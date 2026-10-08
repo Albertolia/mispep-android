@@ -3,14 +3,14 @@
 Aplicación Android nativa e híbrida (Java + WebView moderno) diseñada para el seguimiento clínico de protocolos de péptidos (GLP-1/GIP/glucagón como Retatrutida, Tirzepatida, Semaglutida), control de peso, evolución de tensión arterial y reconstitución.
 
 ## Características principales
-- **Seguimiento de dosis y calendario:** Programación de inyecciones periódicas con alarmas del sistema a las 9:00 AM.
+- **Seguimiento de dosis y calendario:** Programación de inyecciones periódicas con alarmas del sistema.
 - **Evolución del peso corporal e IMC:** Historial cronológico, métricas de progreso semanal y cálculo de IMC dinámico.
 - **Control de tensión arterial:** Registro de sistólica/diastólica, pulso y seguimiento de medicación antihipertensiva.
 - **Calculadoras de reconstitución:** Cálculo de unidades en jeringuilla/pluma, agua BAC, diluciones, mezclas y formatos nasales.
 - **Simulador farmacocinético:** Modelo bicompartimental para visualización de niveles circulantes previstos.
 - **Bilingüe (Español / Inglés):** Selector instantáneo de idioma sin recarga.
 - **Privacidad y almacenamiento local:** Todos los datos se almacenan localmente en el dispositivo.
-- **Módulo de apoyo al desarrollador:** Integración directa con carteras cripto (Bitcoin, Lightning Network, Litecoin).
+
 
 ## Estructura del repositorio
 - `src/`: Código nativo Android en Java (`MainActivity.java`, `BootReceiver.java`, interfaz `@JavascriptInterface`).
