@@ -1,0 +1,6 @@
+# Compilación y artefactos temporales
+build/
+*.idsig
+
+# macOS
+.DS_Store

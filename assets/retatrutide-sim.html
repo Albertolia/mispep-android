@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Farmacocinético de Péptidos (Modelo Bicompartimental)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN con fallback local -->
+  <script src="assets/js/chart.min.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>');
+    }
+  </script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    input[type=range] {
+      accent-color: #059669;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased flex flex-col">
+
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-30 px-3 py-2.5 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+      <div class="flex items-center space-x-2.5 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-2.5">
+          <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+            <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5 flex-wrap">
+              <span id="headerTitle">Simulador PK: Retatrutide</span>
+              <span id="headerBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-medium">Bicompartimental</span>
+            </h1>
+            <p id="headerDesc" class="text-[11px] text-slate-400">Modelo de infusión extravascular subcutánea con superposición de Bateman</p>
+          </div>
+        </div>
+
+        <!-- Selector desplegable de péptidos en móvil -->
+        <div class="sm:hidden">
+          <select id="selectPeptideMob" class="bg-slate-900 text-emerald-400 border border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold focus:outline-none focus:border-emerald-500">
+            <!-- Rellenado dinámicamente -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+        <!-- Selector desplegable de péptidos en escritorio/tablet -->
+        <div class="hidden sm:block">
+          <select id="selectPeptideDesk" class="bg-slate-900 text-emerald-400 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
+            <!-- Rellenado dinámicamente -->
+          </select>
+        </div>
+        <button id="btnReset" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center gap-1 border border-slate-700">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Restablecer
+        </button>
+        <button id="btnInfoModal" class="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors shadow-sm shadow-emerald-700/40">
+          Fórmula
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+    <!-- Left Column: Controls & Configuration (4 cols on lg) -->
+    <div class="lg:col-span-4 space-y-5">
+      
+      <!-- Dosage Protocol Card -->
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Protocolo de Inyección
+          </h2>
+          <span id="badgeDose" class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/30">2.0 mg / 7 días</span>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Dose Slider -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputDose" class="text-slate-300 font-medium">Dosis por inyección:</label>
+              <span id="valDose" class="font-mono text-emerald-400 font-bold">2.0 mg</span>
+            </div>
+            <input id="inputDose" type="range" min="0.5" max="12.0" step="0.5" value="2.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div id="labelsDose" class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+              <span>0.5 mg</span>
+              <span>4.0 mg</span>
+              <span>8.0 mg</span>
+              <span>12.0 mg</span>
+            </div>
+          </div>
+
+          <!-- Interval Slider -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputInterval" class="text-slate-300 font-medium">Intervalo entre dosis (&tau;):</label>
+              <span id="valInterval" class="font-mono text-emerald-400 font-bold">7 días</span>
+            </div>
+            <input id="inputInterval" type="range" min="1" max="14" step="1" value="7" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div id="labelsInterval" class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+              <span>1 día</span>
+              <span>3.5 d</span>
+              <span>7 días</span>
+              <span>14 días</span>
+            </div>
+          </div>
+
+          <!-- Number of Doses / Weeks -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputDosesCount" class="text-slate-300 font-medium">Número de dosis simuladas:</label>
+              <span id="valDosesCount" class="font-mono text-emerald-400 font-bold">4 dosis (28 días)</span>
+            </div>
+            <input id="inputDosesCount" type="range" min="2" max="14" step="1" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Escalation Protocol Preset -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input id="checkEscalation" type="checkbox" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-800 border-slate-700">
+              <span class="text-xs text-slate-300 font-medium" id="lblEscalation">Simular escalado clínico oficial</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            Constantes Fisiológicas (PopPK)
+          </h2>
+          <button id="btnToggleAdvanced" class="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-medium">
+            Ocultar
+          </button>
+        </div>
+
+        <div id="advancedControls" class="space-y-4 pt-1">
+          <!-- Half-life / Clearance -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputHalfLife" class="text-slate-300">Semivida terminal (t<sub>1/2,&beta;</sub>):</label>
+              <span id="valHalfLife" class="font-mono text-cyan-400 font-bold">6.0 días</span>
+            </div>
+            <input id="inputHalfLife" type="range" min="0.05" max="10.0" step="0.05" value="6.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Bioavailability -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputBioav" class="text-slate-300">Biodisponibilidad SC (F):</label>
+              <span id="valBioav" class="font-mono text-cyan-400 font-bold">80 %</span>
+            </div>
+            <input id="inputBioav" type="range" min="50" max="100" step="5" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Absorption rate ka -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="inputKa" class="text-slate-300">Tasa de absorción (k<sub>a</sub>):</label>
+              <span id="valKa" class="font-mono text-cyan-400 font-bold">1.00 día⁻¹</span>
+            </div>
+            <input id="inputKa" type="range" min="0.2" max="10.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Volume and Clearances -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+              <div class="text-slate-400 text-[10px]">Vol. Central (V<sub>c</sub>)</div>
+              <div id="dispVc" class="font-mono font-semibold text-slate-200 mt-0.5">5.0 L</div>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+              <div class="text-slate-400 text-[10px]">Vol. Periférico (V<sub>p</sub>)</div>
+              <div id="dispVp" class="font-mono font-semibold text-slate-200 mt-0.5">3.5 L</div>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+              <div class="text-slate-400 text-[10px]">Aclaramiento (CL)</div>
+              <div id="dispCL" class="font-mono font-semibold text-slate-200 mt-0.5">0.95 L/día</div>
+            </div>
+            <div class="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+              <div class="text-slate-400 text-[10px]">Acl. Intercomp. (Q)</div>
+              <div id="dispQ" class="font-mono font-semibold text-slate-200 mt-0.5">1.20 L/día</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Comparison Switch -->
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-xl flex items-center justify-between">
+        <div>
+          <div class="text-xs font-semibold text-slate-200">Comparar con 1 Compartimento</div>
+          <div class="text-[11px] text-slate-400">Superpone la función estándar de Bateman monocompartimental</div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input id="checkCompare1C" type="checkbox" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:width-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive Charts and Metrics (8 cols on lg) -->
+    <div class="lg:col-span-8 flex flex-col space-y-6">
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Peak Cmax -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Pico máx. (C<sub>max</sub>)</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="my-2">
+            <span id="metricCmax" class="text-xl sm:text-2xl font-bold font-mono text-emerald-400">203.9</span>
+            <span class="text-xs text-slate-400 ml-1">μg/L</span>
+          </div>
+          <div id="metricCmaxSub" class="text-[10px] text-slate-500 font-mono">Día pico acumulado</div>
+        </div>
+
+        <!-- Trough Cmin -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Valle residual (C<sub>min</sub>)</span>
+            <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+          </div>
+          <div class="my-2">
+            <span id="metricCmin" class="text-xl sm:text-2xl font-bold font-mono text-teal-400">99.5</span>
+            <span class="text-xs text-slate-400 ml-1">μg/L</span>
+          </div>
+          <div class="text-[10px] text-slate-500 font-mono">Previo a sig. inyección</div>
+        </div>
+
+        <!-- Accumulation Index -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Índice Acumulación</span>
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          </div>
+          <div class="my-2">
+            <span id="metricAccum" class="text-xl sm:text-2xl font-bold font-mono text-amber-400">1.82x</span>
+          </div>
+          <div class="text-[10px] text-slate-500 font-mono">Vs. dosis inicial 1</div>
+        </div>
+
+        <!-- Steady State time -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Estado Estacionario</span>
+            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+          </div>
+          <div class="my-2">
+            <span id="metricSteadyTime" class="text-xl sm:text-2xl font-bold font-mono text-purple-400">~24 d</span>
+          </div>
+          <div class="text-[10px] text-slate-500 font-mono">4-5 semividas (~94%)</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 shadow-2xl flex-1 flex flex-col min-h-[420px]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Curva de Concentración Plasmática C(t)
+              <span id="chartSubLabel" class="text-xs font-normal text-slate-400 font-mono">(en sangre)</span>
+            </h3>
+            <p class="text-xs text-slate-400">Eje vertical en microgramos por litro (&mu;g/L ó ng/mL)</p>
+          </div>
+
+          <div class="flex items-center gap-2.5 text-xs flex-wrap">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-0.5 bg-emerald-400 rounded-full inline-block"></span>
+              <span class="text-slate-300">Modelo 2 Compartimentos</span>
+            </div>
+            <div id="legend1C" class="flex items-center gap-1.5 hidden">
+              <span class="w-3 h-0.5 bg-amber-400 border-dashed rounded-full inline-block"></span>
+              <span class="text-slate-300">1 Compartimento</span>
+            </div>
+            <button type="button" id="btnDismissTooltip" onclick="window.clearChartTooltip && window.clearChartTooltip()" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:text-white transition-colors" title="Apartar cartel flotante">
+              ✕ Limpiar cartel
+            </button>
+          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="relative flex-1 w-full h-[320px] sm:h-[380px]">
+          <canvas id="pkChart"></canvas>
+        </div>
+
+        <!-- Legend and interactive tip -->
+        <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-500">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono font-medium">💡 Tip</span>
+            <span>Toca o desliza en la curva para inspeccionar. El cartel se aparta solo al soltar.</span>
+          </div>
+          <div class="font-mono text-slate-400">
+            Jeringa (<span class="text-emerald-400">💉</span>) = Día de inyección
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Hitos Clave de Concentración (Día a Día)</h4>
+          <span class="text-[11px] text-slate-500">Muestreo en picos y valles</span>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-300 font-mono">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 text-[11px]">
+                <th class="pb-2 font-medium">Hito / Evento</th>
+                <th class="pb-2 font-medium">Día</th>
+                <th class="pb-2 font-medium">Conc. Bicompartimental</th>
+                <th class="pb-2 font-medium">Fase Cinética</th>
+                <th class="pb-2 font-medium">Acumulación Rel.</th>
+              </tr>
+            </thead>
+            <tbody id="tableMilestones" class="divide-y divide-slate-800/60">
+              <!-- Dynamically populated via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="modalInfo" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl custom-scrollbar space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          Fundamento Matemático: Bateman &amp; 2 Compartimentos
+        </h3>
+        <button id="btnCloseModal" class="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="text-xs text-slate-300 space-y-3 leading-relaxed">
+        <p>
+          En farmacocinética, la concentración plasmática en el compartimento central tras una inyección extravascular (subcutánea) de un péptido se modela mediante un sistema de ecuaciones diferenciales acopladas con una entrada de primer orden (k<sub>a</sub>) y distribución reversible a un compartimento periférico (k<sub>12</sub>, k<sub>21</sub>):
+        </p>
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-300">
+          C(t) = Y₁ · e^(-α t) + Y₂ · e^(-β t) - (Y₁ + Y₂) · e^(-k_a t)
+        </div>
+
+        <p class="font-semibold text-slate-200">Definición de coeficientes exponenciales:</p>
+        <ul class="list-disc list-inside space-y-1 text-slate-400 pl-2">
+          <li><strong>Y₁:</strong> Coeficiente de la fase rápida de distribución tisular (&alpha;).</li>
+          <li><strong>Y₂:</strong> Coeficiente de la fase lenta de eliminación metabólica (&beta; &rArr; t<sub>1/2,&beta;</sub> = ln(2)/&beta;).</li>
+          <li><strong>-(Y₁ + Y₂):</strong> Término de absorción subcutánea depot (k<sub>a</sub>).</li>
+        </ul>
+
+        <p class="font-semibold text-slate-200">Superposición para n inyecciones periódicas cada intervalo &tau;:</p>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-cyan-300">
+          C_total(t) = &Sigma; H(t - k&middot;&tau;) &middot; [ Y₁ e^(-&alpha;(t-k&tau;)) + Y₂ e^(-&beta;(t-k&tau;)) - (Y₁+Y₂) e^(-k_a(t-k&tau;)) ]
+        </div>
+
+        <p class="text-slate-400">
+          Los péptidos acilados de larga duración (como Retatrutida, Semaglutida, Tirzepatida) se unen a la albúmina plasmática (>99%), extendiendo la semivida a varios días. Otros compuestos como BPC-157 o Ipamorelina presentan aclaramiento más acelerado, modelado en el simulador mediante constantes de absorción y semividas específicas.
+        </p>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex justify-end">
+        <button id="btnDismissModal" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+       CATÁLOGO FARMACOCINÉTICO MULTICOMPUESTO (PopPK Data)
+       ============================================================ */
+    const PEPTIDE_PK_PRESETS = {
+      retatrutide: {
+        id: 'retatrutide',
+        name: 'Retatrutide (LY3437943)',
+        shortName: 'Retatrutide',
+        badge: 'Triple agonista GIP/GLP-1/Glucagón',
+        dose: 2.0,
+        doseMin: 0.5,
+        doseMax: 12.0,
+        doseStep: 0.5,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 6.0,
+        bioavailability: 0.80,
+        ka: 1.0,
+        Vc: 5.0,
+        Vp: 3.5,
+        Q: 1.20,
+        escalation: false,
+        escalationDoses: [2.0, 4.0, 6.0, 8.0, 12.0],
+        desc: 'Modelo extravascular subcutáneo bicompartimental · Fase II TRIUMPH'
+      },
+      tirzepatide: {
+        id: 'tirzepatide',
+        name: 'Tirzepatida (Mounjaro / Zepbound)',
+        shortName: 'Tirzepatida',
+        badge: 'Dual agonista GIP/GLP-1',
+        dose: 2.5,
+        doseMin: 2.5,
+        doseMax: 15.0,
+        doseStep: 2.5,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 5.0,
+        bioavailability: 0.80,
+        ka: 0.85,
+        Vc: 5.5,
+        Vp: 4.0,
+        Q: 1.10,
+        escalation: false,
+        escalationDoses: [2.5, 5.0, 7.5, 10.0, 12.5, 15.0],
+        desc: 'Modelo bicompartimental de infusión depot · Datos FDA SURPASS'
+      },
+      semaglutide: {
+        id: 'semaglutide',
+        name: 'Semaglutida (Ozempic / Wegovy)',
+        shortName: 'Semaglutida',
+        badge: 'Agonista GLP-1 acilado',
+        dose: 0.5,
+        doseMin: 0.25,
+        doseMax: 2.4,
+        doseStep: 0.25,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 7.0,
+        bioavailability: 0.89,
+        ka: 0.70,
+        Vc: 4.8,
+        Vp: 3.2,
+        Q: 0.95,
+        escalation: false,
+        escalationDoses: [0.25, 0.5, 1.0, 1.7, 2.4],
+        desc: 'Modelo bicompartimental PopPK · Ensayos SUSTAIN / STEP'
+      },
+      cagrilintide: {
+        id: 'cagrilintide',
+        name: 'Cagrilintida (AM833)',
+        shortName: 'Cagrilintida',
+        badge: 'Análogo amilina acilado',
+        dose: 0.6,
+        doseMin: 0.3,
+        doseMax: 4.5,
+        doseStep: 0.3,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 7.0,
+        bioavailability: 0.80,
+        ka: 0.75,
+        Vc: 5.0,
+        Vp: 3.5,
+        Q: 1.00,
+        escalation: false,
+        escalationDoses: [0.3, 0.6, 1.2, 2.4, 4.5],
+        desc: 'Cinética de amilina prolongada semanal · Novo Nordisk'
+      },
+      survodutide: {
+        id: 'survodutide',
+        name: 'Survodutida (BI 456906)',
+        shortName: 'Survodutida',
+        badge: 'Dual agonista GLP-1/Glucagón',
+        dose: 0.6,
+        doseMin: 0.6,
+        doseMax: 4.8,
+        doseStep: 0.6,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 6.0,
+        bioavailability: 0.80,
+        ka: 0.90,
+        Vc: 5.2,
+        Vp: 3.8,
+        Q: 1.15,
+        escalation: false,
+        escalationDoses: [0.6, 1.2, 1.8, 2.7, 3.6, 4.8],
+        desc: 'Modelo bicompartimental · Boehringer Ingelheim / Zealand'
+      },
+      mazdutide: {
+        id: 'mazdutide',
+        name: 'Mazdutida (IBI362)',
+        shortName: 'Mazdutida',
+        badge: 'Oximodulina sintética GLP-1/GCGR',
+        dose: 3.0,
+        doseMin: 1.5,
+        doseMax: 9.0,
+        doseStep: 1.5,
+        interval: 7,
+        intervalMin: 3,
+        intervalMax: 14,
+        intervalStep: 1,
+        numDoses: 4,
+        halfLife: 5.0,
+        bioavailability: 0.80,
+        ka: 0.85,
+        Vc: 5.0,
+        Vp: 3.5,
+        Q: 1.10,
+        escalation: false,
+        escalationDoses: [1.5, 3.0, 4.5, 6.0, 9.0],
+        desc: 'Cinética dual GLP-1/Glucagón · Innovent Biologics'
+      },
+      tb500: {
+        id: 'tb500',
+        name: 'TB-500 (Timosina Beta-4)',
+        shortName: 'TB-500',
+        badge: 'Péptido reparador tisular',
+        dose: 2.5,
+        doseMin: 1.0,
+        doseMax: 5.0,
+        doseStep: 0.5,
+        interval: 4,
+        intervalMin: 2,
+        intervalMax: 7,
+        intervalStep: 1,
+        numDoses: 6,
+        halfLife: 1.0,
+        bioavailability: 0.75,
+        ka: 2.5,
+        Vc: 7.0,
+        Vp: 5.0,
+        Q: 2.00,
+        escalation: false,
+        escalationDoses: [2.0, 2.5, 3.0, 4.0, 5.0],
+        desc: 'Cinética bicompartimental de redistribución tisular (24h t1/2)'
+      },
+      bpc157: {
+        id: 'bpc157',
+        name: 'BPC-157 (Body Protection Compound)',
+        shortName: 'BPC-157',
+        badge: 'Pentadecapéptido gástrico/angiogénico',
+        dose: 0.25,
+        doseMin: 0.1,
+        doseMax: 1.0,
+        doseStep: 0.05,
+        interval: 1,
+        intervalMin: 1,
+        intervalMax: 3,
+        intervalStep: 1,
+        numDoses: 10,
+        halfLife: 0.17, // ~4 horas
+        bioavailability: 0.70,
+        ka: 6.0,
+        Vc: 8.0,
+        Vp: 6.0,
+        Q: 3.00,
+        escalation: false,
+        escalationDoses: [0.25, 0.5, 0.75, 1.0],
+        desc: 'Modelo de absorción y aclaramiento rápido diario (~4h t1/2)'
+      },
+      ipamorelin: {
+        id: 'ipamorelin',
+        name: 'Ipamorelina (GHRP)',
+        shortName: 'Ipamorelina',
+        badge: 'Secretagogo fisiológico selectivo de GH',
+        dose: 0.2,
+        doseMin: 0.1,
+        doseMax: 0.5,
+        doseStep: 0.05,
+        interval: 1,
+        intervalMin: 1,
+        intervalMax: 2,
+        intervalStep: 1,
+        numDoses: 10,
+        halfLife: 0.08, // ~2 horas
+        bioavailability: 0.75,
+        ka: 8.0,
+        Vc: 9.0,
+        Vp: 6.0,
+        Q: 4.00,
+        escalation: false,
+        escalationDoses: [0.1, 0.2, 0.3, 0.4, 0.5],
+        desc: 'Cinética pulsátil ultrarrápida nocturna (~2h t1/2)'
+      },
+      pt141: {
+        id: 'pt141',
+        name: 'PT-141 (Bremelanotida / Vyleesi)',
+        shortName: 'PT-141',
+        badge: 'Agonista de melanocortina MC3R/MC4R',
+        dose: 1.75,
+        doseMin: 0.5,
+        doseMax: 2.0,
+        doseStep: 0.25,
+        interval: 1,
+        intervalMin: 1,
+        intervalMax: 7,
+        intervalStep: 1,
+        numDoses: 3,
+        halfLife: 0.11, // ~2.7 horas
+        bioavailability: 1.0,
+        ka: 5.0,
+        Vc: 12.0,
+        Vp: 8.0,
+        Q: 4.50,
+        escalation: false,
+        escalationDoses: [1.0, 1.5, 1.75, 2.0],
+        desc: 'Cinética de administración s.c. a demanda (2.7h t1/2)'
+      }
+    };
+
+    let activePeptideKey = 'retatrutide';
+    let params = { ...PEPTIDE_PK_PRESETS[activePeptideKey], compare1C: false };
+    let chartInstance = null;
+
+    function populateSelects() {
+      const selDesk = document.getElementById('selectPeptideDesk');
+      const selMob = document.getElementById('selectPeptideMob');
+      const opts = Object.values(PEPTIDE_PK_PRESETS).map(p => 
+        `<option value="${p.id}">${p.shortName}</option>`
+      ).join('');
+
+      if (selDesk) selDesk.innerHTML = opts;
+      if (selMob) selMob.innerHTML = opts;
+    }
+
+    function setPeptidePreset(key) {
+      if (!PEPTIDE_PK_PRESETS[key]) key = 'retatrutide';
+      activePeptideKey = key;
+      const preset = PEPTIDE_PK_PRESETS[key];
+      
+      const comp1C = params.compare1C;
+      params = { ...preset, compare1C: comp1C };
+
+      // Actualizar UI encabezado
+      document.getElementById('headerTitle').textContent = 'Simulador PK: ' + preset.shortName;
+      document.getElementById('headerDesc').textContent = preset.desc;
+      document.getElementById('chartSubLabel').textContent = '(' + preset.shortName + ' en sangre)';
+
+      // Actualizar selects
+      const selDesk = document.getElementById('selectPeptideDesk');
+      const selMob = document.getElementById('selectPeptideMob');
+      if (selDesk) selDesk.value = key;
+      if (selMob) selMob.value = key;
+
+      // Actualizar Sliders y rangos
+      const inputDose = document.getElementById('inputDose');
+      inputDose.min = preset.doseMin;
+      inputDose.max = preset.doseMax;
+      inputDose.step = preset.doseStep;
+      inputDose.value = preset.dose;
+      document.getElementById('valDose').textContent = preset.dose.toFixed(preset.doseStep < 0.1 ? 2 : 1) + ' mg';
+
+      // Etiquetas slider dosis
+      const labelsDose = document.getElementById('labelsDose');
+      labelsDose.innerHTML = `
+        <span>${preset.doseMin} mg</span>
+        <span>${((preset.doseMin + preset.doseMax) / 2).toFixed(1)} mg</span>
+        <span>${preset.doseMax} mg</span>
+      `;
+
+      // Slider intervalo
+      const inputInterval = document.getElementById('inputInterval');
+      inputInterval.min = preset.intervalMin;
+      inputInterval.max = preset.intervalMax;
+      inputInterval.step = preset.intervalStep;
+      inputInterval.value = preset.interval;
+      document.getElementById('valInterval').textContent = preset.interval + (preset.interval === 1 ? ' día' : ' días');
+
+      // Slider dosis simuladas
+      const inputDosesCount = document.getElementById('inputDosesCount');
+      inputDosesCount.value = preset.numDoses;
+      document.getElementById('valDosesCount').textContent = preset.numDoses + ' dosis (' + (preset.numDoses * preset.interval).toFixed(1) + ' d)';
+
+      // Constantes avanzadas
+      const inputHalfLife = document.getElementById('inputHalfLife');
+      inputHalfLife.value = preset.halfLife;
+      document.getElementById('valHalfLife').textContent = preset.halfLife >= 1 ? (preset.halfLife.toFixed(1) + ' días') : ((preset.halfLife * 24).toFixed(1) + ' h');
+
+      const inputBioav = document.getElementById('inputBioav');
+      inputBioav.value = preset.bioavailability * 100;
+      document.getElementById('valBioav').textContent = (preset.bioavailability * 100) + ' %';
+
+      const inputKa = document.getElementById('inputKa');
+      inputKa.value = preset.ka;
+      document.getElementById('valKa').textContent = preset.ka.toFixed(2) + ' día⁻¹';
+
+      document.getElementById('dispVc').textContent = preset.Vc.toFixed(1) + ' L';
+      document.getElementById('dispVp').textContent = preset.Vp.toFixed(1) + ' L';
+      document.getElementById('dispQ').textContent = preset.Q.toFixed(2) + ' L/día';
+
+      // Escalado
+      const checkEscalation = document.getElementById('checkEscalation');
+      checkEscalation.checked = false;
+      document.getElementById('lblEscalation').textContent = 'Simular escalado (' + preset.escalationDoses.slice(0, 3).join(' → ') + '...)';
+
+      updateDashboard();
+    }
+    window.setPeptidePreset = setPeptidePreset;
+
+    function calculatePKModel(p) {
+      const beta = Math.log(2) / p.halfLife;
+      const CL = (p.Vc + p.Vp) * beta;
+      
+      const k10 = CL / p.Vc;
+      const k12 = p.Q / p.Vc;
+      const k21 = p.Q / p.Vp;
+
+      const sumK = k10 + k12 + k21;
+      const prodK = k10 * k21;
+      const disc = Math.max(0, Math.pow(sumK, 2) - 4 * prodK);
+      const alphaRoot = (sumK + Math.sqrt(disc)) / 2;
+      const betaRoot = (sumK - Math.sqrt(disc)) / 2;
+
+      const totalDays = +(p.interval * p.numDoses).toFixed(2);
+      const timePoints = [];
+      const data2C = [];
+      const data1C = [];
+      
+      // Adaptar el paso temporal para péptidos de vida corta
+      const step = p.halfLife < 0.5 ? 0.02 : 0.1;
+
+      // Plan de inyecciones
+      const dosesList = [];
+      for (let k = 0; k < p.numDoses; k++) {
+        let currentDose = p.dose;
+        if (p.escalation && p.escalationDoses && p.escalationDoses.length) {
+          const escIdx = Math.min(Math.floor(k / 2), p.escalationDoses.length - 1);
+          currentDose = p.escalationDoses[escIdx];
+        }
+        dosesList.push({
+          time: +(k * p.interval).toFixed(2),
+          doseMg: currentDose
+        });
+      }
+
+      const V1C = p.Vc + p.Vp;
+      const ke1C = CL / V1C;
+
+      for (let t = 0; t <= totalDays + 0.001; t = +(t + step).toFixed(3)) {
+        let conc2C = 0;
+        let conc1C = 0;
+
+        for (const doseItem of dosesList) {
+          if (t >= doseItem.time) {
+            const dt = t - doseItem.time;
+            const doseUcg = doseItem.doseMg * 1000 * p.bioavailability;
+
+            // 2 Compartimentos
+            const denomAlpha = (p.ka - alphaRoot) * (betaRoot - alphaRoot) || 0.0001;
+            const denomBeta = (p.ka - betaRoot) * (alphaRoot - betaRoot) || 0.0001;
+
+            const Y1 = (doseUcg * p.ka / p.Vc) * ((k21 - alphaRoot) / denomAlpha);
+            const Y2 = (doseUcg * p.ka / p.Vc) * ((k21 - betaRoot) / denomBeta);
+            const Y3 = -(Y1 + Y2);
+
+            const cDose2C = Y1 * Math.exp(-alphaRoot * dt) + Y2 * Math.exp(-betaRoot * dt) + Y3 * Math.exp(-p.ka * dt);
+            conc2C += Math.max(0, cDose2C);
+
+            // 1 Compartimento (Bateman)
+            const denom1C = (p.ka - ke1C) || 0.0001;
+            const cDose1C = (doseUcg * p.ka / (V1C * denom1C)) * (Math.exp(-ke1C * dt) - Math.exp(-p.ka * dt));
+            conc1C += Math.max(0, cDose1C);
+          }
+        }
+
+        timePoints.push(t);
+        data2C.push(+conc2C.toFixed(2));
+        data1C.push(+conc1C.toFixed(2));
+      }
+
+      return {
+        CL,
+        alphaRoot,
+        betaRoot,
+        k10,
+        k12,
+        k21,
+        timePoints,
+        data2C,
+        data1C,
+        dosesList,
+        totalDays,
+        step
+      };
+    }
+
+    function initOrUpdateChart(pkResult) {
+      const ctx = document.getElementById('pkChart').getContext('2d');
+
+      const datasets = [
+        {
+          label: 'Modelo 2 Compartimentos',
+          data: pkResult.timePoints.map((t, idx) => ({ x: t, y: pkResult.data2C[idx] })),
+          borderColor: '#10b981',
+          borderWidth: 2.8,
+          backgroundColor: 'rgba(16, 185, 129, 0.08)',
+          fill: true,
+          tension: 0.25,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#10b981',
+          pointHoverBorderColor: '#ffffff',
+          pointHoverBorderWidth: 2
+        }
+      ];
+
+      if (params.compare1C) {
+        datasets.push({
+          label: 'Modelo 1 Compartimento',
+          data: pkResult.timePoints.map((t, idx) => ({ x: t, y: pkResult.data1C[idx] })),
+          borderColor: '#f59e0b',
+          borderWidth: 2,
+          borderDash: [5, 4],
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.25,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#f59e0b'
+        });
+      }
+
+      if (chartInstance) {
+        chartInstance.data.datasets = datasets;
+        chartInstance.options.scales.x.max = pkResult.totalDays;
+        chartInstance.options.scales.x.ticks.stepSize = params.interval;
+        chartInstance.update();
+        return;
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false,
+          },
+          animation: {
+            duration: 300
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.94)',
+              titleColor: '#38bdf8',
+              titleFont: { size: 10, weight: '700' },
+              bodyColor: '#e2e8f0',
+              bodyFont: { size: 10, family: 'JetBrains Mono, monospace' },
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: { top: 4, bottom: 4, left: 7, right: 7 },
+              cornerRadius: 6,
+              displayColors: false,
+              caretSize: 4,
+              callbacks: {
+                title: function(items) {
+                  return 'Día ' + items[0].parsed.x.toFixed(1);
+                },
+                label: function(context) {
+                  const tag = context.datasetIndex === 0 ? '2C' : '1C';
+                  return tag + ': ' + context.parsed.y.toFixed(1) + ' μg/L';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              title: {
+                display: true,
+                text: 'Tiempo transcurrido (Días)',
+                color: '#94a3b8',
+                font: { size: 12, family: 'Inter', weight: 500 }
+              },
+              grid: {
+                color: 'rgba(51, 65, 85, 0.4)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#64748b',
+                stepSize: params.interval,
+                font: { family: 'JetBrains Mono', size: 10 }
+              },
+              min: 0,
+              max: pkResult.totalDays
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Concentración Plasmática (μg/L ó ng/mL)',
+                color: '#94a3b8',
+                font: { size: 12, family: 'Inter', weight: 500 }
+              },
+              grid: {
+                color: 'rgba(51, 65, 85, 0.4)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 10 }
+              },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function updateDashboard() {
+      const pk = calculatePKModel(params);
+
+      // Update Chart
+      initOrUpdateChart(pk);
+
+      const max2C = Math.max(...pk.data2C);
+      const lastPoint = pk.data2C[pk.data2C.length - 1];
+      
+      const firstCycleLimitIdx = Math.max(1, Math.floor(params.interval / pk.step));
+      const peak1 = Math.max(...pk.data2C.slice(0, firstCycleLimitIdx));
+      const accumRatio = peak1 > 0 ? (max2C / peak1).toFixed(2) : '1.00';
+
+      // Actualizar tarjetas de métricas
+      document.getElementById('metricCmax').textContent = max2C.toFixed(1);
+      document.getElementById('metricCmin').textContent = lastPoint.toFixed(1);
+      document.getElementById('metricAccum').textContent = accumRatio + 'x';
+      
+      const ssDays = Math.round(4.5 * params.halfLife);
+      document.getElementById('metricSteadyTime').textContent = ssDays >= 1 ? ('~' + ssDays + ' d') : ('~' + (ssDays * 24).toFixed(0) + ' h');
+      document.getElementById('dispCL').textContent = pk.CL.toFixed(2) + ' L/día';
+
+      // Badge en protocolo
+      document.getElementById('badgeDose').textContent = params.dose.toFixed(params.doseStep < 0.1 ? 2 : 1) + ' mg / ' + params.interval + (params.interval === 1 ? ' d' : ' d');
+
+      // Tabla de hitos
+      const tableBody = document.getElementById('tableMilestones');
+      tableBody.innerHTML = '';
+
+      const milestones = [];
+      pk.dosesList.forEach((d, i) => {
+        milestones.push({
+          event: 'Inyección #' + (i+1) + ' (' + d.doseMg + ' mg)',
+          day: d.time.toFixed(1),
+          conc: pk.data2C[Math.round(d.time / pk.step)] || 0,
+          phase: 'Administración SC',
+          accum: (((pk.data2C[Math.round(d.time / pk.step)] || 0) / (peak1 || 1))).toFixed(2) + 'x'
+        });
+
+        // Pico adaptado a vida media
+        const tPeakOffset = Math.min(params.interval * 0.3, Math.max(0.05, 1.0 / params.ka));
+        const peakTime = +(d.time + tPeakOffset).toFixed(2);
+        if (peakTime <= pk.totalDays) {
+          const peakIdx = Math.round(peakTime / pk.step);
+          milestones.push({
+            event: 'Pico Cmax (' + (i+1) + ')',
+            day: peakTime.toFixed(1),
+            conc: pk.data2C[peakIdx] || 0,
+            phase: 'Absorción / Tmax',
+            accum: (((pk.data2C[peakIdx] || 0) / (peak1 || 1))).toFixed(2) + 'x'
+          });
+        }
+      });
+
+      milestones.push({
+        event: 'Valle Final Cmin',
+        day: pk.totalDays.toFixed(1),
+        conc: lastPoint,
+        phase: 'Eliminación terminal (β)',
+        accum: (lastPoint / (peak1 || 1)).toFixed(2) + 'x'
+      });
+
+      milestones.slice(0, 8).forEach(m => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-900/60 transition-colors';
+        row.innerHTML = `
+          <td class="py-2 font-medium text-slate-200">${m.event}</td>
+          <td class="py-2 text-cyan-400">${m.day}</td>
+          <td class="py-2 font-semibold text-emerald-400">${m.conc.toFixed(1)} μg/L</td>
+          <td class="py-2 text-slate-400 text-[11px]">${m.phase}</td>
+          <td class="py-2 text-amber-400">${m.accum}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      populateSelects();
+
+      // Leer query param o hash para péptido inicial (ej. ?pep=tirzepatide)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryPep = urlParams.get('pep') || window.location.hash.replace('#', '') || 'retatrutide';
+      
+      const selDesk = document.getElementById('selectPeptideDesk');
+      const selMob = document.getElementById('selectPeptideMob');
+      
+      if (selDesk) selDesk.addEventListener('change', (e) => setPeptidePreset(e.target.value));
+      if (selMob) selMob.addEventListener('change', (e) => setPeptidePreset(e.target.value));
+
+      // Sliders bindings
+      const inputDose = document.getElementById('inputDose');
+      const inputInterval = document.getElementById('inputInterval');
+      const inputDosesCount = document.getElementById('inputDosesCount');
+      const inputHalfLife = document.getElementById('inputHalfLife');
+      const inputBioav = document.getElementById('inputBioav');
+      const inputKa = document.getElementById('inputKa');
+      const checkCompare1C = document.getElementById('checkCompare1C');
+      const checkEscalation = document.getElementById('checkEscalation');
+
+      const valDose = document.getElementById('valDose');
+      const valInterval = document.getElementById('valInterval');
+      const valDosesCount = document.getElementById('valDosesCount');
+      const valHalfLife = document.getElementById('valHalfLife');
+      const valBioav = document.getElementById('valBioav');
+      const valKa = document.getElementById('valKa');
+      const legend1C = document.getElementById('legend1C');
+
+      inputDose.addEventListener('input', (e) => {
+        params.dose = parseFloat(e.target.value);
+        valDose.textContent = params.dose.toFixed(params.doseStep < 0.1 ? 2 : 1) + ' mg';
+        updateDashboard();
+      });
+
+      inputInterval.addEventListener('input', (e) => {
+        params.interval = parseFloat(e.target.value);
+        valInterval.textContent = params.interval + (params.interval === 1 ? ' día' : ' días');
+        updateDashboard();
+      });
+
+      inputDosesCount.addEventListener('input', (e) => {
+        params.numDoses = parseInt(e.target.value, 10);
+        valDosesCount.textContent = params.numDoses + ' dosis (' + (params.numDoses * params.interval).toFixed(1) + ' d)';
+        updateDashboard();
+      });
+
+      inputHalfLife.addEventListener('input', (e) => {
+        params.halfLife = parseFloat(e.target.value);
+        valHalfLife.textContent = params.halfLife >= 1 ? (params.halfLife.toFixed(1) + ' días') : ((params.halfLife * 24).toFixed(1) + ' h');
+        updateDashboard();
+      });
+
+      inputBioav.addEventListener('input', (e) => {
+        params.bioavailability = parseInt(e.target.value, 10) / 100;
+        valBioav.textContent = (params.bioavailability * 100) + ' %';
+        updateDashboard();
+      });
+
+      inputKa.addEventListener('input', (e) => {
+        params.ka = parseFloat(e.target.value);
+        valKa.textContent = params.ka.toFixed(2) + ' día⁻¹';
+        updateDashboard();
+      });
+
+      checkCompare1C.addEventListener('change', (e) => {
+        params.compare1C = e.target.checked;
+        if (params.compare1C) {
+          legend1C.classList.remove('hidden');
+        } else {
+          legend1C.classList.add('hidden');
+        }
+        updateDashboard();
+      });
+
+      checkEscalation.addEventListener('change', (e) => {
+        params.escalation = e.target.checked;
+        updateDashboard();
+      });
+
+      // Advanced toggle
+      const btnToggleAdvanced = document.getElementById('btnToggleAdvanced');
+      const advancedControls = document.getElementById('advancedControls');
+      let advancedVisible = true;
+      btnToggleAdvanced.addEventListener('click', () => {
+        advancedVisible = !advancedVisible;
+        advancedControls.classList.toggle('hidden', !advancedVisible);
+        btnToggleAdvanced.textContent = advancedVisible ? 'Ocultar' : 'Mostrar';
+      });
+
+      // Reset button
+      document.getElementById('btnReset').addEventListener('click', () => {
+        setPeptidePreset(activePeptideKey);
+      });
+
+      // Modal info handlers
+      const modal = document.getElementById('modalInfo');
+      const openModal = () => modal.classList.remove('hidden');
+      const closeModal = () => modal.classList.add('hidden');
+
+      document.getElementById('btnInfoModal').addEventListener('click', openModal);
+      document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+      document.getElementById('btnDismissModal').addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      // Inicializar con el preset correspondiente
+      setPeptidePreset(queryPep);
+
+      // Desvanecer o apartar el cartel táctil al soltar o tocar fuera
+      const canvasEl = document.getElementById('pkChart');
+      let hideTooltipTimeout = null;
+      
+      const clearChartTooltip = () => {
+        if (chartInstance && chartInstance.tooltip) {
+          chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+          chartInstance.setActiveElements([]);
+          chartInstance.update();
+        }
+      };
+      window.clearChartTooltip = clearChartTooltip;
+
+      if (canvasEl) {
+        canvasEl.addEventListener('touchend', () => {
+          clearTimeout(hideTooltipTimeout);
+          hideTooltipTimeout = setTimeout(clearChartTooltip, 1200);
+        }, { passive: true });
+      }
+
+      document.addEventListener('touchstart', (e) => {
+        if (canvasEl && !canvasEl.contains(e.target)) {
+          clearChartTooltip();
+        }
+      }, { passive: true });
+    });
+  </script>
+</body>
+</html>
