@@ -160,7 +160,7 @@
               <label for="inputDosesCount" class="text-slate-300 font-medium">Número de dosis simuladas:</label>
               <span id="valDosesCount" class="font-mono text-emerald-400 font-bold">4 dosis (28 días)</span>
             </div>
-            <input id="inputDosesCount" type="range" min="2" max="14" step="1" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <input id="inputDosesCount" type="range" min="2" max="24" step="1" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
           </div>
 
           <!-- Escalation Protocol Preset -->
@@ -350,7 +350,7 @@
           <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Hitos Clave de Concentración (Día a Día)</h4>
           <span class="text-[11px] text-slate-500">Muestreo en picos y valles</span>
         </div>
-        <div class="overflow-x-auto custom-scrollbar">
+        <div class="overflow-x-auto overflow-y-auto max-h-80 custom-scrollbar">
           <table class="w-full text-left text-xs text-slate-300 font-mono">
             <thead>
               <tr class="border-b border-slate-800 text-slate-400 text-[11px]">
@@ -442,8 +442,9 @@
         Vp: 3.5,
         Q: 1.20,
         escalation: false,
-        escalationDoses: [2.0, 4.0, 6.0, 8.0, 12.0],
-        desc: 'Modelo extravascular subcutáneo bicompartimental · Fase II TRIUMPH'
+        escalationStepDoses: 4,
+        escalationDoses: [2.0, 4.0, 6.0, 9.0, 12.0],
+        desc: 'Modelo extravascular subcutáneo bicompartimental · Fase II/III TRIUMPH'
       },
       tirzepatide: {
         id: 'tirzepatide',
@@ -466,6 +467,7 @@
         Vp: 4.0,
         Q: 1.10,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [2.5, 5.0, 7.5, 10.0, 12.5, 15.0],
         desc: 'Modelo bicompartimental de infusión depot · Datos FDA SURPASS'
       },
@@ -490,6 +492,7 @@
         Vp: 3.2,
         Q: 0.95,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [0.25, 0.5, 1.0, 1.7, 2.4],
         desc: 'Modelo bicompartimental PopPK · Ensayos SUSTAIN / STEP'
       },
@@ -514,6 +517,7 @@
         Vp: 3.5,
         Q: 1.00,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [0.3, 0.6, 1.2, 2.4, 4.5],
         desc: 'Cinética de amilina prolongada semanal · Novo Nordisk'
       },
@@ -538,6 +542,7 @@
         Vp: 3.8,
         Q: 1.15,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [0.6, 1.2, 1.8, 2.7, 3.6, 4.8],
         desc: 'Modelo bicompartimental · Boehringer Ingelheim / Zealand'
       },
@@ -562,6 +567,7 @@
         Vp: 3.5,
         Q: 1.10,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [1.5, 3.0, 4.5, 6.0, 9.0],
         desc: 'Cinética dual GLP-1/Glucagón · Innovent Biologics'
       },
@@ -586,6 +592,7 @@
         Vp: 5.0,
         Q: 2.00,
         escalation: false,
+        escalationStepDoses: 4,
         escalationDoses: [2.0, 2.5, 3.0, 4.0, 5.0],
         desc: 'Cinética bicompartimental de redistribución tisular (24h t1/2)'
       },
@@ -610,6 +617,7 @@
         Vp: 6.0,
         Q: 3.00,
         escalation: false,
+        escalationStepDoses: 7,
         escalationDoses: [0.25, 0.5, 0.75, 1.0],
         desc: 'Modelo de absorción y aclaramiento rápido diario (~4h t1/2)'
       },
@@ -634,6 +642,7 @@
         Vp: 6.0,
         Q: 4.00,
         escalation: false,
+        escalationStepDoses: 7,
         escalationDoses: [0.1, 0.2, 0.3, 0.4, 0.5],
         desc: 'Cinética pulsátil ultrarrápida nocturna (~2h t1/2)'
       },
@@ -658,6 +667,7 @@
         Vp: 8.0,
         Q: 4.50,
         escalation: false,
+        escalationStepDoses: 2,
         escalationDoses: [1.0, 1.5, 1.75, 2.0],
         desc: 'Cinética de administración s.c. a demanda (2.7h t1/2)'
       }
@@ -746,7 +756,8 @@
       // Escalado
       const checkEscalation = document.getElementById('checkEscalation');
       checkEscalation.checked = false;
-      document.getElementById('lblEscalation').textContent = 'Simular escalado (' + preset.escalationDoses.slice(0, 3).join(' → ') + '...)';
+      const stepLabel = preset.interval === 7 ? '4 sem/escalón' : ((preset.escalationStepDoses || 4) + ' iny/escalón');
+      document.getElementById('lblEscalation').textContent = 'Simular escalado (' + stepLabel + ': ' + preset.escalationDoses.slice(0, 3).join(' → ') + '...)';
 
       updateDashboard();
     }
@@ -776,10 +787,11 @@
 
       // Plan de inyecciones
       const dosesList = [];
+      const stepDoses = p.escalationStepDoses || (p.interval === 1 ? 7 : 4);
       for (let k = 0; k < p.numDoses; k++) {
         let currentDose = p.dose;
         if (p.escalation && p.escalationDoses && p.escalationDoses.length) {
-          const escIdx = Math.min(Math.floor(k / 2), p.escalationDoses.length - 1);
+          const escIdx = Math.min(Math.floor(k / stepDoses), p.escalationDoses.length - 1);
           currentDose = p.escalationDoses[escIdx];
         }
         dosesList.push({
@@ -990,7 +1002,11 @@
       document.getElementById('dispCL').textContent = pk.CL.toFixed(2) + ' L/día';
 
       // Badge en protocolo
-      document.getElementById('badgeDose').textContent = params.dose.toFixed(params.doseStep < 0.1 ? 2 : 1) + ' mg / ' + params.interval + (params.interval === 1 ? ' d' : ' d');
+      let doseBadge = params.dose.toFixed(params.doseStep < 0.1 ? 2 : 1) + ' mg / ' + params.interval + (params.interval === 1 ? ' d' : ' d');
+      if (params.escalation && params.escalationDoses) {
+        doseBadge = 'Titulación: ' + params.escalationDoses.join(' → ') + ' mg';
+      }
+      document.getElementById('badgeDose').textContent = doseBadge;
 
       // Tabla de hitos
       const tableBody = document.getElementById('tableMilestones');
@@ -1029,7 +1045,7 @@
         accum: (lastPoint / (peak1 || 1)).toFixed(2) + 'x'
       });
 
-      milestones.slice(0, 8).forEach(m => {
+      milestones.forEach(m => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-900/60 transition-colors';
         row.innerHTML = `
@@ -1122,6 +1138,14 @@
 
       checkEscalation.addEventListener('change', (e) => {
         params.escalation = e.target.checked;
+        const inputDosesCount = document.getElementById('inputDosesCount');
+        if (params.escalation && params.numDoses < 12) {
+          params.numDoses = 12;
+          if (inputDosesCount) {
+            inputDosesCount.value = 12;
+            document.getElementById('valDosesCount').textContent = '12 dosis (' + (12 * params.interval).toFixed(0) + ' d)';
+          }
+        }
         updateDashboard();
       });
 
