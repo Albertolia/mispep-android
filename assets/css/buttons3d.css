@@ -1,0 +1,1027 @@
+/* ============================================================
+   MisPep · Sistema Táctil 3D (v2)
+   ------------------------------------------------------------
+   Cada control interactivo es un "keycap": cara biselada,
+   canto duro inferior (--lift) y sombra ambiental. Al pulsarlo,
+   la cara desciende exactamente lo mismo que mide su canto, de
+   modo que el borde inferior permanece clavado en su sitio:
+   el botón se *hunde* físicamente en la pantalla.
+
+   Cargar SIEMPRE después de app.css (es la capa autoritativa).
+   ============================================================ */
+
+:root {
+  --btn-lift: 5px;          /* grosor del canto inferior visible */
+  --btn-press: var(--btn-lift); /* recorrido al hundirse */
+  --btn-radius: 14px;
+  --btn-pill-radius: 12px;
+  --btn-ease: cubic-bezier(0.2, 0.9, 0.32, 1.28);
+  --btn-snap: 90ms;
+  --bevel-top: rgba(255, 255, 255, 0.38);
+  --bevel-bottom: rgba(0, 0, 0, 0.22);
+  --plate-edge: var(--shadow-bottom, #0b101c);
+  --plate-face-1: #1e2942;
+  --plate-face-2: #161f33;
+  --plate-glow: rgba(0, 0, 0, 0.42);
+  --press-shade: rgba(0, 0, 0, 0.32);
+}
+
+/* Toda superficie pulsable: sin retardo de doble toque, sin
+   resaltado azul nativo y sin selección accidental de texto. */
+button,
+.btn-3d,
+.icon-btn-3d,
+.subtab-btn,
+.pill-3d,
+.filter-chip,
+.body-zone-chip,
+.dose-unit-card,
+.cal-day,
+.drawer-item,
+.med-wheel-item,
+.nav-item,
+.action-card-6,
+.btn-emerald-dose,
+.color-pick-btn,
+.body-node-item,
+.zone-node,
+[data-press] {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================================
+   1. BOTÓN BASE 3D
+   ============================================================ */
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  color: #ffffff;
+  /* Valores por defecto si no lleva variante de color */
+  --face-1: #334155;
+  --face-2: #1e293b;
+  --edge: #0f172a;
+  --glow: rgba(0, 0, 0, 0.4);
+  background-image: linear-gradient(180deg, var(--face-1) 0%, var(--face-2) 100%);
+  box-shadow:
+    0 var(--btn-lift, 5px) 0 var(--edge),
+    0 calc(var(--btn-lift, 5px) + 4px) 12px var(--glow),
+    inset 0 1px 0 var(--bevel-top),
+    inset 0 calc(var(--btn-lift, 5px) * -1) 0 rgba(0, 0, 0, 0.14);
+  transform: translateY(0);
+  will-change: transform, box-shadow;
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+/* Veladura superior: simula la luz cenital sobre la cara */
+.btn-3d::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 52%);
+  opacity: 1;
+  transition: opacity var(--btn-snap) ease;
+}
+
+/* Sombra interior que "apaga" la cara cuando está hundida */
+.btn-3d::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0) 62%);
+  opacity: 0;
+  transition: opacity var(--btn-snap) ease;
+}
+
+.btn-3d > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Hundido (pulsado) --- */
+.btn-3d:active,
+.btn-3d.is-pressed {
+  transform: translateY(var(--btn-press));
+  box-shadow:
+    0 1px 0 var(--edge, #0f172a),
+    0 2px 5px rgba(0, 0, 0, 0.34),
+    inset 0 2px 6px rgba(0, 0, 0, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  filter: brightness(0.93) saturate(1.05);
+}
+
+.btn-3d:active::before,
+.btn-3d.is-pressed::before { opacity: 0.35; }
+
+.btn-3d:active::after,
+.btn-3d.is-pressed::after { opacity: 1; }
+
+.btn-3d:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.btn-3d:disabled,
+.btn-3d[aria-disabled="true"] {
+  opacity: 0.5;
+  filter: grayscale(0.35);
+  pointer-events: none;
+}
+
+/* ============================================================
+   2. VARIANTES DE COLOR
+   ============================================================ */
+.btn-3d-emerald {
+  --face-1: #34d399;
+  --face-2: #059669;
+  --edge: #047857;
+  --glow: rgba(16, 185, 129, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.btn-3d-cyan {
+  --face-1: #22d3ee;
+  --face-2: #0891b2;
+  --edge: #0e7490;
+  --glow: rgba(6, 182, 212, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.btn-3d-purple {
+  --face-1: #a78bfa;
+  --face-2: #7c3aed;
+  --edge: #6d28d9;
+  --glow: rgba(139, 92, 246, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.btn-3d-amber {
+  --face-1: #fbbf24;
+  --face-2: #d97706;
+  --edge: #b45309;
+  --glow: rgba(245, 158, 11, 0.38);
+  color: #241a05;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-3d-danger {
+  --face-1: #fb7185;
+  --face-2: #e11d48;
+  --edge: #be123c;
+  --glow: rgba(244, 63, 94, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+/* Alias heredado: .btn-3d-rose (usado en HTML y JS) */
+.btn-3d-rose {
+  --face-1: #fb7185;
+  --face-2: #be123c;
+  --edge: #9f1239;
+  --glow: rgba(244, 63, 94, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.btn-3d-blue {
+  --face-1: #60a5fa;
+  --face-2: #2563eb;
+  --edge: #1d4ed8;
+  --glow: rgba(37, 99, 235, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+/* Placa neutra (tema oscuro/claro) */
+.btn-3d-surface {
+  --face-1: var(--card-bg-elevated);
+  --face-2: var(--card-bg);
+  --edge: var(--shadow-bottom);
+  --glow: var(--shadow-ambient);
+  --bevel-top: var(--border-highlight);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  text-shadow: none;
+}
+
+.btn-3d-ghost {
+  --face-1: transparent;
+  --face-2: transparent;
+  --edge: var(--shadow-bottom);
+  --glow: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  box-shadow: 0 3px 0 var(--shadow-bottom);
+}
+
+/* ============================================================
+   3. TAMAÑOS Y ANCHO
+   ============================================================ */
+.btn-3d-sm {
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  --btn-lift: 4px;
+  border-radius: 12px;
+}
+
+.btn-3d-lg {
+  padding: 16px 22px;
+  font-size: 1.02rem;
+  --btn-lift: 6px;
+  border-radius: 16px;
+}
+
+.btn-3d-square {
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--btn-radius);
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+.btn-3d .btn-hint {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* ============================================================
+   4. BOTONES DE ICONO (cabecera, borrados, cierres)
+   ============================================================ */
+.icon-btn-3d {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  padding-bottom: var(--btn-lift, 3px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background-image: linear-gradient(180deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow:
+    0 var(--btn-lift, 3px) 0 var(--shadow-bottom),
+    0 calc(var(--btn-lift, 3px) + 3px) 7px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.icon-btn-3d:active,
+.icon-btn-3d.is-pressed {
+  transform: translateY(var(--btn-lift, 3px));
+  filter: brightness(0.94);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 1px 3px var(--shadow-ambient),
+    inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.icon-btn-3d svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Iconos dentro de filas de historial: mismo relieve, más pequeños */
+.icon-btn-3d.delete-entry-btn,
+.icon-btn-3d.del-wlog-btn,
+.icon-btn-3d.bp-del-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fb7185;
+}
+
+/* ============================================================
+   5. PESTAÑAS SECUNDARIAS SEGMENTADAS
+   ============================================================ */
+.subtabs {
+  background: var(--card-bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 -1px 0 var(--border-highlight);
+}
+
+.subtab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-image: linear-gradient(180deg, var(--pill-bg-top) 0%, var(--pill-bg-bot) 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow:
+    0 2px 0 var(--pill-shadow),
+    0 3px 6px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    background var(--btn-snap) ease,
+    color var(--btn-snap) ease;
+}
+
+.subtab-btn:active,
+.subtab-btn.is-pressed {
+  transform: translateY(2px) scale(0.985);
+  color: var(--text-secondary);
+  box-shadow:
+    0 0 0 var(--pill-shadow),
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.subtab-btn.active {
+  color: #ffffff;
+  background-image: linear-gradient(180deg, #34d399 0%, #059669 100%);
+  box-shadow:
+    0 3px 0 #047857,
+    0 5px 10px rgba(16, 185, 129, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.subtab-btn.active:active,
+.subtab-btn.active.is-pressed {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #047857,
+    0 2px 4px rgba(16, 185, 129, 0.28),
+    inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
+   6. PASTILLAS SELECTORAS (mg / ml / unidades)
+   ============================================================ */
+.pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.pill-3d {
+  position: relative;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--btn-pill-radius);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  background-image: linear-gradient(180deg, var(--pill-bg-top) 0%, var(--pill-bg-bot) 100%);
+  box-shadow:
+    0 4px 0 var(--pill-shadow),
+    0 6px 10px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease,
+    color var(--btn-snap) ease;
+}
+
+.pill-3d:active,
+.pill-3d.is-pressed {
+  transform: translateY(4px);
+  filter: brightness(0.95);
+  box-shadow:
+    0 1px 0 var(--pill-shadow),
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    inset 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.pill-3d.active {
+  color: #ffffff;
+  border-color: #34d399;
+  background-image: linear-gradient(180deg, #34d399 0%, #059669 100%);
+  box-shadow:
+    0 4px 0 #047857,
+    0 7px 14px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+.pill-3d.active:active,
+.pill-3d.active.is-pressed {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 #047857,
+    0 3px 6px rgba(16, 185, 129, 0.3),
+    inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
+   7. CHIPS (filtros, zonas corporales) Y TARJETAS DE UNIDAD
+   ============================================================ */
+.filter-chip,
+.body-zone-chip {
+  position: relative;
+  cursor: pointer;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  background-image: linear-gradient(180deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);
+  color: var(--text-main);
+  box-shadow:
+    0 3px 0 var(--shadow-bottom),
+    0 5px 9px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.filter-chip { padding: 7px 14px; font-size: 0.78rem; font-weight: 700; }
+.body-zone-chip { padding: 7px 14px; font-size: 0.78rem; font-weight: 800; }
+
+.filter-chip:active,
+.filter-chip.is-pressed,
+.body-zone-chip:active,
+.body-zone-chip.is-pressed {
+  transform: translateY(3px);
+  filter: brightness(0.95);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 2px 4px var(--shadow-ambient),
+    inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.filter-chip.active {
+  color: #ddd6fe;
+  border-color: #8b5cf6;
+  background-image: linear-gradient(180deg, rgba(139, 92, 246, 0.55) 0%, rgba(109, 40, 217, 0.75) 100%);
+  box-shadow:
+    0 3px 0 #5b21b6,
+    0 5px 12px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.body-zone-chip.active {
+  color: #d1fae5;
+  border-color: #34d399;
+  background-image: linear-gradient(180deg, rgba(16, 185, 129, 0.55) 0%, rgba(4, 120, 87, 0.8) 100%);
+  box-shadow:
+    0 3px 0 #065f46,
+    0 5px 12px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.dose-unit-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 13px;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  background-image: linear-gradient(180deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);
+  box-shadow:
+    0 4px 0 var(--shadow-bottom),
+    0 6px 11px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    border-color var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.dose-unit-card:active,
+.dose-unit-card.is-pressed {
+  transform: translateY(4px);
+  filter: brightness(0.95);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 2px 4px var(--shadow-ambient),
+    inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.dose-unit-card.active {
+  border-color: #d4a373;
+  background-image: linear-gradient(180deg, rgba(212, 163, 115, 0.28) 0%, rgba(120, 78, 38, 0.28) 100%);
+  box-shadow:
+    0 4px 0 #8a5a2b,
+    0 7px 14px rgba(212, 163, 115, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* ============================================================
+   8. CALENDARIO
+   ============================================================ */
+.cal-day {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-radius: 11px;
+  background-image: linear-gradient(180deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);
+  color: var(--text-main);
+  box-shadow:
+    0 3px 0 var(--shadow-bottom),
+    0 4px 8px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.cal-day:active,
+.cal-day.is-pressed {
+  transform: translateY(3px);
+  filter: brightness(0.95);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 2px 4px var(--shadow-ambient),
+    inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.cal-day.other-month { opacity: 0.32; }
+.cal-day.today { color: #fbbf24; border-color: #f59e0b; }
+.cal-day.selected {
+  color: #ffffff;
+  border-color: #22d3ee;
+  background-image: linear-gradient(180deg, #22d3ee 0%, #0e7490 100%);
+  box-shadow: 0 3px 0 #0c4a6e, 0 5px 12px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.cal-day.scheduled { border-color: #8b5cf6; }
+.cal-day.scheduled:not(.selected) {
+  background-image: linear-gradient(180deg, rgba(139, 92, 246, 0.35) 0%, rgba(76, 29, 149, 0.5) 100%);
+}
+
+/* ============================================================
+   9. NAVEGACIÓN Y LISTAS
+   ============================================================ */
+.nav-item {
+  position: relative;
+  border-radius: 14px;
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    color var(--btn-snap) ease,
+    background var(--btn-snap) ease;
+}
+
+.nav-item:active,
+.nav-item.is-pressed {
+  transform: translateY(3px) scale(0.96);
+}
+
+.nav-item:active svg,
+.nav-item.is-pressed svg { transform: scale(0.9); }
+
+/* Pestaña activa: cápsula en relieve */
+.nav-item.active {
+  background-image: linear-gradient(180deg, rgba(16, 185, 129, 0.22) 0%, rgba(4, 120, 87, 0.16) 100%);
+  box-shadow:
+    0 3px 0 rgba(4, 120, 87, 0.55),
+    0 6px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.nav-item.active:active,
+.nav-item.active.is-pressed {
+  transform: translateY(3px) scale(0.96);
+  box-shadow: 0 1px 0 rgba(4, 120, 87, 0.5), inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.drawer-item {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-radius: 13px;
+  background-image: linear-gradient(180deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);
+  box-shadow:
+    0 3px 0 var(--shadow-bottom),
+    0 5px 9px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    color var(--btn-snap) ease;
+}
+
+.drawer-item:active,
+.drawer-item.is-pressed {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 2px 4px var(--shadow-ambient),
+    inset 0 2px 5px rgba(0, 0, 0, 0.32);
+}
+
+.drawer-item.active {
+  color: #34d399;
+  border-color: #10b981;
+}
+
+.med-wheel-item {
+  position: relative;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    background var(--btn-snap) ease;
+}
+
+.med-wheel-item:active,
+.med-wheel-item.is-pressed {
+  transform: translateY(2px) scale(0.99);
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.med-wheel-item.selected {
+  border-left: 3px solid #10b981;
+  background-image: linear-gradient(180deg, rgba(16, 185, 129, 0.22) 0%, rgba(4, 120, 87, 0.12) 100%);
+  box-shadow: 0 2px 0 rgba(4, 120, 87, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* ============================================================
+   10. TARJETAS DE ACCIÓN Y BOTONES GRANDES
+   ============================================================ */
+.action-card-6 {
+  transform: translateY(0);
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.35),
+    0 10px 20px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.action-card-6:active,
+.action-card-6.is-pressed {
+  transform: translateY(5px) scale(0.985);
+  filter: brightness(0.93);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 3px 8px rgba(0, 0, 0, 0.32);
+}
+
+.btn-emerald-dose {
+  position: relative;
+  cursor: pointer;
+  border: none;
+  border-radius: 15px;
+  color: #ffffff;
+  background-image: linear-gradient(180deg, #34d399 0%, #059669 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 6px 0 #047857,
+    0 10px 20px rgba(16, 185, 129, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.16);
+  transform: translateY(0);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.btn-emerald-dose:active,
+.btn-emerald-dose.is-pressed {
+  transform: translateY(6px);
+  filter: brightness(0.93);
+  box-shadow:
+    0 1px 0 #047857,
+    0 3px 6px rgba(16, 185, 129, 0.3),
+    inset 0 3px 8px rgba(0, 0, 0, 0.38);
+}
+
+/* ============================================================
+   11. SELECTOR DE COLOR CLÍNICO
+   ============================================================ */
+.color-pick-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  cursor: pointer;
+  transform: translateY(0);
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.55),
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.color-pick-btn:active,
+.color-pick-btn.is-pressed {
+  transform: translateY(4px) scale(0.95);
+  filter: brightness(0.92);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.3),
+    inset 0 3px 7px rgba(0, 0, 0, 0.45);
+}
+
+.color-pick-btn.active {
+  border-color: #ffffff !important;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.55),
+    0 0 0 3px rgba(255, 255, 255, 0.35),
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45);
+}
+
+.color-pick-btn.active::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 900;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   12. MAPA CORPORAL (SVG): nodos que se hunden al tocar
+   ============================================================ */
+.body-node-item,
+.zone-node {
+  cursor: pointer;
+}
+
+.body-node-item circle,
+.zone-node circle {
+  transition: transform 100ms var(--btn-ease), filter 100ms ease, r 100ms ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.body-node-item:active circle,
+.zone-node:active circle {
+  transform: scale(0.72);
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+}
+
+.body-node-item.active circle {
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.9));
+}
+
+.body-node-item.active circle:first-child {
+  animation: bodynode-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes bodynode-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================
+   13. INTERRUPTOR (SWITCH) 3D
+   ============================================================ */
+.switch-toggle {
+  border-radius: 28px;
+}
+
+.switch-slider {
+  background-color: var(--border-color);
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.switch-slider:before {
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.35),
+    0 5px 9px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+}
+
+.switch-toggle:active .switch-slider:before,
+.switch-toggle.is-pressed .switch-slider:before {
+  transform: scale(0.9);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.switch-toggle input:checked + .switch-slider {
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.35),
+    0 0 12px var(--med-accent-color, #8b5cf6);
+}
+
+.switch-toggle.is-pressed .switch-slider {
+  filter: brightness(0.9);
+}
+
+/* ============================================================
+   14. FLOTANTES Y ASAS
+   ============================================================ */
+.fab-3d {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --btn-lift: 5px;
+  box-shadow:
+    0 5px 0 var(--edge, #047857),
+    0 10px 18px rgba(0, 0, 0, 0.42),
+    inset 0 2px 4px rgba(255, 255, 255, 0.35);
+}
+
+.fab-3d:active,
+.fab-3d.is-pressed {
+  transform: translateY(5px);
+  box-shadow:
+    0 1px 0 var(--edge, #047857),
+    0 3px 7px rgba(0, 0, 0, 0.38),
+    inset 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.bottom-sheet-handle {
+  cursor: grab;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.bottom-sheet-handle:active {
+  transform: scaleY(0.7) scaleX(0.94);
+  background: var(--text-muted);
+}
+
+/* ============================================================
+   15. UTILIDADES
+   ============================================================ */
+.pressable { cursor: pointer; }
+
+/* Respeta a quien prefiere menos movimiento: se mantiene el
+   hundimiento (es información, no adorno) pero sin rebote. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-3d,
+  .icon-btn-3d,
+  .pill-3d,
+  .filter-chip,
+  .body-zone-chip,
+  .dose-unit-card,
+  .cal-day,
+  .drawer-item,
+  .action-card-6,
+  .btn-emerald-dose,
+  .color-pick-btn,
+  .subtab-btn,
+  .nav-item {
+    transition: transform 40ms linear, box-shadow 40ms linear, filter 40ms linear;
+  }
+  .body-node-item.active circle:first-child { animation: none; }
+}
+
+/* ============================================================
+   16. CONTROLES NATIVOS (fecha, hora, número) ACORDES AL TEMA
+   ------------------------------------------------------------
+   Sin esto, los <input type="date"> y <input type="time"> de
+   los modales se pintan con la interfaz clara del sistema y el
+   icono del selector desaparece sobre fondo oscuro.
+   ============================================================ */
+:root { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
+
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="text"] {
+  color-scheme: inherit;
+  font-family: inherit;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  filter: invert(1) brightness(1.6);
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* Los botones nativos de un input date/time no deben heredar el
+   relieve 3D: son widgets compactos del propio navegador. */
+input::-webkit-datetime-edit { color: var(--text-main); }
+
+/* Foco visible en toda la app (accesibilidad) */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   17. TARJETAS MÉTRICAS Y LOGOTIPO: también son pulsables
+   ============================================================ */
+.health-card {
+  position: relative;
+  cursor: pointer;
+  transform: translateY(0);
+  box-shadow:
+    0 4px 0 var(--shadow-bottom),
+    0 6px 12px var(--shadow-ambient),
+    inset 0 1px 0 var(--border-highlight);
+  transition:
+    transform var(--btn-snap) var(--btn-ease),
+    box-shadow var(--btn-snap) ease,
+    filter var(--btn-snap) ease;
+}
+
+.health-card:active,
+.health-card.is-pressed {
+  transform: translateY(4px);
+  filter: brightness(0.94);
+  box-shadow:
+    0 1px 0 var(--shadow-bottom),
+    0 2px 4px var(--shadow-ambient),
+    inset 0 3px 7px rgba(0, 0, 0, 0.34);
+}
+
+.brand {
+  transform: translateY(0);
+  transition: transform var(--btn-snap) var(--btn-ease), filter var(--btn-snap) ease;
+}
+
+.brand:active,
+.brand.is-pressed {
+  transform: translateY(2px) scale(0.98);
+  filter: brightness(1.12);
+}
+
+/* Encabezados plegables (acordeones) y enlaces de detalle */
+.card-title,
+.drawer-item-icon {
+  transition: transform var(--btn-snap) ease;
+}

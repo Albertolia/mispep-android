@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#090d16">
+  <title>MisPep - Calculadoras de Péptidos</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/buttons3d.css">
+</head>
+<body>
+
+  <!-- Cabecera Superior Fija -->
+  <header class="app-header">
+    <div class="brand" onclick="switchModule('calc')">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">MisPep</span>
+        <span class="brand-sub">Calculadoras Clínicas</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn-3d" id="langToggleBtn" type="button" aria-label="Cambiar idioma / Switch language" title="Cambiar idioma / Switch language" style="font-size:0.8rem; font-weight:900; width:auto; height:38px; padding:0 10px; min-width:52px; border-radius:10px; color:var(--text-main); display:inline-flex; align-items:center; justify-content:center; gap:4px; touch-action:manipulation; cursor:pointer;">
+        <span id="langFlag" style="pointer-events:none; font-size:1rem;">🇪🇸</span> <span id="langText" style="pointer-events:none; font-weight:900;">ES</span>
+      </button>
+      <button class="icon-btn-3d" id="themeToggleBtn" aria-label="Cambiar tema">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+      <button class="icon-btn-3d" id="menuBtn" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="main-content">
+
+    <!-- 0. MÓDULO DASHBOARD (Seguimiento, Próxima Inyección y Datos de Salud) -->
+    <section id="module-dashboard" class="module-view active">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Panel</span>
+            Seguimiento y Salud
+          </h1>
+          <p>Control de tratamiento, cuenta atrás de inyección y métricas corporales.</p>
+        </div>
+      </div>
+
+      <!-- Banner de Racha / Notificación Superior -->
+      <div class="dashboard-banner">
+        <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2.2;"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        <span id="dashBannerText">¡8 días en camino con tu tratamiento!</span>
+      </div>
+
+      <!-- Métricas Gemelas Superiores (8 días en camino / 1 inyección) -->
+      <div class="stat-twin-cards">
+        <div class="stat-twin-card">
+          <div class="stat-twin-icon" style="background:rgba(239, 68, 68, 0.1); color:#ef4444;">
+            <svg viewBox="0 0 24 24" style="width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2;"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+          </div>
+          <div class="stat-twin-info">
+            <div class="val" id="dashDaysCount">8 días</div>
+            <div class="lbl" id="dashLblOnTrack">en camino</div>
+          </div>
+        </div>
+        <div class="stat-twin-card">
+          <div class="stat-twin-icon" style="background:rgba(6, 182, 212, 0.1); color:#06b6d4;">
+            <svg viewBox="0 0 24 24" style="width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2;"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+          </div>
+          <div class="stat-twin-info">
+            <div class="val" id="dashTotalInjections">1</div>
+            <div class="lbl" id="dashLblInjection">inyección</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 1: EN CIRCULACIÓN AHORA (ESTILO BENCH v2.3) -->
+      <div class="bench-section-label">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#2dd4bf; box-shadow:0 0 8px #2dd4bf;"></span>
+        <span><span id="benchCirculatingLabel">En circulación ahora</span> · <strong id="benchCurCompName" style="color:#ffffff;">Retatrutide</strong></span>
+      </div>
+
+      <div class="bench-circulating-card">
+        <div style="width:100%; height:172px; position:relative;" id="benchCirculatingSvgWrap">
+          <!-- SVG generado dinámicamente con la Ecuación de Bateman y triángulos de inyección -->
+          <svg id="benchCirculatingSvg" viewBox="0 0 360 170" style="width:100%; height:100%; overflow:visible;"></svg>
+        </div>
+
+        <!-- Leyenda de protocolos superpuestos (un color por medicamento) -->
+        <div id="benchProtocolLegend" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;"></div>
+
+        <!-- Indicador Interactivo de Inspección (Scrubber) -->
+        <div class="bench-scrubber-info" id="benchScrubberInfo">
+          <div id="benchScrubberText">Toca o desliza sobre la gráfica para inspeccionar</div>
+          <div id="benchScrubberVal" style="font-weight:900; color:#2dd4bf;">-- mg</div>
+        </div>
+
+        <!-- Nota Técnica de la Ecuación de Bateman -->
+        <div class="bench-disclaimer-card">
+          💡 <strong>Ecuación de Bateman (1 compartimento):</strong> Los niveles representan la <em>masa estimada en circulación</em>, no una analítica sanguínea directa. Cada curva usa la vida media de su propio fármaco y absorción subcutánea depot; los triángulos <strong>▲</strong> marcan las dosis administradas. Al cambiar de medicación, la curva anterior decae a cero y la nueva arranca superpuesta con su color.
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: PROTOCOLOS ACTIVOS (ESTILO BENCH v2.3) -->
+      <div class="bench-section-label">
+        <span id="benchProtocolsLabel">Protocolos Activos</span>
+      </div>
+
+      <div class="bench-protocol-card">
+        <div class="bench-protocol-header">
+          <div class="bench-med-badge">
+            <div class="bench-med-icon">
+              <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2.2;"><path d="m18 2 4 4"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/></svg>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.05rem; font-weight:900; color:#ffffff;" id="benchActiveMedTitle">Retatrutide</span>
+                <span class="bench-tag-absorbing" id="benchPhaseBadge">Absorbiendo</span>
+              </div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                próximo en <strong id="benchNextDaysCount" style="color:#2dd4bf;">5 días</strong>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-3d btn-3d-surface" id="benchQuickRegisterBtn" style="padding:6px 12px; font-size:0.8rem; font-weight:800; border:1px solid rgba(45,212,191,0.4); color:#2dd4bf;">
+            ＋ Registrar
+          </button>
+        </div>
+
+        <div style="font-size:0.82rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;" id="benchDoseMarksText">
+          1.5 mg · 30 marcas (unidades U-100) · Retatrutide
+        </div>
+
+        <!-- Barra de Progreso Luminosa de Acumulación y Pico -->
+        <div class="bench-progress-track">
+          <div class="bench-progress-glow" id="benchProgressGlow" style="width: 78%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; margin-bottom:8px;">
+          <span style="font-weight:800; color:#2dd4bf;" id="benchPeakPctText">117% del pico de una sola dosis</span>
+          <span style="color:var(--text-muted); font-size:0.7rem;" id="benchPeakTrendText">Alcanzando el pico</span>
+        </div>
+
+        <!-- Subtarjeta Fisiológica en Tiempo Real (Absorción y Fase) -->
+        <div class="bench-phase-card" id="benchPhaseCard">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:900; font-size:0.82rem; color:#2dd4bf; margin-bottom:4px;">
+            <span>✨</span>
+            <span id="benchElapsedTitle">Ahora mismo · 8.9 h desde tu última dosis</span>
+          </div>
+          <div style="font-size:0.76rem; color:var(--text-main); line-height:1.35;" id="benchPhaseDesc">
+            Absorbiéndose desde el tejido subcutáneo. Apenas se nota aún.
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;" id="benchPhaseNextChange">
+            Esta fase cambia en unas 3.1 h hacia meseta.
+          </div>
+        </div>
+
+        <!-- Línea de tiempo de protocolos (cambios de medicación) -->
+        <div id="benchProtocolTimeline" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+
+        <!-- Metadatos de Rotación, Vida Media y Stock -->
+        <div class="bench-meta-grid">
+          <div style="display:flex; justify-content:space-between;">
+            <span>📍 Última dosis:</span>
+            <span style="font-weight:700; color:#ffffff;" id="benchLastDoseSite">Hace 9h · Abdomen, superior izquierdo</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>⏳ Vida media:</span>
+            <span style="font-weight:700; color:#ffffff;" id="benchHalfLifeText">6 días</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>📦 Stock en inventario:</span>
+            <span style="font-weight:700; color:#2dd4bf;" id="benchStockCoverageText">Stock: 98 dosis · queda aprox. 691.4 d</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta Próxima Inyección (Estilo Shotlee con Cuenta Atrás) -->
+      <div class="next-inj-card">
+        <div class="next-inj-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:#a78bfa; fill:none; stroke-width:2.2;"><path d="m18 2 4 4"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/></svg>
+            <span style="font-size:0.95rem; font-weight:800; color:var(--text-main);">Próxima inyección</span>
+          </div>
+          <button type="button" class="icon-btn-3d" id="dashConfigInjBtn" style="width:30px; height:30px;" title="Configurar protocolo">⚙️</button>
+        </div>
+
+        <div style="background:var(--card-bg-elevated); border:1px solid rgba(139, 92, 246, 0.25); border-radius:14px; padding:12px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="next-inj-badge" id="dashMedName">RETATRUTIDE</span>
+            <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:#8b5cf6; box-shadow:0 0 8px #8b5cf6;"></span>
+          </div>
+
+          <div class="next-inj-body">
+            <div class="next-inj-days" id="dashDaysLeft">5</div>
+            <div class="next-inj-sub">días restantes</div>
+            <div class="next-inj-date-dose" id="dashNextDoseText">Domingo · 1.5 mg</div>
+          </div>
+
+          <button type="button" class="btn-3d btn-3d-purple btn-block" id="dashMarkDoseBtn" style="margin-top:6px; font-size:0.85rem; padding:10px;">
+            💉 Vamos a poner el pinchazo
+          </button>
+        </div>
+      </div>
+
+      <!-- Sección Datos de Salud (Métricas de Peso e IMC) -->
+      <div class="card-section health-data-section">
+        <div class="card-title">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span>Datos de salud</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="icon-btn-3d" id="dashAddWeightBtn" style="width:30px; height:30px;" title="Añadir peso">＋</button>
+            <button type="button" class="icon-btn-3d" id="dashConfigHealthBtn" style="width:30px; height:30px;" title="Ajustes de altura">⚙️</button>
+          </div>
+        </div>
+
+        <!-- Fila 1: Promedio Semanal y Mejor Semana -->
+        <div class="health-grid-2">
+          <div class="health-card health-card-blue">
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:2px;">
+              <svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:#3b82f6; fill:none; stroke-width:2.5;"><path d="m3 17 6-6 4 4 8-8"/></svg>
+              <span class="health-card-title" style="margin:0;">Promedio semanal</span>
+            </div>
+            <div class="health-card-value" id="dashWeeklyAvg">0.0 kg</div>
+          </div>
+          <div class="health-card health-card-beige">
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:2px;">
+              <span style="font-size:0.8rem; color:#f59e0b;">⭐</span>
+              <span class="health-card-title" style="margin:0;">Mejor semana</span>
+            </div>
+            <div class="health-card-value" id="dashBestWeek">0.0 kg</div>
+          </div>
+        </div>
+
+        <!-- Fila 2: Peso Actual, Cambio Total e IMC Actual -->
+        <div class="health-grid-3">
+          <!-- Peso Actual -->
+          <div class="health-card health-card-mint">
+            <div class="health-card-title">PESO ACTUAL</div>
+            <div class="health-card-value" id="dashCurrentWeight">--</div>
+            <div>
+              <span class="health-card-tag" style="background:rgba(16,185,129,0.2); color:#10b981;">kg</span>
+            </div>
+          </div>
+
+          <!-- Cambio Total -->
+          <div class="health-card health-card-blue">
+            <div class="health-card-title">CAMBIO TOTAL</div>
+            <div class="health-card-value" id="dashTotalChange">--</div>
+            <div>
+              <span class="health-card-tag" id="dashTotalChangeTag" style="background:transparent; color:var(--text-muted);">--</span>
+            </div>
+            <div class="health-card-sub" id="dashTotalChangePct">—</div>
+          </div>
+
+          <!-- IMC Actual -->
+          <div class="health-card health-card-beige">
+            <div class="health-card-title">IMC ACTUAL</div>
+            <div class="health-card-value" id="dashCurrentBmi">--</div>
+            <div>
+              <span class="health-card-tag" id="dashBmiCategory" style="background:transparent; color:var(--text-muted); font-size:0.6rem; padding:2px 4px;">Sin datos</span>
+            </div>
+            <div class="health-card-sub" id="dashBmiTargetNote">Configura altura y peso</div>
+          </div>
+        </div>
+
+        <!-- Tarjeta Gráfica: Evolución del Peso Corporal (Estilo de la captura) -->
+        <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:18px; padding:14px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:1.05rem; font-weight:900; color:var(--text-main);">Evolución del Peso</span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">▾</span>
+            </div>
+            <span style="font-size:0.75rem; color:#3b82f6; font-weight:800; cursor:pointer;" id="wGraphDetailLink">Seguimiento global ›</span>
+          </div>
+
+          <!-- Selector de Intervalo Temporal: Semana / Mes / Año / Todo -->
+          <div class="subtabs" id="wGraphTimeframe" style="margin-bottom:10px;">
+            <button type="button" class="subtab-btn active" data-wrange="week">Semana</button>
+            <button type="button" class="subtab-btn" data-wrange="month">Mes</button>
+            <button type="button" class="subtab-btn" data-wrange="year">Año</button>
+            <button type="button" class="subtab-btn" data-wrange="all">Todo</button>
+          </div>
+
+          <!-- Navegador de Rango de Fechas (< 29/08/2026-12/09/2026 >) -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.8rem; font-weight:800; color:var(--text-main);">
+            <button type="button" class="icon-btn-3d" id="wGraphPrevRange" style="width:26px; height:26px;">‹</button>
+            <span id="wGraphDateRangeLabel">--</span>
+            <button type="button" class="icon-btn-3d" id="wGraphNextRange" style="width:26px; height:26px;">›</button>
+          </div>
+
+          <!-- Contenedor SVG Interactivo de la Gráfica de Peso -->
+          <div id="weightSvgContainer" style="width:100%; min-height:185px; position:relative;"></div>
+
+          <!-- Botón Unificado Añadir Nuevo Peso -->
+          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogWeightBtn" style="margin-top:12px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
+            <span>⚖️</span> <span>Añadir nuevo peso</span>
+          </button>
+        </div>
+
+        <!-- Contenedor de la Gráfica de Evolución de Presión Arterial (Sistólica y Diastólica) -->
+        <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:14px; padding:12px; margin-top:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.95rem;">❤️</span>
+              <span style="font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">Evolución Presión Arterial</span>
+            </div>
+            <span style="font-size:0.75rem; color:#3b82f6; font-weight:700; cursor:pointer;" id="bpGraphDetailLink">Ver detalles</span>
+          </div>
+
+          <!-- Métricas Gemelas PA (Última Lectura) -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div style="background:rgba(244, 63, 94, 0.08); border:1px solid rgba(244, 63, 94, 0.2); border-radius:10px; padding:8px 10px; text-align:center;">
+              <div style="font-size:0.68rem; font-weight:800; color:#f43f5e; text-transform:uppercase;">Sistólica</div>
+              <div style="font-size:1.15rem; font-weight:900; color:#ffffff;" id="dashBpSysVal">--</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">mmHg</div>
+            </div>
+            <div style="background:rgba(6, 182, 212, 0.08); border:1px solid rgba(6, 182, 212, 0.2); border-radius:10px; padding:8px 10px; text-align:center;">
+              <div style="font-size:0.68rem; font-weight:800; color:#06b6d4; text-transform:uppercase;">Diastólica</div>
+              <div style="font-size:1.15rem; font-weight:900; color:#ffffff;" id="dashBpDiaVal">--</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">mmHg</div>
+            </div>
+            <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.2); border-radius:10px; padding:8px 10px; text-align:center;">
+              <div style="font-size:0.68rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Estado</div>
+              <div style="font-size:0.92rem; font-weight:900; color:var(--text-muted); margin-top:3px;" id="dashBpStatusVal">--</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">--</div>
+            </div>
+          </div>
+
+          <!-- Selector de Intervalo Temporal: Semana / Mes / Año / Todo -->
+          <div class="subtabs" id="bpGraphTimeframe" style="margin-bottom:10px;">
+            <button type="button" class="subtab-btn active" data-bprange="week">Semana</button>
+            <button type="button" class="subtab-btn" data-bprange="month">Mes</button>
+            <button type="button" class="subtab-btn" data-bprange="year">Año</button>
+            <button type="button" class="subtab-btn" data-bprange="all">Todo</button>
+          </div>
+
+          <!-- Navegador de Rango de Fechas -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.8rem; font-weight:800; color:var(--text-main);">
+            <button type="button" class="icon-btn-3d" id="bpGraphPrevRange" style="width:26px; height:26px;">‹</button>
+            <span id="bpGraphDateRangeLabel">29/08/2026 - 22/09/2026</span>
+            <button type="button" class="icon-btn-3d" id="bpGraphNextRange" style="width:26px; height:26px;">›</button>
+          </div>
+
+          <!-- Contenedor SVG Interactivo de la Gráfica de PA -->
+          <div id="bpSvgContainer" style="width:100%; min-height:190px; position:relative;"></div>
+
+          <!-- Leyenda de Curvas y Variación de Medicación -->
+          <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; margin-top:8px; font-size:0.72rem; color:var(--text-muted); font-weight:700;">
+            <div style="display:flex; align-items:center; gap:5px;">
+              <span style="display:inline-block; width:12px; height:3px; background:#f43f5e; border-radius:2px;"></span>
+              <span>SYS</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:5px;">
+              <span style="display:inline-block; width:12px; height:3px; background:#06b6d4; border-radius:2px;"></span>
+              <span>DIA</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#f59e0b; color:#000; border-radius:3px; font-size:10px; font-weight:900;">+</span>
+              <span>Más fármaco</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#10b981; color:#fff; border-radius:3px; font-size:10px; font-weight:900;">-</span>
+              <span>Menos fármaco</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:11px; height:13px; border-left:1.3px solid #f43f5e; border-top:2.2px solid #f43f5e; border-bottom:2.2px solid #f43f5e;"></span>
+              <span>Rango sistólica</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:11px; height:13px; border-left:1.3px solid #06b6d4; border-top:2.2px solid #06b6d4; border-bottom:2.2px solid #06b6d4;"></span>
+              <span>Rango diastólica</span>
+            </div>
+          </div>
+
+          <!-- Panel Interactivo de Detalle y Medicación al tocar la Gráfica -->
+          <div id="bpScrubberInfo" style="margin-top:10px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:10px 12px; font-size:0.78rem; transition:all 0.2s ease;">
+            <!-- Contenido generado dinámicamente -->
+          </div>
+
+          <!-- Botón Unificado Añadir Nueva Tensión Arterial -->
+          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogBpBtn" style="margin-top:12px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
+            <span>❤️</span> <span>Añadir nueva tensión arterial</span>
+          </button>
+        </div>
+
+        <!-- Fila 3: Inyecciones Totales -->
+        <div class="total-inj-card">
+          <div>
+            <div style="font-size:1.6rem; font-weight:900; color:var(--text-main); line-height:1;" id="dashTotalInjAllTime">0</div>
+            <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-top:3px;">Inyecciones totales</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:10px; padding:6px 10px; font-size:0.75rem; font-weight:700; color:var(--text-muted);">
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:#06b6d4; fill:none; stroke-width:2;"><path d="m18 2 4 4"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/></svg>
+            <span>En todo el periodo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta: Suministro de Medicamento (Inventario Rápido) -->
+      <div class="card-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:#06b6d4; fill:none; stroke-width:2;"><path d="M5 2h5v6l2 3v11H3V11l2-3z"/><path d="M14 7h5v4l2 3v8h-9v-8l2-3z"/></svg>
+            <div>
+              <div style="font-size:0.95rem; font-weight:800; color:var(--text-main);">Suministro de medicamento</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Controla cuánto medicamento te queda en reserva.</div>
+            </div>
+          </div>
+          <button type="button" class="icon-btn-3d" id="dashGoInventoryBtn" style="width:32px; height:32px; font-weight:900;" title="Gestionar viales">＋</button>
+        </div>
+      </div>
+
+      <!-- Enlace Rápido al Pronóstico PK -->
+      <div class="card-section" style="cursor:pointer;" id="dashGoPkBtn">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.4rem;">📈</span>
+            <div>
+              <div style="font-size:0.92rem; font-weight:800; color:var(--text-main);">Pronóstico del Nivel en Organismo</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Persistencia estimada: curva PK interactiva y vista en barras.</div>
+            </div>
+          </div>
+          <span style="color:#06b6d4; font-weight:900;">➔</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 0B. MÓDULO CALENDARIO (Registro Diario, Calendario y Recordatorios) -->
+    <section id="module-calendar" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Agenda</span>
+            Calendario y Registro
+          </h1>
+          <p>Registra inyecciones, peso, estado de ánimo y presión arterial, y sigue tu progreso en un solo lugar.</p>
+        </div>
+      </div>
+
+      <!-- Botón Superior: Exportar Informe de Salud PDF -->
+      <button type="button" class="btn-3d btn-3d-surface btn-block" id="calExportPdfBtn" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>📄</span>
+          <span style="font-weight:800; font-size:0.9rem;">Exportar informe de salud</span>
+        </div>
+        <span style="background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:800;">PDF</span>
+      </button>
+
+      <!-- Selector de Modo: Calendario vs Cronología vs Recordatorios -->
+      <div class="subtabs" id="calModeSubtabs" style="margin-bottom:12px;">
+        <button type="button" class="subtab-btn active" data-calmode="calendar">📅 Calendario</button>
+        <button type="button" class="subtab-btn" data-calmode="timeline">📋 Cronología</button>
+        <button type="button" class="subtab-btn" data-calmode="reminders">⏰ Recordatorios</button>
+      </div>
+
+      <!-- VISTA A: CALENDARIO INTERACTIVO -->
+      <div id="calViewCalendar">
+        <!-- Chips de Filtro Horizontal (Estilo Shotlee) -->
+        <div class="filter-chips-wrap" id="calFilterChips">
+          <button type="button" class="filter-chip active" data-filter="all">✨ Todo</button>
+          <button type="button" class="filter-chip" data-filter="inj">💉 Inyecciones</button>
+          <button type="button" class="filter-chip" data-filter="weight">⚖️ Peso</button>
+          <button type="button" class="filter-chip" data-filter="mood">😊 Ánimo</button>
+          <button type="button" class="filter-chip" data-filter="bp">❤️ Presión PA</button>
+          <button type="button" class="filter-chip" data-filter="measure">📏 Medidas</button>
+        </div>
+
+        <!-- Tarjeta del Calendario Mensual -->
+        <div class="cal-container">
+          <div class="cal-header">
+            <button type="button" class="icon-btn-3d" id="calPrevMonthBtn" style="width:32px; height:32px;">←</button>
+            <div class="cal-title" id="calCurrentMonthLabel">septiembre de 2026</div>
+            <button type="button" class="icon-btn-3d" id="calNextMonthBtn" style="width:32px; height:32px;">→</button>
+          </div>
+
+          <!-- Cabeceras de Días de la Semana -->
+          <div class="cal-weekdays">
+            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+          </div>
+
+          <!-- Cuadrícula de Días -->
+          <div class="cal-grid" id="calDaysGrid"></div>
+        </div>
+
+        <!-- Detalle de la Fecha Seleccionada (idéntico a la captura 2) -->
+        <div class="card-section" id="calDayDetailSection">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-size:1.05rem; font-weight:900; color:var(--text-main); text-transform:capitalize;" id="calSelectedDayHeader">miércoles, 2 de septiembre</div>
+            <button type="button" class="btn-3d btn-3d-surface" id="calClearDayEntriesBtn" style="padding:4px 10px; font-size:0.75rem;">Borrar</button>
+          </div>
+
+          <!-- Contenedor de Registros del Día (o estado vacío) -->
+          <div id="calDayEntriesList"></div>
+
+          <!-- Las 6 Tarjetas de Acción con Gradientes Vivos (2x3 Grid) -->
+          <div class="action-grid-6">
+            <!-- 1. Añadir Inyección -->
+            <button type="button" class="action-card-6 card-grad-taupe" data-action="add-inj">
+              <div class="icon">💉</div>
+              <div class="title">Añadir inyección</div>
+              <div class="desc">Registra inyecciones GLP-1 y péptidos</div>
+            </button>
+
+            <!-- 2. Registrar Peso -->
+            <button type="button" class="action-card-6 card-grad-emerald" data-action="add-weight">
+              <div class="icon">⚖️</div>
+              <div class="title">Registrar peso</div>
+              <div class="desc">Sigue el progreso y el IMC</div>
+            </button>
+
+            <!-- 3. Medidas -->
+            <button type="button" class="action-card-6 card-grad-blue" data-action="add-measure">
+              <div class="icon">📏</div>
+              <div class="title">Medidas</div>
+              <div class="desc">Vientre, cadera, brazos y más</div>
+            </button>
+
+            <!-- 4. Foto de Progreso -->
+            <button type="button" class="action-card-6 card-grad-purple" data-action="add-photo">
+              <div class="icon">📷</div>
+              <div class="title">Foto de progreso</div>
+              <div class="desc">Registra vistas frontal y lateral</div>
+            </button>
+
+            <!-- 5. Registrar Ánimo -->
+            <button type="button" class="action-card-6 card-grad-amber" data-action="add-mood">
+              <div class="icon">😊</div>
+              <div class="title">Registrar ánimo</div>
+              <div class="desc">Registra ánimo, apetito y energía</div>
+            </button>
+
+            <!-- 6. Presión Arterial -->
+            <button type="button" class="action-card-6 card-grad-rose" data-action="add-bp">
+              <div class="icon">❤️</div>
+              <div class="title">Presión arterial</div>
+              <div class="desc">Registra PA y frecuencia cardíaca</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA B: CRONOLOGÍA / TIMELINE -->
+      <div id="calViewTimeline" style="display:none;">
+        <div class="card-section">
+          <div class="card-title">Historial Cronológico de Entradas</div>
+          <div id="calTimelineList"></div>
+        </div>
+      </div>
+
+      <!-- VISTA C: RECORDATORIOS Y NOTIFICACIONES DE DOSIS -->
+      <div id="calViewReminders" style="display:none;">
+        <div class="card-section" style="border-color:rgba(16,185,129,0.3);">
+          <div class="card-title">
+            <span>⏰ Configuración de Recordatorios de Dosis</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Recibe notificaciones del sistema Android en tu teléfono para no olvidar tu inyección programada.</p>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>
+              <label class="field-label">Medicamento / Péptido</label>
+              <input type="text" id="remMedInput" value="Retatrutide" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+            </div>
+            <div class="grid-2col">
+              <div>
+                <label class="field-label">Dosis (mg)</label>
+                <input type="number" id="remDoseInput" value="1.5" step="any" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+              </div>
+              <div>
+                <label class="field-label">Hora del Aviso</label>
+                <input type="time" id="remTimeInput" value="09:00" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Día de Administración</label>
+              <select id="remDaySelect" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+                <option value="0" selected>Domingo</option>
+                <option value="1">Lunes</option>
+                <option value="2">Martes</option>
+                <option value="3">Miércoles</option>
+                <option value="4">Jueves</option>
+                <option value="5">Viernes</option>
+                <option value="6">Sábado</option>
+              </select>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:8px;">
+              <button type="button" class="btn-3d btn-3d-emerald" id="remSaveBtn" style="flex:2;">
+                🔔 Activar Recordatorio de Dosis
+              </button>
+              <button type="button" class="btn-3d btn-3d-cyan" id="remTestBtn" style="flex:1;">
+                ⚡ Probar Notificación
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1.b MÓDULO TODAS LAS MEDICACIONES (Registro para el médico) -->
+    <section id="module-medications" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Medicación</span>
+            Todas las Medicaciones
+          </h1>
+          <p>Registro completo de medicamentos y suplementos con dosis y pauta. Consúltalo en cualquier momento o muéstraselo al médico.</p>
+        </div>
+      </div>
+
+      <!-- Resumen rápido -->
+      <div class="card-section" style="margin-bottom:14px;">
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+          <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+            <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Total</div>
+            <div id="medSummaryTotal" style="font-size:1.15rem; font-weight:900; color:#22d3ee; line-height:1.2;">0</div>
+            <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">en tratamiento</div>
+          </div>
+          <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+            <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Diarios</div>
+            <div id="medSummaryDaily" style="font-size:1.15rem; font-weight:900; color:#34d399; line-height:1.2;">0</div>
+            <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">todos los días</div>
+          </div>
+          <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+            <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Semanales</div>
+            <div id="medSummaryWeekly" style="font-size:1.15rem; font-weight:900; color:#fbbf24; line-height:1.2;">0</div>
+            <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">no diarios</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-3d btn-3d-cyan btn-block" id="medAddBtn" style="margin-bottom:14px;">
+        ＋ Añadir Medicación o Suplemento
+      </button>
+
+      <!-- Formulario Desplegable 3D -->
+      <div id="medAddFormCard" class="card-section" style="display:none; margin-bottom:16px; border-color:rgba(6,182,212,0.4); background:linear-gradient(135deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);">
+        <div class="card-title">
+          <span id="medFormTitle">Nueva Medicación</span>
+          <button id="medCancelBtn" class="icon-btn-3d" style="width:28px; height:28px; font-size:0.8rem;">✕</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+
+          <!-- PASO 1: Grupo / Indicación -->
+          <div>
+            <label class="field-label">1. Grupo terapéutico o indicación</label>
+            <select id="medCategorySelect" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; font-size:0.88rem;">
+              <option value="">— Selecciona un grupo —</option>
+            </select>
+          </div>
+
+          <!-- PASO 2: Medicamentos típicos del grupo -->
+          <div id="medTypicalWrap" style="display:none;">
+            <label class="field-label">2. Medicamento <span id="medTypicalGroupName" style="color:#22d3ee; font-weight:800;"></span></label>
+            <div class="med-wheel-container" id="medTypicalList" style="max-height:190px;"></div>
+          </div>
+
+          <!-- PASO 3: Dosis del medicamento seleccionado -->
+          <div id="medDoseWrap" style="display:none;">
+            <label class="field-label">3. Dosis</label>
+            <div id="medDosePresets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+            <div class="input-group" style="margin:0;">
+              <input type="number" id="medDoseInput" value="1" step="any" placeholder="Dosis">
+              <select id="medDoseUnit" style="background:var(--card-bg-elevated); color:var(--text-main); border:none; border-left:1px solid var(--border-color); font-weight:800; font-size:0.8rem; padding:0 6px;">
+                <option value="mg" selected>mg</option>
+                <option value="mcg">mcg</option>
+                <option value="g">g</option>
+                <option value="UI">UI</option>
+                <option value="mL">mL</option>
+                <option value="gotas">gotas</option>
+                <option value="comprimido">comprimido(s)</option>
+                <option value="cápsula">cápsula(s)</option>
+                <option value="sobre">sobre(s)</option>
+                <option value="puff">puff(s)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PASO 4: Pauta / Frecuencia -->
+          <div>
+            <label class="field-label">4. Pauta</label>
+            <select id="medFreqMode" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; font-size:0.88rem;">
+              <option value="diario" selected>Diario (todos los días)</option>
+              <option value="semanal">Días por semana</option>
+              <option value="alternos">Días alternos (uno sí, uno no)</option>
+              <option value="semanas">1 vez por semana</option>
+              <option value="quincenal">Cada 15 días</option>
+              <option value="mensual">1 vez al mes</option>
+              <option value="rescate">Solo si es necesario (a demanda)</option>
+            </select>
+            <div id="medFreqDaysRow" style="display:none; margin-top:8px; align-items:center; gap:8px;">
+              <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">Veces por semana:</span>
+              <input type="number" id="medFreqDays" value="2" min="1" max="6" step="1" style="width:70px; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:8px; font-weight:900; font-size:0.9rem; text-align:center;">
+              <span style="font-size:0.78rem; font-weight:700; color:#fbbf24;">días/semana</span>
+            </div>
+          </div>
+
+          <!-- PASO 5: Notas -->
+          <div>
+            <label class="field-label">5. Nota (opcional)</label>
+            <input type="text" id="medNoteInput" placeholder="ej. por la mañana en ayunas, pautado por el Dr. ..." style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:600; font-size:0.85rem; box-sizing:border-box;">
+          </div>
+
+          <!-- Personalizado / manual -->
+          <div style="border-top:1px dashed var(--border-color); padding-top:12px;">
+            <label class="field-label">¿No está en la lista? Añádelo a mano</label>
+            <input type="text" id="medCustomName" placeholder="Nombre del medicamento o suplemento" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; font-size:0.88rem; box-sizing:border-box;">
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:5px; line-height:1.35;">Si rellenas este campo, se usará este nombre y se ignorará la selección del grupo.</div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:6px;">
+            <button class="btn-3d btn-3d-emerald" id="medSaveBtn" style="flex:2;">✓ Guardar</button>
+            <button class="btn-3d btn-3d-surface" id="medDismissBtn" style="flex:1;">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de medicaciones -->
+      <div id="medicationsList"></div>
+
+      <!-- Acciones para el médico -->
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn-3d btn-3d-purple" id="medCopyBtn" style="flex:1;">📋 Copiar para el médico</button>
+        <button class="btn-3d btn-3d-cyan" id="medShareBtn" style="flex:1;">📤 Compartir</button>
+      </div>
+    </section>
+
+    <!-- 1. MÓDULO CALC (Calculadora Estándar) -->
+    <section id="module-calc" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Estándar</span>
+            Calculadora de Péptidos
+          </h1>
+          <p>Reconstitución de viales y cálculo exacto de unidades para inyección.</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 1: Tamaño del vial -->
+      <div class="card-section">
+        <div class="card-title">
+          <div class="card-title-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 2h8M9 2v18a3 3 0 0 0 6 0V2"/><path d="M9 8h3M9 12h3M9 16h3"/></svg>
+            <span>1. Cantidad de Péptido en el Vial</span>
+          </div>
+        </div>
+        <div class="pill-grid" id="calcVialPills">
+          <button class="pill-3d" data-val="2">2 mg</button>
+          <button class="pill-3d active" data-val="5">5 mg</button>
+          <button class="pill-3d" data-val="10">10 mg</button>
+          <button class="pill-3d" data-val="15">15 mg</button>
+          <button class="pill-3d" data-val="30">30 mg</button>
+          <button class="pill-3d" data-val="custom">Otro</button>
+        </div>
+        <div class="input-group">
+          <input type="number" id="calcVialInput" value="5" step="any" placeholder="Personalizado">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Agua bacteriostática -->
+      <div class="card-section">
+        <div class="card-title">
+          <div class="card-title-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            <span>2. Agua Bacteriostática (BAC) añadida</span>
+          </div>
+        </div>
+        <div class="pill-grid" id="calcBacPills">
+          <button class="pill-3d" data-val="1">1 mL</button>
+          <button class="pill-3d active" data-val="2">2 mL</button>
+          <button class="pill-3d" data-val="2.5">2.5 mL</button>
+          <button class="pill-3d" data-val="3">3 mL</button>
+          <button class="pill-3d" data-val="5">5 mL</button>
+          <button class="pill-3d" data-val="custom">Otro</button>
+        </div>
+        <div class="input-group">
+          <input type="number" id="calcBacInput" value="2" step="any" placeholder="Personalizado">
+          <span class="unit-badge">mL</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Dosis deseada -->
+      <div class="card-section">
+        <div class="card-title">
+          <div class="card-title-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24"/></svg>
+            <span>3. Dosis Deseada por Inyección</span>
+          </div>
+          <select id="calcDoseUnit" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; padding:4px 8px; font-weight:700;">
+            <option value="mcg" selected>mcg</option>
+            <option value="mg">mg</option>
+          </select>
+        </div>
+        <div class="pill-grid" id="calcDosePills">
+          <button class="pill-3d" data-val="100">100</button>
+          <button class="pill-3d active" data-val="250">250</button>
+          <button class="pill-3d" data-val="500">500</button>
+          <button class="pill-3d" data-val="1000">1000</button>
+          <button class="pill-3d" data-val="2500">2500</button>
+          <button class="pill-3d" data-val="custom">Otro</button>
+        </div>
+        <div class="input-group">
+          <input type="number" id="calcDoseInput" value="250" step="any" placeholder="Dosis">
+          <span class="unit-badge" id="calcDoseBadge">mcg</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta 4: Tipo de Jeringa -->
+      <div class="card-section">
+        <div class="card-title">
+          <div class="card-title-icon">
+            <svg viewBox="0 0 24 24"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+            <span>4. Tipo de Jeringa</span>
+          </div>
+        </div>
+        <select id="calcSyringe" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:10px; font-weight:700; font-size:0.95rem;">
+          <option value="100" selected>U-100 (1 mL / 100 unidades)</option>
+          <option value="50">U-50 (0.5 mL / 50 unidades)</option>
+          <option value="30">U-30 (0.3 mL / 30 unidades)</option>
+          <option value="40">U-40 (1 mL / 40 unidades)</option>
+        </select>
+      </div>
+
+      <!-- Resultado 3D -->
+      <div class="result-box-3d">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#10b981;">Extraer en la Jeringa</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="calcUnitsResult">10</span>
+          <span class="result-unit-big">unidades</span>
+        </div>
+        <p class="result-desc" id="calcDescResult">Extrae exactamente 10 unidades (0.10 mL) para 250 mcg.</p>
+        
+        <!-- Jeringa interactiva -->
+        <div class="syringe-container">
+          <div class="syringe-title">Visualización de la Jeringa</div>
+          <div class="syringe-svg-box" id="calcSyringeView"></div>
+        </div>
+
+        <!-- Pen / Pluma dosificadora interactiva -->
+        <div class="syringe-container" style="margin-top:14px;">
+          <div class="syringe-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Visualización del Pen (Pluma Dosificadora)</span>
+            <span style="font-size:0.75rem; color:#38bdf8; font-weight:800;" id="penDoseBadge">--</span>
+          </div>
+          <div class="syringe-svg-box" id="calcPenView" style="margin-top:6px; background:rgba(0,0,0,0.25); border:1px solid var(--border-color); border-radius:10px; padding:10px 6px;"></div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Concentración</div>
+            <div class="metric-val" id="calcConcVal">2.50 mg/mL</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Volumen</div>
+            <div class="metric-val" id="calcVolVal">0.10 mL</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Dosis por Vial</div>
+            <div class="metric-val" id="calcDosesVal">20 dosis</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Por Marca (Tick)</div>
+            <div class="metric-val" id="calcPerUnitVal">25 mcg/u</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MÓDULO REVERSE (Calculadora Inversa) -->
+    <section id="module-reverse" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag" style="color:#06b6d4; background:rgba(6,182,212,0.15); border-color:rgba(6,182,212,0.3);">Inversa</span>
+            Reconstitución Inversa
+          </h1>
+          <p>Halla cuánta agua BAC añadir para que tu dosis sea una marca limpia (ej. 10 unidades).</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Masa del Vial (mg)</div>
+        <div class="input-group">
+          <input type="number" id="revVialInput" value="5" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">
+          <span>Dosis Deseada</span>
+          <select id="revDoseUnit" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; padding:4px;">
+            <option value="mcg" selected>mcg</option>
+            <option value="mg">mg</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <input type="number" id="revDoseInput" value="250" step="any">
+          <span class="unit-badge" id="revDoseBadge">mcg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Unidades Deseadas en Jeringa (Extracción Limpia)</div>
+        <div class="input-group">
+          <input type="number" id="revTargetUnits" value="10" step="any">
+          <span class="unit-badge">unidades</span>
+        </div>
+        <div style="margin-top:10px;">
+          <select id="revSyringeType" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:8px;">
+            <option value="100">Jeringa U-100 (100u / mL)</option>
+            <option value="40">Jeringa U-40 (40u / mL)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-box-3d" style="border-color:rgba(6,182,212,0.4); background:linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(59,130,246,0.08) 100%);">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#06b6d4;">Agua BAC a Añadir</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="revBacResult" style="background:linear-gradient(180deg, #ffffff 0%, #bae6fd 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">2.00</span>
+          <span class="result-unit-big" style="color:#06b6d4;">mL</span>
+        </div>
+        <p class="result-desc" id="revDescResult">Añade 2.00 mL de agua BAC al vial.</p>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Concentración</div>
+            <div class="metric-val" id="revConcVal">2.50 mg/mL</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Dosis Totales</div>
+            <div class="metric-val" id="revDosesVal">20 dosis</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. MÓDULO BLEND (Mezclas de Péptidos) -->
+    <section id="module-blend" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag" style="color:#8b5cf6; background:rgba(139,92,246,0.15); border-color:rgba(139,92,246,0.3);">Blend</span>
+            Mezclas de Péptidos
+          </h1>
+          <p>Calcula mezclas combinadas en un solo vial (ej. BPC-157 + TB-500).</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Péptido 1 (Base de Referencia)</div>
+        <div style="display:grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap:8px; width:100%;">
+          <input type="text" id="blendP1Name" value="BPC-157" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; min-width:0; width:100%;">
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="blendP1Mg" value="5" step="any">
+            <span class="unit-badge">mg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Péptido 2</div>
+        <div style="display:grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap:8px; width:100%;">
+          <input type="text" id="blendP2Name" value="TB-500" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; min-width:0; width:100%;">
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="blendP2Mg" value="5" step="any">
+            <span class="unit-badge">mg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Agua BAC Total en el Vial</div>
+        <div class="input-group">
+          <input type="number" id="blendBac" value="2" step="any">
+          <span class="unit-badge">mL</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">
+          <span>Dosis Deseada del Péptido 1</span>
+          <select id="blendTargetUnit" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; padding:4px;">
+            <option value="mcg" selected>mcg</option>
+            <option value="mg">mg</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <input type="number" id="blendTargetDose" value="250" step="any">
+          <span class="unit-badge" id="blendTargetBadge">mcg</span>
+        </div>
+      </div>
+
+      <div class="result-box-3d" style="border-color:rgba(139,92,246,0.4); background:linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(217,70,239,0.08) 100%);">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#8b5cf6;">Extracción de la Mezcla</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="blendUnitsResult" style="background:linear-gradient(180deg, #ffffff 0%, #ddd6fe 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">10</span>
+          <span class="result-unit-big" style="color:#8b5cf6;">unidades</span>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Dosis Recibida P1</div>
+            <div class="metric-val" id="blendP1Result" style="font-size:0.88rem;">250 mcg (BPC-157)</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Dosis Recibida P2</div>
+            <div class="metric-val" id="blendP2Result" style="font-size:0.88rem;">250 mcg (TB-500)</div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:10px; font-size:0.85rem; color:var(--text-muted);">
+          Volumen inyectado: <strong id="blendVolResult" style="color:var(--text-main);">0.10 mL</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. MÓDULO HGH (Hormona de Crecimiento) -->
+    <section id="module-hgh" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag" style="color:#f59e0b; background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3);">HGH</span>
+            Somatropina (HGH)
+          </h1>
+          <p>Calculadora basada en Unidades Internacionales (UI / IU) y mg.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Vial de HGH (UI totales)</div>
+        <div class="input-group">
+          <input type="number" id="hghIuInput" value="10" step="any">
+          <span class="unit-badge">UI</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Agua BAC / Diluyente añadido</div>
+        <div class="input-group">
+          <input type="number" id="hghBacInput" value="1" step="any">
+          <span class="unit-badge">mL</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Dosis Deseada</div>
+        <div class="input-group">
+          <input type="number" id="hghDoseIu" value="2.0" step="any">
+          <span class="unit-badge">UI</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Conversión Estándar (UI por mg)</div>
+        <select id="hghRatio" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+          <option value="3.0" selected>1 mg = 3.00 UI (Estándar habitual)</option>
+          <option value="3.33">1 mg = 3.33 UI (Farmacopea europea antigua)</option>
+        </select>
+      </div>
+
+      <div class="result-box-3d" style="border-color:rgba(245,158,11,0.4); background:linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(234,88,12,0.08) 100%);">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#f59e0b;">Extracción en Jeringa U-100</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="hghUnitsResult" style="background:linear-gradient(180deg, #ffffff 0%, #fde68a 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">20</span>
+          <span class="result-unit-big" style="color:#f59e0b;">unidades</span>
+        </div>
+        <p class="result-desc" id="hghDescResult">Extrae 20 unidades para 2.0 UI.</p>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Concentración</div>
+            <div class="metric-val" id="hghConcentration">10.0 UI/mL</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Dosis por Vial</div>
+            <div class="metric-val" id="hghTotalDoses">5 dosis</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. MÓDULO INTRANASAL -->
+    <section id="module-intranasal" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Nasal</span>
+            Spray Intranasal
+          </h1>
+          <p>Cálculo de pulverizaciones para frascos con válvula dosificadora.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Capacidad del Frasco</div>
+        <div class="input-group">
+          <input type="number" id="nasalBottleMl" value="10" step="any">
+          <span class="unit-badge">mL</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Volumen por Pulverización de la Bomba</div>
+        <div class="input-group">
+          <input type="number" id="nasalSprayVol" value="0.10" step="any">
+          <span class="unit-badge">mL / spray</span>
+        </div>
+        <small style="font-size:0.75rem; color:var(--text-muted); display:block; margin-top:4px;">El estándar en la mayoría de frascos es 0.10 mL (100 µL).</small>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Péptido en Polvo Disuelto</div>
+        <div class="input-group">
+          <input type="number" id="nasalPeptideMg" value="10" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Dosis Deseada por Aplicación</div>
+        <div class="input-group">
+          <input type="number" id="nasalTargetMcg" value="200" step="any">
+          <span class="unit-badge">mcg</span>
+        </div>
+      </div>
+
+      <div class="result-box-3d">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#10b981;">Pulverizaciones Necesarias</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="nasalSpraysResult">2</span>
+          <span class="result-unit-big">sprays</span>
+        </div>
+        <p class="result-desc" id="nasalDescResult">Con 2 pulverizaciones recibes 200 mcg (1 en cada fosa nasal).</p>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Dosis por Spray</div>
+            <div class="metric-val"><span id="nasalMcgPerSpray">100</span> mcg</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Sprays en el Frasco</div>
+            <div class="metric-val" id="nasalTotalSprays">100</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. MÓDULO PLAN & PRONÓSTICO DE NIVEL (PK) -->
+    <section id="module-plan" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">PK Model</span>
+            Nivel y Titulación
+          </h1>
+          <p>Pronóstico del nivel de medicamento según historial, dosis y vida media.</p>
+        </div>
+      </div>
+
+      <!-- Subpestañas 3D -->
+      <div class="subtabs" id="planSubtabs">
+        <button type="button" class="subtab-btn active" data-subtab="forecast">📈 Pronóstico de Nivel (PK)</button>
+        <button type="button" class="subtab-btn" data-subtab="titration">📅 Pauta de Titulación</button>
+      </div>
+
+      <!-- SUBVISTA 1: PRONÓSTICO DE NIVEL (GRÁFICA PK IDÉNTICA A LA IMAGEN) -->
+      <div id="subview-forecast" class="plan-subview">
+        <!-- Tarjeta de Cabecera y Semivida -->
+        <div class="card-section">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div style="flex:1;">
+              <h2 style="font-size:1.15rem; font-weight:800; color:var(--text-main); letter-spacing:-0.3px;">Pronóstico del nivel de medicamento</h2>
+              <p style="font-size:0.78rem; color:var(--text-muted); margin-top:3px; line-height:1.35;">Persistencia equivalente a dosis estimada a partir de tu historial y la vida media del medicamento.</p>
+            </div>
+            <!-- Badge Semivida con reloj -->
+            <div class="pk-badge-halflife" id="pkHalfLifeBadge">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div>
+                <div style="font-size:0.8rem; font-weight:800; color:var(--text-main);" id="pkHalfLifeVal">~6 days</div>
+                <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">vida media</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selector de Compuesto para PK -->
+          <div style="margin-top:12px;">
+            <label class="field-label">Medicamento / Péptido</label>
+            <select id="pkCompoundSelect" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:10px; font-weight:700; font-size:0.92rem;">
+              <option value="retatrutide" data-hl="6.0" data-dose="2.0" selected>Retatrutida (~6 días vida media)</option>
+              <option value="tirzepatide" data-hl="5.0" data-dose="2.5">Tirzepatida (~5 días vida media)</option>
+              <option value="semaglutide" data-hl="7.0" data-dose="0.5">Semaglutida (~7 días vida media)</option>
+              <option value="cagrilintide" data-hl="7.0" data-dose="0.5">Cagrilintida (~7 días vida media)</option>
+              <option value="bpc157" data-hl="0.17" data-dose="0.25">BPC-157 (~4 horas vida media)</option>
+              <option value="tb500" data-hl="1.0" data-dose="2.5">TB-500 (~24 horas vida media)</option>
+              <option value="tesamorelin" data-hl="0.08" data-dose="1.0">Tesamorelina (~2 horas vida media)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector de Rango Temporal (Segmented Control) -->
+        <div class="pill-grid" id="pkRangePills" style="margin-bottom:12px; grid-template-columns: repeat(4, 1fr);">
+          <button type="button" class="pill-3d" data-days="7">7 días</button>
+          <button type="button" class="pill-3d active" data-days="14">2 semanas</button>
+          <button type="button" class="pill-3d" data-days="30">1 mes</button>
+          <button type="button" class="pill-3d" data-days="90">90 días</button>
+        </div>
+
+        <!-- Tarjeta de Nivel Estimado en la Fecha Seleccionada -->
+        <div class="card-section" style="background:var(--card-bg-elevated); border:1.5px solid var(--border-color); padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted);">Estimado en la fecha seleccionada</div>
+              <div style="display:flex; align-items:baseline; gap:4px; margin-top:2px;">
+                <span style="font-size:2.4rem; font-weight:900; color:var(--text-main); line-height:1;" id="pkSelectedLevel">1.24</span>
+                <span style="font-size:1.1rem; font-weight:700; color:var(--text-muted);" id="pkSelectedUnit">mg</span>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:1.15rem; font-weight:800; color:var(--text-main);" id="pkSelectedDate">Sep 16</div>
+              <div style="display:inline-block; font-size:0.75rem; font-weight:800; color:#8b5cf6; background:rgba(139,92,246,0.15); padding:2px 8px; border-radius:10px; margin-top:2px;" id="pkSelectedRelative">Historial</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de Vista (Previsión vs Barras) -->
+        <div style="display:flex; justify-content:center; margin:12px 0;">
+          <div style="display:inline-flex; background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:30px; padding:3px; gap:4px;" id="pkViewToggle">
+            <button type="button" class="subtab-btn active" data-view="curve" style="border-radius:24px; padding:6px 16px; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2.2;"><path d="M3 18c6 0 6-12 12-12s6 12 6 12"/></svg>
+              <span>Previsión</span>
+            </button>
+            <button type="button" class="subtab-btn" data-view="bars" style="border-radius:24px; padding:6px 16px; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2.2;"><line x1="6" y1="20" x2="6" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
+              <span>Barras</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Gráfica Principal Interactiva (SVG) -->
+        <div class="card-section" style="padding:14px 10px; position:relative; overflow:hidden;">
+          <div id="pkGraphSvgContainer" style="width:100%; min-height:230px; position:relative;"></div>
+
+          <!-- Leyenda de protocolos superpuestos -->
+          <div id="pkProtocolLegend" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;"></div>
+
+          <!-- Leyenda (Idéntica a Shotlee) -->
+          <div style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:10px; font-size:0.75rem; color:var(--text-muted); font-weight:700;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:16px; height:3px; background:#8b5cf6; border-radius:2px;"></span>
+              <span>Historial</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:16px; height:3px; border-top:2.5px dashed #06b6d4;"></span>
+              <span>Previsión</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#f59e0b;"></span>
+              <span>Dosis</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parámetros de Inyección y Simulación -->
+        <div class="card-section">
+          <div class="card-title">Parámetros de Inyección del Modelo</div>
+          <div class="grid-2col">
+            <div>
+              <label class="field-label">Dosis Administrada (mg)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="pkDoseInput" value="2.0" step="any">
+                <span class="unit-badge">mg</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Frecuencia (cada N días)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="pkIntervalInput" value="7" step="any">
+                <span class="unit-badge">días</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button type="button" class="btn-3d btn-3d-emerald" id="pkLogDoseBtn" style="flex:1; font-size:0.82rem; padding:10px;">
+              💉 Registrar Inyección Hoy
+            </button>
+            <button type="button" class="btn-3d btn-3d-surface" id="pkResetSimBtn" style="font-size:0.82rem; padding:10px 14px;">
+              Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <!-- Aviso Clínico al Pie idéntico a la captura -->
+        <div style="display:flex; align-items:flex-start; gap:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:12px; padding:10px 12px; font-size:0.73rem; color:var(--text-muted); line-height:1.4; margin-top:10px;">
+          <span style="font-size:0.9rem; color:var(--text-secondary); line-height:1;">ⓘ</span>
+          <span>Modelo de persistencia equivalente a dosis basado en las dosis registradas y la vida media — no es una cantidad en el torrente sanguíneo ni una medición clínica.</span>
+        </div>
+      </div>
+
+      <!-- SUBVISTA 2: PLAN DE TITULACIÓN (Cronograma semana a semana) -->
+      <div id="subview-titration" class="plan-subview" style="display:none;">
+        <div class="card-section">
+          <div class="card-title">Compuesto Predefinido</div>
+          <select id="planCompound" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+            <option value="tirzepatide" selected>Tirzepatida (Semivida ~5 días)</option>
+            <option value="semaglutide">Semaglutida (Semivida ~7 días)</option>
+            <option value="retatrutide">Retatrutida (Semivida ~6 días)</option>
+            <option value="bpc157">BPC-157 (Semivida corta ~4 horas)</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+
+        <div class="card-section">
+          <div class="card-title">Parámetros de Titulación</div>
+          <div class="grid-2col">
+            <div>
+              <label class="field-label">Semivida (días)</label>
+              <div class="input-group">
+                <input type="number" id="planHalfLife" value="5.0" step="any">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Dosis Inicial (mg)</label>
+              <div class="input-group">
+                <input type="number" id="planStartDose" value="2.5" step="any">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Semanas por Nivel</label>
+              <div class="input-group">
+                <input type="number" id="planStepWeeks" value="4">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Incremento (mg)</label>
+              <div class="input-group">
+                <input type="number" id="planDoseStep" value="2.5" step="any">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="field-label">Duración Total (Semanas)</label>
+            <div class="input-group">
+              <input type="number" id="planTotalWeeks" value="12">
+            </div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="card-title">
+            <span>Cronograma del Protocolo</span>
+            <span class="badge-tag" id="planTotalMg">50 mg total</span>
+          </div>
+          <div id="planScheduleOutput"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. MÓDULO RUNWAY (Duración de Suministro) -->
+    <section id="module-runway" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Runway</span>
+            Control de Reservas
+          </h1>
+          <p>Conoce cuántos días o semanas te durará tu inventario actual.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Viales en Stock</div>
+        <div class="input-group">
+          <input type="number" id="runwayVials" value="5">
+          <span class="unit-badge">viales</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Miligramos por Vial</div>
+        <div class="input-group">
+          <input type="number" id="runwayMgPerVial" value="10" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Dosis por Toma (mg)</div>
+        <div class="input-group">
+          <input type="number" id="runwayDoseMg" value="2.5" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Frecuencia de Inyección (Intervalo en Días)</div>
+        <select id="runwayFreqDays" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+          <option value="7" selected>Cada 7 días (Semanal)</option>
+          <option value="3.5">Cada 3.5 días (2 veces por semana)</option>
+          <option value="1">Diario</option>
+        </select>
+      </div>
+
+      <div class="result-box-3d">
+        <div style="text-align:center; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#10b981;">Duración Estimada</div>
+        <div class="result-hero">
+          <span class="result-value-big" id="runwayDaysResult">140 días</span>
+        </div>
+        <p class="result-desc" id="runwayDescResult">Tu reserva durará 20 semanas.</p>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Péptido Total</div>
+            <div class="metric-val" id="runwayStockMg">50 mg</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Reordenar en</div>
+            <div class="metric-val" id="runwayReorderDate">119 días</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. MÓDULO ROTATE (Rotación de Zonas SubQ) -->
+    <section id="module-rotate" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Rotate</span>
+            Rotación de Inyecciones
+          </h1>
+          <p>Registra pinchazos y prevé la lipohipertrofia eligiendo el punto en reposo.</p>
+        </div>
+      </div>
+
+      <div class="bodymap-box">
+        <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">
+          ★ Punto recomendado resaltado en esmeralda
+        </div>
+        <div id="rotateBodyMap"></div>
+      </div>
+
+      <div class="card-section" style="margin-top:14px;">
+        <div class="card-title">Zona Seleccionada</div>
+        <div style="font-size:1.15rem; font-weight:800; color:#10b981;" id="rotateSelectedZoneName">Abdomen Sup. Izquierdo</div>
+        <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
+          Última vez inyectado: <span id="rotateLastInjected" style="color:var(--text-main); font-weight:700;">Nunca</span>
+        </div>
+        <button class="btn-3d btn-3d-emerald btn-block" id="rotateLogBtn" style="margin-top:14px;">
+          <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5;"><path d="M12 5v14M5 12h14"/></svg>
+          Registrar Inyección Aquí
+        </button>
+      </div>
+    </section>
+
+    <!-- 9. MÓDULO CONVERT (Conversor Clínico) -->
+    <section id="module-convert" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Convert</span>
+            Conversor Clínico
+          </h1>
+          <p>Conversión instantánea bidireccional entre unidades de laboratorio.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Microgramos (mcg) ↔ Miligramos (mg)</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convMcg" placeholder="mcg" value="1000">
+            <span class="unit-badge">mcg</span>
+          </div>
+          <span style="font-weight:900; color:var(--text-muted);">=</span>
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convMg" placeholder="mg" value="1">
+            <span class="unit-badge">mg</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Mililitros (mL) ↔ Unidades U-100</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convMl" placeholder="mL" value="0.1">
+            <span class="unit-badge">mL</span>
+          </div>
+          <span style="font-weight:900; color:var(--text-muted);">=</span>
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convUnits" placeholder="unidades" value="10">
+            <span class="unit-badge">u</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">HGH: Miligramos (mg) ↔ Unidades (UI)</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convMgHgh" placeholder="mg" value="1">
+            <span class="unit-badge">mg</span>
+          </div>
+          <span style="font-weight:900; color:var(--text-muted);">=</span>
+          <div class="input-group" style="margin:0;">
+            <input type="number" id="convIuHgh" placeholder="UI" value="3.0">
+            <span class="unit-badge">UI</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. MÓDULO INVENTARIO (Gestión de Viales) -->
+    <section id="module-inventory" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Inventario</span>
+            Inventario de Viales
+          </h1>
+          <p>Control de viales abiertos, dosis restantes y fecha límite de uso (28-30 días).</p>
+        </div>
+      </div>
+
+      <button class="btn-3d btn-3d-cyan btn-block" id="invAddBtn" style="margin-bottom:14px;">
+        + Añadir Vial Reconstituido
+      </button>
+
+      <!-- Formulario Desplegable Elegante 3D para Añadir Vial -->
+      <div id="invAddFormCard" class="card-section" style="display:none; margin-bottom:16px; border-color:rgba(6,182,212,0.4); background:linear-gradient(135deg, var(--card-bg-elevated) 0%, var(--card-bg) 100%);">
+        <div class="card-title">
+          <span>Nuevo Vial Reconstituido</span>
+          <button id="invCancelBtn" class="icon-btn-3d" style="width:28px; height:28px; font-size:0.8rem;">✕</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label class="field-label">Nombre del Péptido</label>
+            <input type="text" id="invFormName" placeholder="ej. Tirzepatida, BPC-157..." style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700; font-size:0.95rem;">
+          </div>
+          <div class="grid-2col">
+            <div>
+              <label class="field-label">Masa Total (mg)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="invFormMg" value="10" step="any">
+                <span class="unit-badge">mg</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Agua BAC añadida (mL)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="invFormBac" value="2" step="any">
+                <span class="unit-badge">mL</span>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2col">
+            <div>
+              <label class="field-label">Fecha de Reconstitución</label>
+              <input type="date" id="invFormDate" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700; font-size:0.85rem;">
+            </div>
+            <div>
+              <label class="field-label">Ubicación</label>
+              <select id="invFormLoc" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700; font-size:0.85rem;">
+                <option value="Nevera (4°C)" selected>Nevera (4°C)</option>
+                <option value="Congelador (-20°C)">Congelador (-20°C)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn-3d btn-3d-emerald" id="invSaveVialBtn" style="flex:2;">
+              ✓ Guardar en Inventario
+            </button>
+            <button class="btn-3d btn-3d-surface" id="invDismissBtn" style="flex:1;">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="inventoryList"></div>
+    </section>
+
+    <!-- 11. MÓDULO LABEL (Generador de Etiquetas Térmicas) -->
+    <section id="module-label" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Label</span>
+            Etiquetas de Vial
+          </h1>
+          <p>Diseño para impresoras térmicas (NIIMBOT, Phomemo) o impresión directa.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Datos del Vial</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <input type="text" id="labelName" value="TIRZEPATIDE" placeholder="Nombre del Péptido" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+          <div class="grid-2col" style="gap:8px;">
+            <div class="input-group" style="margin:0;"><input type="number" id="labelMg" value="10"><span class="unit-badge">mg</span></div>
+            <div class="input-group" style="margin:0;"><input type="number" id="labelBac" value="2"><span class="unit-badge">mL BAC</span></div>
+          </div>
+          <input type="date" id="labelDate" style="background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+        </div>
+      </div>
+
+      <div class="label-preview-box">
+        <canvas id="labelCanvas" width="340" height="150"></canvas>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn-3d btn-3d-emerald btn-block" id="labelSaveBtn">
+          💾 Guardar Etiqueta PNG en Galería
+        </button>
+        <button class="btn-3d btn-3d-cyan btn-block" id="labelShareBtn">
+          🖨️ Compartir / Enviar a Impresora
+        </button>
+      </div>
+    </section>
+
+    <!-- 12. MÓDULO COA (Analizador de Certificados de Análisis) -->
+    <section id="module-coa" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">COA</span>
+            Verificador de Pureza
+          </h1>
+          <p>Comprobación de informes de análisis cuantitativo por HPLC y endotoxinas.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Masa Declarada en Etiqueta (mg)</div>
+        <div class="input-group">
+          <input type="number" id="coaClaimMg" value="10" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Masa Real Detectada en Laboratorio (mg)</div>
+        <div class="input-group">
+          <input type="number" id="coaActualMg" value="10.4" step="any">
+          <span class="unit-badge">mg</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Pureza HPLC (%)</div>
+        <div class="input-group">
+          <input type="number" id="coaPurity" value="99.4" step="any">
+          <span class="unit-badge">%</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Nivel de Endotoxinas (EU/mg)</div>
+        <div class="input-group">
+          <input type="number" id="coaEndotoxin" value="0.01" step="any">
+          <span class="unit-badge">EU/mg</span>
+        </div>
+        <small style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:block;">Estándar seguro USP: menos de 0.05 EU/mg.</small>
+      </div>
+
+      <div class="result-box-3d">
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Desviación Masa</div>
+            <div class="metric-val" id="coaDiffResult" style="color:#10b981;">+4.0%</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Veredicto Pureza</div>
+            <div class="metric-val" id="coaPurityVerdict" style="font-size:0.85rem;">Excelente (≥98%)</div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:10px; font-size:0.85rem; color:var(--text-secondary);">
+          Endotoxinas: <strong id="coaEndoVerdict" style="color:#10b981;">Seguro (&lt;0.05 EU/mg)</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. MÓDULO CHART (Matriz de Referencia por Péptido) -->
+    <section id="module-chart" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Matriz</span>
+            Tabla de Referencia
+          </h1>
+          <p>Selecciona un compuesto para cargar sus viales habituales y pauta de titulación con el agua BAC y extracción U-100.</p>
+        </div>
+      </div>
+
+      <!-- Controles de Compuesto y Estilo -->
+      <div class="card-section">
+        <div class="card-title">Seleccionar Péptido</div>
+        <select id="chartCompoundPicker" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:11px; font-weight:700; font-size:0.95rem;"></select>
+
+        <div style="margin-top:14px;">
+          <label class="field-label" style="margin-bottom:6px;">Modo de Extracción</label>
+          <div style="display:flex; gap:8px;" id="chartStyleGroup">
+            <button type="button" class="pill-3d active" data-style="easy" style="flex:1; font-size:0.8rem; padding:10px 4px;">Más fácil de leer</button>
+            <button type="button" class="pill-3d" data-style="small" style="flex:1; font-size:0.8rem; padding:10px 4px;">Menor volumen</button>
+          </div>
+        </div>
+
+        <p id="chartCompoundNote" style="font-size:0.8rem; color:var(--text-secondary); margin-top:10px; line-height:1.4; background:var(--card-bg-elevated); padding:8px 12px; border-radius:8px; border-left:3px solid #10b981;"></p>
+      </div>
+
+      <!-- Matriz Interactiva Dinámica -->
+      <div class="card-section" style="padding:12px;">
+        <div class="reference-table-wrap">
+          <table class="reference-table" id="chartMatrixTable">
+            <thead id="chartMatrixHead"></thead>
+            <tbody id="chartMatrixBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; text-align:center; font-size:0.76rem; color:var(--text-muted);">
+          💡 Pulsa en cualquier casilla de la tabla para cargar automáticamente la dilución en la <strong>Calculadora</strong>.
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. MÓDULO LABS (Paneles de Analítica y Marcadores de Sangre) -->
+    <section id="module-labs" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Labs</span>
+            Analíticas de Sangre
+          </h1>
+          <p>Supervisa biomarcadores según protocolo (GLP-1, GH o Longevidad) y guarda tus analíticas.</p>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Selecciona el Panel de Análisis</div>
+        <select id="labsPanelSelect" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:10px; font-weight:700;">
+          <option value="bench16" selected>Panel Integral 16 Biomarcadores (Metabolismo, Hígado, Riñón, Hormonas)</option>
+          <option value="glp1">Panel GLP-1 (Tirzepatida, Semaglutida, Retatrutida)</option>
+          <option value="gh">Panel Secretagogos GH / Somatropina</option>
+          <option value="longevity">Panel Longevidad y Reparación Celular</option>
+        </select>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Marcadores Clínicos</div>
+        <div id="labsItemsContainer"></div>
+        <button class="btn-3d btn-3d-emerald btn-block" id="labsSaveBtn" style="margin-top:12px;">
+          💾 Guardar Analítica en Historial
+        </button>
+      </div>
+
+      <div class="card-section">
+        <div class="card-title">Historial de Analíticas Recientes</div>
+        <div id="labsHistoryContainer"></div>
+      </div>
+    </section>
+
+    <!-- 15. MÓDULO RESEARCH (Biblioteca de Péptidos) -->
+    <section id="module-research" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Guía</span>
+            Biblioteca de Péptidos
+          </h1>
+          <p>Monografías de investigación con posología habitual y carga rápida en 1 clic.</p>
+        </div>
+      </div>
+
+      <div class="card-section" style="padding:12px 14px;">
+        <div class="input-group" style="margin:0;">
+          <input type="text" id="researchSearchInput" placeholder="Buscar compuesto (ej. BPC, Tirzepatida, GHK, Semax...)" style="font-size:0.95rem;">
+          <span class="unit-badge">🔍</span>
+        </div>
+
+        <!-- Pastillas Selectoras 3D de Categorías -->
+        <div class="pill-grid" id="researchCategoryPills" style="margin-top:10px; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));">
+          <button class="pill-3d active" data-cat="all">Todos</button>
+          <button class="pill-3d" data-cat="Metabolismo">Metabolismo</button>
+          <button class="pill-3d" data-cat="Reparación">Reparación</button>
+          <button class="pill-3d" data-cat="Eje GH">Eje GH</button>
+          <button class="pill-3d" data-cat="Longevidad">Longevidad</button>
+          <button class="pill-3d" data-cat="Cognición">Cognición</button>
+          <button class="pill-3d" data-cat="Inmunidad">Inmunidad</button>
+          <button class="pill-3d" data-cat="Sexual">Sexual</button>
+        </div>
+      </div>
+
+      <div id="researchListContainer" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- 16. MÓDULO GUÍA DE RECONSTITUCIÓN -->
+    <section id="module-reconst" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Manual</span>
+            Guía de Reconstitución
+          </h1>
+          <p>Del polvo liofilizado a la solución, paso a paso y sin dañar el péptido en el intento.</p>
+        </div>
+      </div>
+
+      <!-- ¿Qué es? -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--cyan); font-size:0.95rem; margin-bottom:8px;">¿Qué es reconstituir?</div>
+        <p style="font-size:0.86rem; color:var(--text-secondary); line-height:1.55; margin:0;">
+          Los péptidos llegan como polvo seco —<em>liofilizado</em>— porque así aguantan años sin estropearse.
+          Reconstituir consiste en disolver ese polvo con un líquido (<strong>diluyente</strong>, normalmente agua
+          bacteriostática) hasta obtener una solución de concentración conocida, la única forma de calcular después
+          una dosis exacta. Todo el proceso se hace con el vial cerrado y material estéril.
+        </p>
+        <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:9px;">
+          🧮 En MisPep: la <strong>Calc</strong> te dice qué volumen echar para tu concentración, el
+          <strong>Inventario</strong> lleva la cuenta de cada vial y su fecha de reconstitución, y
+          <strong>Label</strong> imprime la etiqueta para pegarla encima.
+        </div>
+      </div>
+
+      <!-- Conservación -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--cyan); font-size:0.95rem; margin-bottom:8px;">Dónde guarda el polvo mientras tanto</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
+          • <strong>Frigorífico (2-8 °C)</strong> — bien para el vial que estás usando y para plazos cortos.<br>
+          • <strong>Congelador (-20 °C)</strong> — la mejor casa del polvo: referencias habituales de
+          <strong>12 a 24 meses</strong> si no se toca.<br>
+          • <strong>En tránsito</strong> — el liofilizado aguanta unos días a temperatura ambiente protegido;
+          en cuanto llega, directo al frío.<br>
+          • En cualquier caso, lejos de <strong>luz directa, calor y humedad</strong>.
+        </div>
+        <div style="font-size:0.76rem; color:var(--text-muted); margin-top:8px; line-height:1.45;">
+          Son referencias generales de investigación: si tu proveedor incluye un COA o una fecha de caducidad, manda esa.
+        </div>
+      </div>
+
+      <!-- Paso a paso -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--cyan); font-size:0.95rem; margin-bottom:10px;">Los 5 pasos, en orden</div>
+
+        <div style="display:flex; gap:10px; margin-bottom:11px;">
+          <div style="flex:0 0 24px; height:24px; border-radius:50%; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.5); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem; color:var(--cyan);">1</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-main);">Sácalos del frío y déjalos templados.</strong> Vial y diluyente unos 15-20 minutos a temperatura ambiente. Mezclar en frío deja la solución turbia y te impide ver si se ha disuelto del todo.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:11px;">
+          <div style="flex:0 0 24px; height:24px; border-radius:50%; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.5); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem; color:var(--cyan);">2</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-main);">Iguala la presión del vial.</strong> La liofilización deja vacío dentro del frasco. Entra una aguja cargada un poco de aire y el vial se equaliza solo; así el líquido no salta fuera cuando lo eches.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:11px;">
+          <div style="flex:0 0 24px; height:24px; border-radius:50%; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.5); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem; color:var(--cyan);">3</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-main);">Elige el diluyente.</strong> Agua bacteriostática o estéril para la inmensa mayoría. Excepciones: péptidos muy ácidos pueden necesitar agua con un poco de ácido acético, y los hidrofóbicos hasta ~50% de ácido acético acuoso para disolverse del todo. MisPep trabaja con agua BAC por defecto.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:11px;">
+          <div style="flex:0 0 24px; height:24px; border-radius:50%; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.5); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem; color:var(--cyan);">4</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-main);">Echa el líquido despacio, por la pared.</strong> Que el chorro baje por el cristal, nunca directo sobre el polvo. Después gira el vial con suavidad hasta que quede todo disuelto. <strong style="color:#f0a08a;">Nunca lo agites</strong>: la agitación rompe la estructura del péptido.</div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <div style="flex:0 0 24px; height:24px; border-radius:50%; background:rgba(6,182,212,0.18); border:1px solid rgba(6,182,212,0.5); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem; color:var(--cyan);">5</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-main);">Pon el volumen correcto.</strong> Lo habitual son 1-2,5 mL por vial. Más líquido no mejora nada: solo te deja la solución más diluida. Escribe la concentración objetivo en la <strong>Calc</strong> y ella te devuelve los mL exactos.</div>
+        </div>
+      </div>
+
+      <!-- Después -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--cyan); font-size:0.95rem; margin-bottom:8px;">Después de reconstituir</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
+          • Espera a que la solución quede <strong>transparente y sin partículas</strong> antes de aspirar nada.<br>
+          • Al frío (2-8 °C), en el interior del frigorífico y <strong>protegido de la luz</strong>.<br>
+          • <strong>Anota la fecha de reconstitución</strong> en el vial — con Label la imprimes, y Inventario la guarda.<br>
+          • Ventana cómoda de uso: las <strong>primeras 4-8 semanas</strong>; como máximo <strong>~3 meses</strong> si siempre ha estado frío y limpio (ese es el tope que usa MisPep en sus etiquetas).<br>
+          • Nada de congelar y descongelar la solución: el hielo la rompe. Si es imprescindible, congela alícuotas de un solo uso.<br>
+          • Señales de alarma: turbidez que no se aclara, flotitos o color raro → <strong style="color:#f0a08a;">no lo uses</strong>.
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--cyan); font-size:0.95rem; margin-bottom:9px;">Dudas rápidas</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.5;">
+          <div style="margin-bottom:9px;"><strong style="color:var(--text-main);">¿Puedo agitarlo para que se disuelva antes?</strong><br>No. Gira el vial con calma; agitar denatura el péptido.</div>
+          <div style="margin-bottom:9px;"><strong style="color:var(--text-main);">¿Cuánta agua le echo?</strong><br>La que diga la Calc para tu concentración. Sin ella, 1-2,5 mL es el rango típico de referencia. Utiliza una cantidad de agua que te permita calcular las unidades de la jeringuilla/pluma con facilidad para tu dosis.</div>
+          <div style="margin-bottom:9px;"><strong style="color:var(--text-main);">¿Burbujea cuando pincho el tapón?</strong><br>Es la presión de la liofilización; el paso 2 la iguala y el problema desaparece.</div>
+          <div style="margin-bottom:9px;"><strong style="color:var(--text-main);">¿Agua del grifo o de botella?</strong><br>Agua estéril si vas a utilizar toda la preparación de una vez o en muy pocos días, en caso contrario Agua Bacteriostática (BAC) que contiene un 0,9% de Alcohol Bencílico para evitar proliferación bacteriana. El agua corriente arrastra microorganismos que contaminan el vial.</div>
+          <div><strong style="color:var(--text-main);">¿Puedo congelar la solución hecha?</strong><br>Mejor no: los ciclos de hielo-descongelación degradan el péptido. En la nevera, dentro de su ventana de 4-8 semanas, es donde mejor vive.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17. MÓDULO GLOSARIO DE PÉPTIDOS -->
+    <section id="module-glosario" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Glosario</span>
+            Glosario de Péptidos
+          </h1>
+          <p>Los términos que aparecen en fichas, envases y COA, explicados en castellano llano.</p>
+        </div>
+      </div>
+
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--purple); font-size:0.95rem; margin-bottom:9px;">🧬 Fundamentos</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.55;">
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Aminoácido</strong> — los ladrillos con los que se construye todo: hay 20 habituales, y enlazarlos es como pasar cuentas por un hilo.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Péptido</strong> — una cadena corta de aminoácidos: una mini-proteína. Si la cadena se alarga demasiado, ya se llama proteína.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Enlace peptídico</strong> — el "nudo" que sujeta aminoácido con aminoácido; al apretarse sale una molécula de agua.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Secuencia</strong> — el orden exacto de los aminoácidos. De él depende todo lo que hace el péptido, igual que de las letras depende una palabra.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Residuo</strong> — un aminoácido ya integrado en la cadena. "Péptido de 10 residuos" = 10 aminoácidos enlazados.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Oligopéptido / polipéptido</strong> — cadena muy corta (unos 2-20) / cadena larga; a partir de ~50 se habla de proteína.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Fragmento</strong> — trozo concreto de un péptido o proteína mayor, útil para averiguar qué parte es la que trabaja.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Análogo</strong> — un péptido conocido con algún cambio puntual, para observar cómo cambia su comportamiento.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Péptido sintético</strong> — hecho en laboratorio desde cero, sin extraerlo de plantas o animales: es el caso de casi todo lo que se maneja aquí.</div>
+          <div><strong style="color:var(--text-main);">Biorregulador</strong> — péptido diminuto (2-4 aminoácidos) presente en tejidos, estudiado por su efecto sobre la actividad celular.</div>
+        </div>
+      </div>
+
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--purple); font-size:0.95rem; margin-bottom:9px;">⚡ Cómo actúan</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.55;">
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Receptor</strong> — el "aparcamiento" de la célula donde encaja una molécula concreta y se enciende una señal. Imáginalo como un candado.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Ligando</strong> — la llave que encaja en ese candado y cambia lo que hace la célula.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Agonista</strong> — molécula que mete la llave y <em>enciende</em> el receptor.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Antagonista</strong> — la que tapona el candado sin girarlo: bloquea la señal. Lo contrario de un agonista.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Agonista dual / triple</strong> — una sola molécula que enciende dos receptores (p. ej. GIP y GLP-1) o tres (añadiendo glucagón) a la vez: típico de tirzepatida y retatrutida.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Selectividad</strong> — cuánto se ocupa solo de su diana y de nada más. La ipamorelina es muy selectiva; los GHRP clásicos, menos.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Semivida</strong> — tiempo en que se degrada la mitad del compuesto. De ella depende cada cuánto toca dosificar.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">GHRH</strong> — la hormona que la hipófisis recibe para soltar GH. Sermorelina y CJC-1295 imitan exactamente esa señal.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">GHRP / secretagogo</strong> — péptidos que piden GH por el camino de la grelina: ipamorelina, GHRP-2, hexarelina…</div>
+          <div><strong style="color:var(--text-main);">IGF-1</strong> — proteína que actúa "aguas abajo" de la hormona del crecimiento; muchos estudios del eje GH miran sus niveles.</div>
+        </div>
+      </div>
+
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--purple); font-size:0.95rem; margin-bottom:9px;">🔬 Pureza y análisis (lo que ves en el COA)</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.55;">
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Pureza</strong> — qué porcentaje de lo que detecta el test es el péptido buscado. Un 99% deja menos del 1% de impurezas. Importante: <em>no</em> dice cuántos mg hay en el vial; eso es otra medición.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">HPLC</strong> — la técnica que mide esa pureza. Es el número estrella de cualquier certificado.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">COA (Certificado de Análisis)</strong> — informe de lote: identidad del producto, número de lote y resultados de los ensayos.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Espectrometría de masas (MS)</strong> — pesa la molécula con precisión y confirma su peso esperado; apoya la identidad sin probar por sí sola la secuencia completa.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Peso molecular (MW)</strong> — cuánto "pesa" una molécula. Sirve para confirmar identidad y para pasar de mg a molar.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Número CAS</strong> — el DNI único de cada compuesto químico; evita confusiones entre nombres comerciales.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Contenido neto de péptido</strong> — qué parte del polvo es realmente péptido al descontar los restos de fabricación.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">RUO (solo investigación)</strong> — etiqueta legal: producto para laboratorio, no para personas ni animales.</div>
+          <div><strong style="color:var(--text-main);">In vitro</strong> — literalmente "en vidrio": ensayos en placas y tubos, fuera de un organismo vivo.</div>
+        </div>
+      </div>
+
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--purple); font-size:0.95rem; margin-bottom:9px;">🧊 Manejo y formulación</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.55;">
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Liofilizado</strong> — polvo seco obtenido congelando el material y extrayendo el agua: la forma en que llegan los viales y la que más dura.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Reconstitución</strong> — añadir el diluyente al polvo para volver a la solución. El "cómo" está en la Guía de Reconstitución de este menú.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Diluyente</strong> — el líquido que disuelve el polvo; lo habitual es agua bacteriostática.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Solubilidad</strong> — lo fácil que se disuelve un péptido. Los hidrofóbicos pueden exigir ácido acético diluido.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Blend (mezcla)</strong> — un vial con dos o más péptidos en proporción fija para estudiarlos juntos (Wolverine, Glow, Klow…).</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Contraión / sal de acetato</strong> — molécula "compañera" que se queda unida al péptido para que el polvo aguante estable; es parte normal de cómo se suministra.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Excipiente</strong> — ingrediente extra añadido al vial para proteger o dar volumen al producto.</div>
+          <div style="margin-bottom:8px;"><strong style="color:var(--text-main);">Solución de trabajo</strong> — solución ya diluida, lista para uso diario, preparada a partir de una concentrada.</div>
+          <div><strong style="color:var(--text-main);">Marcado / sin marcar (tagged/untagged)</strong> — si el péptido lleva algún marcador molecular extra o va tal cual, sin nada añadido.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18. MÓDULO ¿CUÁNTO DURA EL PÉPTIDO? -->
+    <section id="module-duracion" class="module-view">
+      <div class="module-hero">
+        <div class="module-hero-info">
+          <h1>
+            <span class="badge-tag">Estabilidad</span>
+            ¿Cuánto Dura el Péptido?
+          </h1>
+          <p>Qué influye en su conservación y cuánto aguanta el polvo frente a la solución ya hecha.</p>
+        </div>
+      </div>
+
+      <!-- Estimador -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--amber); font-size:0.95rem; margin-bottom:10px;">⏱️ Estimador rápido</div>
+
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">Forma del péptido:</div>
+        <div class="pill-grid" id="durFormPills" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <button type="button" class="pill-3d active" data-dur-form="liof">🧴 Polvo liofilizado</button>
+          <button type="button" class="pill-3d" data-dur-form="sol">💉 Solución reconstituida</button>
+        </div>
+
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">Conservación:</div>
+        <div class="pill-grid" id="durTempPills" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <button type="button" class="pill-3d" data-dur-temp="cong">❄️ Congelador -20 °C</button>
+          <button type="button" class="pill-3d active" data-dur-temp="frio">🧊 Frigorífico 2-8 °C</button>
+          <button type="button" class="pill-3d" data-dur-temp="amb">🌡️ Ambiente 20-25 °C</button>
+        </div>
+
+        <div id="durResult" style="background:rgba(245,158,11,0.10); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:11px 13px; font-size:0.86rem; line-height:1.5; color:var(--text-secondary);">
+          Elige forma y conservación para ver la estimación.
+        </div>
+        <div style="font-size:0.74rem; color:var(--text-muted); margin-top:8px; line-height:1.45;">
+          Estimación orientativa de investigación, no una garantía: pH extremos, luz y repetidos ciclos de
+          descongelación acortan la ventana. Consulta el COA de tu lote cuando lo tengas.
+        </div>
+      </div>
+
+      <!-- Factores -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--amber); font-size:0.95rem; margin-bottom:8px;">Los 4 factores que deciden todo</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
+          <strong style="color:var(--text-main);">Temperatura.</strong> El frío frena las reacciones que rompen el péptido. Congelador para almacenar, frigorífico para usar; evita congelar ya la solución.<br>
+          <strong style="color:var(--text-main);">pH.</strong> Los extremos ácidos o alcalinos aceleran la degradación; el entorno neutro (pH 6-7) es el más estable para la mayoría de las secuencias.<br>
+          <strong style="color:var(--text-main);">Luz y oxígeno.</strong> La luz UV y el aire hacen su trabajo invisible: vial cerrado y a oscuras.<br>
+          <strong style="color:var(--text-main);">Forma.</strong> El polvo liofilizado aguanta muchísimo más que la misma molécula ya disuelta. Por eso conviene reconstituir solo lo que vayas a usar.
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--amber); font-size:0.95rem; margin-bottom:10px;">Tabla de referencia</div>
+        <div style="font-size:0.82rem; line-height:1.5;">
+          <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border-color);">
+            <span style="color:var(--text-secondary);">🧴 Polvo · congelador <span style="white-space:nowrap;">-20 °C</span></span>
+            <strong style="color:var(--text-main); white-space:nowrap;">12-24 meses</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border-color);">
+            <span style="color:var(--text-secondary);">🧴 Polvo · frigorífico <span style="white-space:nowrap;">2-8 °C</span></span>
+            <strong style="color:var(--text-main); white-space:nowrap;">meses (ideal al congelador)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border-color);">
+            <span style="color:var(--text-secondary);">💉 Solución · frigorífico <span style="white-space:nowrap;">2-8 °C</span></span>
+            <strong style="color:var(--text-main); white-space:nowrap;">4-8 sem (máx. ~3 meses)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border-color);">
+            <span style="color:var(--text-secondary);">🌡️ Solución · ambiente</span>
+            <strong style="color:var(--text-main); white-space:nowrap;">horas a pocos días</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:10px; padding:7px 0;">
+            <span style="color:var(--text-secondary);">📦 Polvo · en tránsito</span>
+            <strong style="color:var(--text-main); white-space:nowrap;">aguanta días protegido</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reglas -->
+      <div class="card-section" style="padding:14px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--amber); font-size:0.95rem; margin-bottom:8px;">Reglas que alargan la vida de tu vial</div>
+        <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
+          • Marca la <strong>fecha de reconstitución</strong> en cuanto abres el vial (Label / Inventario).<br>
+          • De vuelta al frío en cuanto terminas de manipular: <strong>minutos fuera</strong>, no horas.<br>
+          • Tapón con <strong>alcohol</strong> antes de cada pinchazo y jeringa limpia: la contaminación acorta la vida útil.<br>
+          • <strong>No agites</strong> y no congeles la solución ya hecha.<br>
+          • Reconstituye <strong>lo justo</strong>: lo que no vayas a usar en su ventana, déjalo en polvo.<br>
+          • Guarda el vial <strong>a oscuras</strong>: ni luz directa ni en el parasol del coche.
+        </div>
+      </div>
+    </section>
+
+    <!-- Aviso Farmacológico -->
+    <div class="disclaimer-banner">
+      <svg viewBox="0 0 24 24" style="width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Herramienta para investigación y educación. Verifique siempre los cálculos antes de cualquier aplicación.</span>
+    </div>
+
+  </main>
+
+  <!-- Barra de Navegación Inferior (Bottom Navigation) -->
+  <nav class="bottom-nav">
+    <a class="nav-item active" data-target="dashboard">
+      <svg viewBox="0 0 24 24"><path d="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z"/></svg>
+      <span>Salud</span>
+    </a>
+    <a class="nav-item" data-target="calendar">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      <span>Calendario</span>
+    </a>
+    <a class="nav-item" data-target="calc">
+      <svg viewBox="0 0 24 24"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+      <span>Calc</span>
+    </a>
+    <a class="nav-item" data-target="plan">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 16l3-3 2 2 5-5"/></svg>
+      <span>Nivel PK</span>
+    </a>
+    <a class="nav-item" data-target="inventory">
+      <svg viewBox="0 0 24 24"><path d="M5 2h5v6l2 3v11H3V11l2-3z"/><path d="M14 7h5v4l2 3v8h-9v-8l2-3z"/><path d="M3 15h9"/></svg>
+      <span>Inventario</span>
+    </a>
+  </nav>
+
+  <!-- Cajón Lateral con Todos los Módulos (Drawer) -->
+  <div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer-panel">
+      <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="drawer-title" id="drawerMainTitle">Todos los Módulos</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="icon-btn-3d" id="drawerLangToggleBtn" type="button" aria-label="Cambiar idioma" title="Cambiar idioma" style="font-size:0.78rem; font-weight:900; width:auto; height:34px; padding:0 8px; min-width:44px; border-radius:8px; color:var(--text-main); display:inline-flex; align-items:center; justify-content:center; gap:3px; touch-action:manipulation; cursor:pointer;">
+            <span id="drawerLangFlag" style="pointer-events:none;">🇪🇸</span> <span id="drawerLangText" style="pointer-events:none;">ES</span>
+          </button>
+          <button class="icon-btn-3d" id="closeDrawerBtn" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="drawer-scroll">
+        <div class="drawer-group-label">Panel Personal</div>
+        <div class="drawer-item active" data-target="dashboard">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z"/></svg></div>
+          <span>Seguimiento y Datos de Salud</span>
+        </div>
+        <div class="drawer-item" data-target="calendar">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+          <span>Calendario y Registro Diario</span>
+        </div>
+        <div class="drawer-item" data-target="medications">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg></div>
+          <span>Todas las Medicaciones</span>
+        </div>
+
+        <div class="drawer-group-label">Calculadoras Principales</div>
+        <div class="drawer-item" data-target="calc">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="m18 2 4 4"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/></svg></div>
+          <span>Calc (Reconstitución Estándar)</span>
+        </div>
+        <div class="drawer-item" data-target="reverse">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/></svg></div>
+          <span>Reverse (Calculadora Inversa)</span>
+        </div>
+        <div class="drawer-item" data-target="blend">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M9 3c-3 4-5 6.5-5 9a5 5 0 0 0 10 0c0-2.5-2-5-5-9z"/></svg></div>
+          <span>Blend (Mezclas Multi-péptido)</span>
+        </div>
+        <div class="drawer-item" data-target="hgh">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M8 2h8M9 2v18a3 3 0 0 0 6 0V2"/></svg></div>
+          <span>HGH (Somatropina en UI)</span>
+        </div>
+        <div class="drawer-item" data-target="intranasal">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M6 9h6v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/></svg></div>
+          <span>Intranasal (Spray Dosificado)</span>
+        </div>
+
+        <div class="drawer-group-label">Planificación y Reservas</div>
+        <div class="drawer-item" data-target="plan">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/></svg></div>
+          <span>Plan (Titulación y Pautas)</span>
+        </div>
+        <div class="drawer-item" data-target="runway">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M3 16a9 9 0 0 1 18 0"/></svg></div>
+          <span>Runway (Duración de Suministro)</span>
+        </div>
+
+        <div class="drawer-group-label">Herramientas Clínicas</div>
+        <div class="drawer-item" data-target="rotate">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3.4-7.05"/></svg></div>
+          <span>Rotate (Mapa de Inyecciones SubQ)</span>
+        </div>
+        <div class="drawer-item" data-target="convert">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M3 8h15M21 16H6"/></svg></div>
+          <span>Convert (Conversor de Unidades)</span>
+        </div>
+        <div class="drawer-item" data-target="inventory">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M5 2h5v6l2 3v11H3V11l2-3z"/></svg></div>
+          <span>Inventario (Gestión de Viales)</span>
+        </div>
+        <div class="drawer-item" data-target="label">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M20.6 13.4a2 2 0 0 1 0 2.8l-4.4 4.4"/></svg></div>
+          <span>Label (Etiquetas para Impresora)</span>
+        </div>
+        <div class="drawer-item" data-target="coa">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12"/></svg></div>
+          <span>COA (Análisis de Pureza HPLC)</span>
+        </div>
+        <div class="drawer-item" data-target="chart">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+          <span>Chart (Matriz de Referencia)</span>
+        </div>
+        <div class="drawer-item" data-target="labs">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M10 2v6L4 20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2L14 8V2"/></svg></div>
+          <span>Labs (Analíticas de Sangre)</span>
+        </div>
+        <div class="drawer-item" data-target="research">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <span>Guía (Biblioteca de Péptidos)</span>
+        </div>
+        <div class="drawer-item" data-target="reconst">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M12 2.7c3.3 3.5 6 6.6 6 9.8a6 6 0 1 1-12 0c0-3.2 2.7-6.3 6-9.8z"/><path d="M9.5 13.5a2.5 2.5 0 0 0 2.5 2.5"/></svg></div>
+          <span>Guía de Reconstitución</span>
+        </div>
+        <div class="drawer-item" data-target="glosario">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></div>
+          <span>Glosario de Péptidos</span>
+        </div>
+        <div class="drawer-item" data-target="duracion">
+          <div class="drawer-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <span>¿Cuánto Dura el Péptido?</span>
+        </div>
+
+        <div class="drawer-group-label">Privacidad y Copias (Estilo Bench)</div>
+        <div class="drawer-item" id="drawerBackupJsonBtn">
+          <div class="drawer-item-icon">💾</div>
+          <span>Exportar Copia Completa (JSON)</span>
+        </div>
+        <div class="drawer-item" id="drawerRestoreJsonBtn">
+          <div class="drawer-item-icon">📂</div>
+          <span>Restaurar Copia de Seguridad (JSON)</span>
+        </div>
+        <div class="drawer-item" id="drawerExportCsvBtn">
+          <div class="drawer-item-icon">📊</div>
+          <span>Exportar Historial (CSV)</span>
+        </div>
+        <div style="margin:10px 14px 6px; padding:10px 12px; border-radius:12px; background:rgba(16,185,129,0.10); border:1px solid rgba(16,185,129,0.35); font-size:0.76rem; line-height:1.45; color:#a7f3d0;">
+          🛡️ <strong>Copias automáticas activas</strong><br>
+          Se guardan solas en <em>Descargas/MisPep</em> (no se borran al desinstalar):<br>
+          • <strong>3 copias de cambios</strong> en rotación (<span id="autobackupSlots">MisPep_auto_cambio_1/2/3.json</span>) — se reescribe la más antigua<br>
+          • <strong>1 copia semanal</strong> (<em>MisPep_auto_semanal.json</em>) — solo se renueva cada 7 días<br>
+          <span id="autobackupEstado" style="opacity:0.85;"></span>
+        </div>
+
+        <div class="drawer-group-label">Notificaciones y Sistema</div>
+        <div class="drawer-item" id="drawerBatterySettingsBtn">
+          <div class="drawer-item-icon">🔔</div>
+          <span>Persistencia y Avisos (9:00 AM)</span>
+        </div>
+
+        <div class="drawer-group-label">Apoyo y Desarrollo</div>
+        <div class="drawer-item" id="drawerSupportDevBtn" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:12px; margin-top:4px;">
+          <div class="drawer-item-icon">☕</div>
+          <span style="color:#f59e0b; font-weight:800;">Quiero ayudar al programador</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="backupFileInput" accept=".json" style="display:none;">
+
+  <!-- BOTTOM SHEET MODAL: MEDICAMENTOS ACTIVOS (IDÉNTICO A LA CAPTURA) -->
+  <div class="bottom-sheet-backdrop" id="activeMedsBackdrop">
+    <div class="bottom-sheet-panel" id="activeMedsPanel">
+      <div class="bottom-sheet-handle"></div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+        <div style="flex:1;">
+          <h2 style="font-size:1.3rem; font-weight:900; color:var(--text-main); letter-spacing:-0.4px;">Medicamentos activos</h2>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; line-height:1.4;">
+            Toca «Cambiar el color» para cambiar el color de un medicamento. Desactiva uno para ocultarlo del panel de recordatorios; tu historial se conserva.
+          </p>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeActiveMedsBtn" style="width:30px; height:30px; margin-left:8px;">✕</button>
+      </div>
+
+      <!-- Fila del Medicamento Activo (Retatrutide) -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:18px; padding:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:1.05rem; font-weight:900; color:var(--text-main); margin-bottom:8px;" id="sheetMedTitle">Retatrutide</div>
+          <button type="button" class="btn-3d btn-3d-surface" id="sheetColorBtn" style="padding:5px 12px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px; border-radius:20px;">
+            <span id="sheetMedColorDot" style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#8b5cf6;"></span>
+            <span>Cambiar el color</span>
+          </button>
+        </div>
+
+        <!-- Toggle Switch ON/OFF -->
+        <label class="switch-toggle" id="sheetMedSwitchLabel" style="--med-accent-color: #8b5cf6;">
+          <input type="checkbox" id="sheetMedActiveToggle" checked>
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- Selector Desplegable de Paleta de Colores (Aparece al pulsar Cambiar el color) -->
+      <div id="sheetColorPalette" style="display:none; background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-align:center;">SELECCIONA UN COLOR CLÍNICO</div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button type="button" class="color-pick-btn" data-color="#8b5cf6" style="width:34px; height:34px; border-radius:50%; background:#8b5cf6; border:2px solid #ffffff; cursor:pointer;"></button>
+          <button type="button" class="color-pick-btn" data-color="#06b6d4" style="width:34px; height:34px; border-radius:50%; background:#06b6d4; border:none; cursor:pointer;"></button>
+          <button type="button" class="color-pick-btn" data-color="#10b981" style="width:34px; height:34px; border-radius:50%; background:#10b981; border:none; cursor:pointer;"></button>
+          <button type="button" class="color-pick-btn" data-color="#f59e0b" style="width:34px; height:34px; border-radius:50%; background:#f59e0b; border:none; cursor:pointer;"></button>
+          <button type="button" class="color-pick-btn" data-color="#ec4899" style="width:34px; height:34px; border-radius:50%; background:#ec4899; border:none; cursor:pointer;"></button>
+          <button type="button" class="color-pick-btn" data-color="#3b82f6" style="width:34px; height:34px; border-radius:50%; background:#3b82f6; border:none; cursor:pointer;"></button>
+        </div>
+      </div>
+
+      <!-- Fila: Hora del Recordatorio de Inyección -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Hora de la inyección semanal</div>
+          <div style="font-size:0.74rem; color:var(--text-muted); margin-top:2px;">Aviso del péptido (independiente de la medicación diaria)</div>
+        </div>
+        <button type="button" class="btn-3d btn-3d-surface" id="sheetReminderTimeBtn" style="padding:6px 14px; border-radius:20px; font-weight:800; font-size:0.85rem; display:flex; align-items:center; gap:6px;">
+          <span>⏰</span>
+          <span id="sheetReminderTimeLabel">09:00</span>
+        </button>
+      </div>
+
+      <!-- Selector Desplegable de Hora de Recordatorio -->
+      <div id="sheetTimeEditor" style="display:none; background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:12px; margin-bottom:12px;">
+        <label class="field-label">Ajustar Hora de la Inyección Semanal</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+          <input type="time" id="sheetCustomTimeInput" value="09:00" style="flex:2; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+          <button type="button" class="btn-3d btn-3d-emerald" id="sheetSaveTimeBtn" style="flex:1;">Guardar</button>
+        </div>
+        <button type="button" class="btn-3d btn-3d-purple btn-block" id="sheetSetClockAlarmBtn" style="padding:10px 14px; font-size:0.82rem; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span>⏰</span>
+          <span>Poner en el Despertador / Reloj del teléfono</span>
+        </button>
+        <div style="font-size:0.69rem; color:var(--text-muted); margin-top:6px; text-align:center; line-height:1.35;">
+          Abre la app Reloj de tu móvil con esta alarma programada para que suene sin depender de MisPep en segundo plano.
+        </div>
+      </div>
+
+      <!-- Fila: Editar Horario / Protocolo -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" id="sheetEditScheduleRow">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.2rem;">🗓️</span>
+          <span style="font-weight:800; font-size:0.92rem; color:var(--text-main);">Editar horario</span>
+        </div>
+        <span style="color:var(--text-muted); font-size:1.1rem; font-weight:900;">›</span>
+      </div>
+
+      <!-- Sección Desplegable para Editar Horario -->
+      <div id="sheetScheduleEditor" style="display:none; background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-top:12px;">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="grid-2col">
+            <div>
+              <label class="field-label">Dosis Próxima (mg)</label>
+              <input type="number" id="sheetDoseInput" value="1.5" step="any" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+            </div>
+            <div>
+              <label class="field-label">Frecuencia (días)</label>
+              <input type="number" id="sheetFreqInput" value="7" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Próxima Fecha Programada</label>
+            <input type="date" id="sheetDateInput" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+          </div>
+          <button type="button" class="btn-3d btn-3d-emerald btn-block" id="sheetSaveScheduleBtn">
+            ✓ Guardar Horario
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET MODAL: GESTIÓN Y EDICIÓN DE PESO (SHOTLEE STYLE) -->
+  <div class="bottom-sheet-backdrop" id="weightHistoryBackdrop">
+    <div class="bottom-sheet-panel" id="weightHistoryPanel">
+      <div class="bottom-sheet-handle"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+        <div style="flex:1;">
+          <h2 style="font-size:1.3rem; font-weight:900; color:var(--text-main); letter-spacing:-0.4px;">Historial y Registros de Peso</h2>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:3px; line-height:1.4;">
+            Añade, edita la fecha o el peso de cualquier registro anterior, o ajusta tu estatura para el IMC.
+          </p>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeWeightHistoryBtn" style="width:30px; height:30px; margin-left:8px;">✕</button>
+      </div>
+
+      <!-- Selector de Subpestañas del Modal -->
+      <div class="subtabs" id="weightModalSubtabs" style="margin-bottom:14px;">
+        <button type="button" class="subtab-btn active" data-wtab="records">📋 Todos los Registros</button>
+        <button type="button" class="subtab-btn" data-wtab="add">＋ Nuevo Peso</button>
+        <button type="button" class="subtab-btn" data-wtab="settings">⚙️ Altura y Meta</button>
+      </div>
+
+      <!-- VISTA 1: LISTA COMPLETA DE REGISTROS CON BOTÓN EDITAR Y BORRAR -->
+      <div id="wtabViewRecords">
+        <button type="button" class="btn-3d btn-3d-cyan" id="hcImportBtn" style="width:100%; margin-bottom:12px; display:none;">
+          ⌚ Importar pesajes de la báscula (Health Connect)
+        </button>
+        <div id="weightRecordsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
+      </div>
+
+      <!-- VISTA 2: FORMULARIO DE AÑADIR / EDITAR PESO -->
+      <div id="wtabViewAdd" style="display:none;">
+        <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:12px;">
+          <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); margin-bottom:10px;" id="wFormHeaderTitle">Añadir o Editar Pesaje</div>
+          <input type="hidden" id="wEditIndex" value="-1">
+          <div class="grid-2col" style="margin-bottom:10px;">
+            <div>
+              <label class="field-label">Peso (kg)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="wInputWeight" value="91.0" step="0.1">
+                <span class="unit-badge">kg</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Fecha del Pesaje</label>
+              <input type="date" id="wInputDate" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:9px; font-weight:700;">
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-3d btn-3d-emerald" id="wSaveRecordBtn" style="flex:2;">
+              ✓ Guardar Registro
+            </button>
+            <button type="button" class="btn-3d btn-3d-surface" id="wCancelEditBtn" style="flex:1; display:none;">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 3: AJUSTES DE PERFIL CLÍNICO (ALTURA E INICIO) -->
+      <div id="wtabViewSettings" style="display:none;">
+        <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:12px;">
+          <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); margin-bottom:10px;">Parámetros Clínicos para IMC</div>
+          <div class="grid-2col" style="margin-bottom:12px;">
+            <div>
+              <label class="field-label">Estatura (cm)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="wProfileHeight" placeholder="170" value="">
+                <span class="unit-badge">cm</span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Peso de Inicio (kg)</label>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="wProfileStartWeight" placeholder="75.0" step="0.1" value="">
+                <span class="unit-badge">kg</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="field-label">Meta de peso (kg)</label>
+            <div class="input-group" style="margin:0;">
+              <input type="number" id="wProfileTargetWeight" placeholder="70.0" step="0.1" value="">
+              <span class="unit-badge">kg</span>
+            </div>
+          </div>
+          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="wSaveProfileBtn">
+            ✓ Guardar Altura, Peso Inicial y Meta
+          </button>
+        </div>
+
+        <!-- PANEL: META EN KG Y EVOLUCIÓN DEL PROGRESO -->
+        <div id="wGoalPanel" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:0.92rem; font-weight:800; color:var(--text-main);">🎯 Meta de peso y evolución</span>
+            <span id="wGoalBadge" style="font-size:0.72rem; font-weight:800; padding:3px 9px; border-radius:9px; background:rgba(16,185,129,0.15); color:#34d399; white-space:nowrap;">—</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:12px;">
+            <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+              <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Meta</div>
+              <div id="wGoalTarget" style="font-size:1.05rem; font-weight:900; color:#34d399; line-height:1.2;">—</div>
+              <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">kg a conseguir</div>
+            </div>
+            <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+              <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Conseguido</div>
+              <div id="wGoalDone" style="font-size:1.05rem; font-weight:900; color:#22d3ee; line-height:1.2;">—</div>
+              <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">kg bajados</div>
+            </div>
+            <div class="stat-twin-card" style="flex-direction:column; padding:8px 4px; text-align:center; gap:0;">
+              <div style="font-size:0.6rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Faltan</div>
+              <div id="wGoalLeft" style="font-size:1.05rem; font-weight:900; color:#fbbf24; line-height:1.2;">—</div>
+              <div style="font-size:0.58rem; font-weight:700; color:var(--text-muted);">kg por bajar</div>
+            </div>
+          </div>
+
+          <!-- Barra hundida con relleno en relieve -->
+          <div style="height:14px; border-radius:9px; background:var(--card-bg-elevated); border:1px solid var(--border-color); box-shadow:inset 0 2px 4px rgba(0,0,0,0.45); overflow:hidden; margin-bottom:10px;">
+            <div id="wGoalBarFill" style="height:100%; width:0%; border-radius:8px; background:linear-gradient(180deg, #34d399 0%, #059669 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.45), 0 0 10px rgba(16,185,129,0.5); transition:width 0.45s cubic-bezier(0.16,1,0.3,1);"></div>
+          </div>
+
+          <div id="wGoalSummary" style="font-size:0.78rem; font-weight:700; color:var(--text-secondary); line-height:1.45;">
+            Configura tu meta para ver el progreso.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET MODAL: REGISTRAR ENTRADA DEL CALENDARIO (6 ACCIONES) -->
+  <div class="bottom-sheet-backdrop" id="calActionBackdrop">
+    <div class="bottom-sheet-panel" id="calActionPanel">
+      <div class="bottom-sheet-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-size:1.15rem; font-weight:900; color:var(--text-main);" id="calModalTitle">Registrar Entrada</span>
+        <button type="button" id="calModalCloseBtn" class="icon-btn-3d" style="width:30px; height:30px;">✕</button>
+      </div>
+      <div id="calModalBody"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET MODAL COMPLETO: AÑADIR DOSIS (SHOTLEE REPLICA) -->
+  <div class="bottom-sheet-backdrop" id="addDoseModalBackdrop">
+    <div class="bottom-sheet-panel" id="addDoseModalPanel" style="max-height:92vh; padding-bottom:34px;">
+      <div class="bottom-sheet-handle"></div>
+
+      <!-- Header del Modal -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.3rem;">💉</span>
+          <span style="font-size:1.25rem; font-weight:900; color:var(--text-main);">Añadir dosis</span>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeAddDoseModalBtn" style="width:32px; height:32px;">✕</button>
+      </div>
+
+      <!-- SECCIÓN 1: MEDICAMENTO -->
+      <div class="card-section" style="margin-bottom:12px; border-color:rgba(16,185,129,0.25);">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+          <span>💉</span>
+          <span style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Medicamento</span>
+        </div>
+
+        <!-- Buscador de Medicamentos -->
+        <div style="position:relative; margin-bottom:8px;">
+          <input type="text" id="addDoseMedSearch" placeholder="Buscar medicamentos..." style="width:100%; background:#0b1120; border:1px solid var(--border-color); border-radius:10px; padding:10px 36px 10px 12px; color:var(--text-main); font-weight:700; font-size:0.85rem; box-sizing:border-box;">
+          <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.9rem;">🔍</span>
+        </div>
+
+        <!-- Badge Seleccionado -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:8px 12px; margin-bottom:8px;">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">Seleccionado:</span>
+          <div style="display:flex; align-items:center; gap:6px; background:#0f172a; padding:4px 10px; border-radius:8px; border:1px solid rgba(16,185,129,0.4);">
+            <span style="font-weight:900; font-size:0.88rem; color:#ffffff;" id="addDoseSelectedMedLabel">Retatrutide</span>
+            <span style="color:#10b981; font-weight:900;">✓</span>
+          </div>
+        </div>
+
+        <!-- Selector Scrollable / Rueda de Medicamentos -->
+        <div class="med-wheel-container" id="addDoseMedWheel">
+          <div class="med-wheel-item" data-med="Qsymia" data-class="Fentermina / Topiramato">Qsymia (phentermine/topiramate)</div>
+          <div class="med-wheel-item" data-med="Orlistat" data-class="Inhibidor de la lipasa gastrointestinal">Orlistat (Alli/Xenical)</div>
+          <div class="med-wheel-item selected" data-med="Retatrutide" data-class="Triple agonista GLP-1/GIP/Glucagon">Retatrutide</div>
+          <div class="med-wheel-item" data-med="Tirzepatida" data-class="Agonista dual GIP/GLP-1 (Mounjaro/Zepbound)">Tirzepatida</div>
+          <div class="med-wheel-item" data-med="Semaglutida" data-class="Agonista GLP-1 (Ozempic/Wegovy)">Semaglutida</div>
+          <div class="med-wheel-item" data-med="Liraglutide" data-class="Agonista GLP-1 (Victoza/Saxenda)">Liraglutide (Victoza/Saxenda)</div>
+          <div class="med-wheel-item" data-med="Dulaglutide" data-class="Agonista GLP-1 semanal (Trulicity)">Dulaglutide (Trulicity)</div>
+          <div class="med-wheel-item" data-med="Cagrilintida" data-class="Análogo de amilina de acción prolongada">Cagrilintida</div>
+          <div class="med-wheel-item" data-med="BPC-157" data-class="Péptido de regeneración gástrico y tisular">BPC-157</div>
+          <div class="med-wheel-item" data-med="TB-500" data-class="Timina Beta-4 / Reparación sistémica">TB-500</div>
+          <div class="med-wheel-item" data-med="Tesamorelina" data-class="Análogo sintético del factor liberador de GHRH">Tesamorelina</div>
+        </div>
+
+        <!-- Ficha de Clasificación Farmacológica -->
+        <div class="med-class-card" id="addDoseMedClassCard">
+          <span style="font-size:1.3rem;">💊</span>
+          <div>
+            <div style="font-weight:900; font-size:0.9rem; color:#ffffff;" id="addDoseClassMedName">Retatrutide</div>
+            <div style="font-size:0.75rem; color:#34d399; font-weight:700;" id="addDoseClassDetail">Clase: Triple GLP-1/GIP/Glucagon</div>
+          </div>
+        </div>
+
+        <!-- Botón Añadir Medicamento Personalizado -->
+        <button type="button" class="btn-3d btn-3d-surface btn-block" id="addCustomMedBtn" style="margin-top:8px; font-size:0.8rem; padding:8px 12px; border:1px solid var(--border-color);">
+          ＋ Añadir medicamento personalizado
+        </button>
+      </div>
+
+      <!-- MODALIDAD DOSIS OMITIDA (FILOSOFÍA BENCH) -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="flex:1; padding-right:10px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>⏭️</span>
+            <span style="font-weight:900; font-size:0.88rem; color:var(--text-main);">Registrar como dosis omitida</span>
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px; line-height:1.3;">
+            Marca si decidiste no administrar esta dosis. No descuenta viales, no altera la curva PK y se registra por separado de una dosis olvidada.
+          </div>
+        </div>
+        <label class="switch-toggle" style="--med-accent-color: #f59e0b;">
+          <input type="checkbox" id="addDoseSkippedToggle">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- SECCIÓN 2: DOSIS -->
+      <div class="card-section" id="addDoseSectionDosis" style="margin-bottom:12px; transition:opacity 0.2s ease;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+          <span>💊</span>
+          <span style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Dosis</span>
+        </div>
+
+        <!-- Cómo lo tomas -->
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">como lo tomas</div>
+          <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(212,163,115,0.08); border:1.5px solid #d4a373; border-radius:12px; padding:8px 16px;">
+            <span>💉</span>
+            <span style="font-weight:800; font-size:0.88rem; color:#ffffff;">Injection</span>
+          </div>
+        </div>
+
+        <!-- Dosis activa (Gran Caja Numérica) -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">Dosis activa</div>
+          <input type="number" id="addDoseNumberInput" value="0.5" step="any" class="dose-large-input">
+        </div>
+
+        <!-- Unidad de fuerza activa (Cuadrícula 2x2) -->
+        <div>
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">Unidad de fuerza activa</div>
+          <div class="dose-unit-grid">
+            <div class="dose-unit-card active" data-unit="mg">
+              <span class="unit-name">mg</span>
+              <span class="unit-cat">Masa</span>
+            </div>
+            <div class="dose-unit-card" data-unit="mcg">
+              <span class="unit-name">mcg</span>
+              <span class="unit-cat">Masa</span>
+            </div>
+            <div class="dose-unit-card" data-unit="IU">
+              <span class="unit-name">IU</span>
+              <span class="unit-cat">Actividad</span>
+            </div>
+            <div class="dose-unit-card" data-unit="mL">
+              <span class="unit-name">mL</span>
+              <span class="unit-cat">Volumen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREPARACIÓN DEL PINCHAZO: vial actual + jeringuilla y pluma en directo -->
+        <div style="margin-top:12px; border:1px solid rgba(6,182,212,0.3); background:rgba(6,182,212,0.05); border-radius:14px; padding:12px 12px 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>🧪</span>
+              <span style="font-weight:900; font-size:0.88rem; color:var(--text-main);">Jeringuilla y pluma</span>
+            </div>
+            <span id="addDoseUnitsBadge" style="font-size:0.75rem; font-weight:900; color:#38bdf8; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.35); border-radius:10px; padding:3px 8px; white-space:nowrap;">— unidades</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">Vial actual (mg)</div>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="addDoseVialMg" value="10" step="any" inputmode="decimal">
+                <span class="unit-badge">mg</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">Agua BAC en vial (mL)</div>
+              <div class="input-group" style="margin:0;">
+                <input type="number" id="addDoseBacMl" value="2" step="any" inputmode="decimal">
+                <span class="unit-badge">mL</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted); white-space:nowrap;">Jeringuilla:</span>
+            <select id="addDoseSyringeSel" style="flex:1; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:7px 8px; font-weight:700; font-size:0.8rem;">
+              <option value="100" selected>U-100 (1 mL / 100 u)</option>
+              <option value="50">U-50 (0.5 mL / 50 u)</option>
+              <option value="30">U-30 (0.3 mL / 30 u)</option>
+              <option value="40">U-40 (1 mL / 40 u)</option>
+            </select>
+          </div>
+
+          <div class="syringe-title">Extracción en la jeringuilla</div>
+          <div class="syringe-svg-box" id="addDoseSyringeView"></div>
+
+          <div class="syringe-title" style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-top:8px;">
+            <span>Pluma dosificadora</span>
+            <span style="font-size:0.75rem; color:#38bdf8; font-weight:800; white-space:nowrap;" id="addDosePenBadge">--</span>
+          </div>
+          <div class="syringe-svg-box" id="addDosePenView" style="margin-top:6px; background:rgba(0,0,0,0.25); border:1px solid var(--border-color); border-radius:10px; padding:10px 6px;"></div>
+
+          <div id="addDosePrepNote" style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; line-height:1.35;">
+            💡 Las unidades se recalculan solas al cambiar la dosis, los mg del vial o el agua BAC para mantener siempre la dosis pedida.
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: ZONA DE INYECCIÓN (MAPA ANATÓMICO DUAL FRENTE & ESPALDA) -->
+      <div class="card-section" id="addDoseSectionZone" style="margin-bottom:12px; transition:opacity 0.2s ease;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>📍</span>
+            <span style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Zona de inyección</span>
+          </div>
+          <!-- Estado de rotación y descanso -->
+          <div style="display:flex; align-items:center; gap:4px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:3px 8px;">
+            <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
+            <span style="font-size:0.7rem; font-weight:800; color:#10b981;">Descansada · lista</span>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+          <span style="font-size:0.75rem; color:var(--text-muted);">Toca el cuerpo para elegir una zona</span>
+          <span style="font-size:0.8rem; font-weight:900; color:#06b6d4;" id="addDoseSelectedZoneLabel">Abdomen - Superior izquierdo</span>
+        </div>
+
+        <!-- Diagramas Anatómicos Frente & Espalda -->
+        <div class="body-diagrams-wrap">
+          <!-- Frente -->
+          <div class="body-diagram-col">
+            <div class="body-diagram-label">FRENTE</div>
+            <svg viewBox="0 0 110 180" style="width:100%; max-width:130px; height:auto; margin:0 auto; display:block;">
+              <!-- Silueta Anatómica Frontal -->
+              <path d="M 55 12 C 48 12 43 18 43 26 C 43 32 47 37 51 39 C 43 43 32 46 22 55 C 17 60 14 74 12 90 C 11 96 15 97 17 93 C 20 84 23 72 26 65 L 26 105 C 26 112 30 114 34 114 L 38 114 L 36 155 C 36 168 40 174 46 174 C 49 174 51 168 51 158 L 53 118 L 57 118 L 59 158 C 59 168 61 174 64 174 C 70 174 74 168 74 155 L 72 114 L 76 114 C 80 114 84 112 84 105 L 84 65 C 87 72 90 84 93 93 C 95 97 99 96 98 90 C 96 74 93 60 88 55 C 78 46 67 43 59 39 C 63 37 67 32 67 26 C 67 18 62 12 55 12 Z" fill="#1e293b" stroke="#334155" stroke-width="1.2" />
+              
+              <!-- Puntos de inyección interactivos Frontales -->
+              <!-- Abdomen Superior Izquierdo (Seleccionado) -->
+              <g class="body-node-item active" data-zone="Abdomen - Superior izquierdo" style="cursor:pointer;">
+                <circle cx="61" cy="74" r="8" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="2,2" />
+                <circle cx="61" cy="74" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Abdomen Superior Derecho -->
+              <g class="body-node-item" data-zone="Abdomen - Superior derecho" style="cursor:pointer;">
+                <circle cx="49" cy="74" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Abdomen Inferior Izquierdo -->
+              <g class="body-node-item" data-zone="Abdomen - Inferior izquierdo" style="cursor:pointer;">
+                <circle cx="61" cy="88" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Abdomen Inferior Derecho -->
+              <g class="body-node-item" data-zone="Abdomen - Inferior derecho" style="cursor:pointer;">
+                <circle cx="49" cy="88" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Muslo Izquierdo -->
+              <g class="body-node-item" data-zone="Muslo - Izquierdo frontal" style="cursor:pointer;">
+                <circle cx="64" cy="132" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Muslo Derecho -->
+              <g class="body-node-item" data-zone="Muslo - Derecho frontal" style="cursor:pointer;">
+                <circle cx="46" cy="132" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <!-- Brazo Deltoides Izquierdo -->
+              <g class="body-node-item" data-zone="Brazo - Deltoides izquierdo" style="cursor:pointer;">
+                <circle cx="83" cy="62" r="4" fill="#a855f7" stroke="#ffffff" stroke-width="1.2" />
+              </g>
+              <!-- Brazo Deltoides Derecho -->
+              <g class="body-node-item" data-zone="Brazo - Deltoides derecho" style="cursor:pointer;">
+                <circle cx="27" cy="62" r="4" fill="#a855f7" stroke="#ffffff" stroke-width="1.2" />
+              </g>
+            </svg>
+          </div>
+
+          <!-- Espalda -->
+          <div class="body-diagram-col">
+            <div class="body-diagram-label">ESPALDA</div>
+            <svg viewBox="0 0 110 180" style="width:100%; max-width:130px; height:auto; margin:0 auto; display:block;">
+              <!-- Silueta Anatómica Dorsal -->
+              <path d="M 55 12 C 48 12 43 18 43 26 C 43 32 47 37 51 39 C 43 43 32 46 22 55 C 17 60 14 74 12 90 C 11 96 15 97 17 93 C 20 84 23 72 26 65 L 26 105 C 26 112 30 114 34 114 L 38 114 L 36 155 C 36 168 40 174 46 174 C 49 174 51 168 51 158 L 53 118 L 57 118 L 59 158 C 59 168 61 174 64 174 C 70 174 74 168 74 155 L 72 114 L 76 114 C 80 114 84 112 84 105 L 84 65 C 87 72 90 84 93 93 C 95 97 99 96 98 90 C 96 74 93 60 88 55 C 78 46 67 43 59 39 C 63 37 67 32 67 26 C 67 18 62 12 55 12 Z" fill="#1e293b" stroke="#334155" stroke-width="1.2" />
+              
+              <!-- Puntos de Glúteo y Espalda -->
+              <g class="body-node-item" data-zone="Glúteo - Superior izquierdo" style="cursor:pointer;">
+                <circle cx="63" cy="106" r="4.5" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <g class="body-node-item" data-zone="Glúteo - Superior derecho" style="cursor:pointer;">
+                <circle cx="47" cy="106" r="4.5" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <g class="body-node-item" data-zone="Costado - Flanco izquierdo" style="cursor:pointer;">
+                <circle cx="68" cy="84" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <g class="body-node-item" data-zone="Costado - Flanco derecho" style="cursor:pointer;">
+                <circle cx="42" cy="84" r="4.5" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" />
+              </g>
+              <g class="body-node-item" data-zone="Brazo - Tríceps izquierdo" style="cursor:pointer;">
+                <circle cx="83" cy="74" r="4" fill="#06b6d4" stroke="#ffffff" stroke-width="1.2" />
+              </g>
+              <g class="body-node-item" data-zone="Brazo - Tríceps derecho" style="cursor:pointer;">
+                <circle cx="27" cy="74" r="4" fill="#06b6d4" stroke="#ffffff" stroke-width="1.2" />
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Leyenda Clínica de Inyección -->
+        <div style="display:flex; justify-content:center; gap:14px; font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#06b6d4;"></span>
+            <span>Subcutánea</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#a855f7;"></span>
+            <span>Intramuscular</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b;"></span>
+            <span>Usada hace poco</span>
+          </div>
+        </div>
+
+        <!-- Chips de Región Anatómica -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; gap:6px; overflow-x:auto;">
+            <button type="button" class="body-zone-chip active" data-region="Abdomen">Abdomen</button>
+            <button type="button" class="body-zone-chip" data-region="Costado">Costado</button>
+            <button type="button" class="body-zone-chip" data-region="Muslo">Muslo</button>
+            <button type="button" class="body-zone-chip" data-region="Brazo">Brazo</button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="body-zone-chip" data-region="Glúteo">Glúteo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: PLANIFICACIÓN Y RECORDATORIOS -->
+      <div class="card-section" style="margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+          <span>📅</span>
+          <span style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Planificación y recordatorios</span>
+        </div>
+
+        <!-- Toggle Dosis Planificada -->
+        <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <div style="font-weight:800; font-size:0.88rem; color:var(--text-main);">Esta fue una dosis planificada</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Marca si sigues tu horario</div>
+          </div>
+          <label class="switch-toggle" style="--med-accent-color: #10b981;">
+            <input type="checkbox" id="addDosePlannedToggle" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Caja de Recordatorio Próxima Dosis (Cyan Tint) -->
+        <div class="reminder-cyan-card">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+            <span style="font-size:1.1rem;">🔔</span>
+            <span style="font-weight:800; font-size:0.88rem; color:#ffffff;">Recordatorio de próxima dosis</span>
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:8px;">Opcional — te avisaremos el día y hora indicados</div>
+          
+          <div class="grid-2col" style="gap:8px;">
+            <div>
+              <label class="field-label" style="font-size:0.75rem;">Fecha</label>
+              <input type="date" id="addDoseNextDateInput" style="width:100%; background:#0f172a; border:1px solid rgba(6,182,212,0.4); border-radius:10px; padding:9px; color:#ffffff; font-weight:800; font-size:0.85rem; box-sizing:border-box;">
+            </div>
+            <div>
+              <label class="field-label" style="font-size:0.75rem;">Hora del Recordatorio</label>
+              <input type="time" id="addDoseNextTimeInput" value="21:30" style="width:100%; background:#0f172a; border:1px solid rgba(6,182,212,0.4); border-radius:10px; padding:9px; color:#ffffff; font-weight:800; font-size:0.85rem; box-sizing:border-box;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 5: ¿CÓMO TE SIENTES? (OPCIONAL) -->
+      <div class="card-section" style="margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" id="addDoseSymptomHeader">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>📝</span>
+            <span style="font-weight:900; font-size:0.95rem; color:var(--text-main);">¿Cómo te sientes?</span>
+            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">(opcional)</span>
+          </div>
+          <span style="font-size:0.9rem; color:var(--text-muted);" id="addDoseSymptomChevron">▼</span>
+        </div>
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px; margin-bottom:10px;">Toca para añadir estado de ánimo, apetito y dolor</div>
+
+        <!-- Contenido Desplegable Síntomas -->
+        <div id="addDoseSymptomBody" style="display:none; flex-direction:column; gap:10px; border-top:1px solid var(--border-color); padding-top:10px;">
+          <div>
+            <label class="field-label">Estado de Ánimo</label>
+            <select id="addDoseMoodSelect" style="width:100%; background:#0b1120; border:1px solid var(--border-color); border-radius:8px; padding:9px; color:var(--text-main); font-weight:700;">
+              <option value="Excelente">Excelente 🌟</option>
+              <option value="Bien" selected>Bien 😊</option>
+              <option value="Normal">Normal 😐</option>
+              <option value="Cansado">Cansado 🥱</option>
+              <option value="Bajo">Bajo de energía 🌧️</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Apetito</label>
+            <select id="addDoseAppetiteSelect" style="width:100%; background:#0b1120; border:1px solid var(--border-color); border-radius:8px; padding:9px; color:var(--text-main); font-weight:700;">
+              <option value="Muy Supreso">Muy suprimido</option>
+              <option value="Controlado" selected>Controlado sin antojos</option>
+              <option value="Normal">Normal</option>
+              <option value="Alto">Alto</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Molestia o Dolor en Zona (0-10)</label>
+            <input type="range" id="addDosePainRange" min="0" max="10" value="0" style="width:100%;">
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); font-weight:700;">
+              <span>0 (Ninguno)</span>
+              <span>5 (Moderado)</span>
+              <span>10 (Intenso)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN INFERIORES FIJOS -->
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn-emerald-dose" id="confirmAddDoseBtn" style="flex:2;">
+          ✓ Añadir dosis
+        </button>
+        <button type="button" class="btn-3d btn-3d-surface" id="cancelAddDoseBtn" style="flex:1;">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET MODAL: REGISTRAR PRESIÓN ARTERIAL -->
+  <div class="bottom-sheet-backdrop" id="bpSheetBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:85vh;">
+      <div class="bottom-sheet-handle"></div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.3rem;">❤️</span>
+          <span style="font-size:1.1rem; font-weight:900; color:var(--text-main);">Presión Arterial y Pulso</span>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeBpSheetBtn" style="width:30px; height:30px;">✕</button>
+      </div>
+
+      <div class="subtabs" id="bpModalTabs" style="margin-bottom:12px;">
+        <button type="button" class="subtab-btn active" id="bpTabNewBtn" data-bptab="new">＋ Nueva Lectura</button>
+        <button type="button" class="subtab-btn" data-bptab="list">📋 Historial</button>
+      </div>
+
+      <!-- Pestaña Nueva Lectura / Edición -->
+      <div id="bpTabNew">
+        <input type="hidden" id="bpEditId" value="">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label class="field-label">Fecha y Hora</label>
+            <div class="grid-2col">
+              <input type="date" id="bpInputDate" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:10px; font-weight:700;">
+              <input type="time" id="bpInputTime" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:10px; font-weight:700;">
+            </div>
+          </div>
+
+          <div class="grid-2col">
+            <div>
+              <label class="field-label" style="color:#f43f5e;">Sistólica (mmHg)</label>
+              <input type="number" id="bpInputSys" value="120" min="60" max="220" style="width:100%; background:var(--card-bg-elevated); color:#ffffff; border:1.5px solid rgba(244,63,94,0.4); border-radius:10px; padding:12px; font-size:1.2rem; font-weight:900; text-align:center;">
+              <div style="font-size:0.68rem; color:var(--text-muted); text-align:center; margin-top:2px;">Normal: &lt; 120</div>
+            </div>
+            <div>
+              <label class="field-label" style="color:#06b6d4;">Diastólica (mmHg)</label>
+              <input type="number" id="bpInputDia" value="80" min="40" max="140" style="width:100%; background:var(--card-bg-elevated); color:#ffffff; border:1.5px solid rgba(6,182,212,0.4); border-radius:10px; padding:12px; font-size:1.2rem; font-weight:900; text-align:center;">
+              <div style="font-size:0.68rem; color:var(--text-muted); text-align:center; margin-top:2px;">Normal: &lt; 80</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label">Frecuencia Cardíaca (ppm / BPM)</label>
+            <input type="number" id="bpInputPulse" value="70" min="40" max="180" style="width:100%; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:10px; padding:10px; font-weight:800;">
+          </div>
+
+          <!-- Sección Medicación Antihipertensiva Activa (Ampliables a múltiples fármacos) -->
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-top:2px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:0.95rem;">💊</span>
+                <span style="font-size:0.82rem; font-weight:800; color:var(--text-main);">Medicación Hipertensión</span>
+              </div>
+              <button type="button" class="btn-3d btn-3d-surface" id="bpAddMedRowBtn" style="padding:4px 10px; font-size:0.75rem; font-weight:800; color:#06b6d4;">
+                ＋ Añadir Fármaco
+              </button>
+            </div>
+            <p style="font-size:0.7rem; color:var(--text-muted); margin:0 0 10px 0; line-height:1.35;">
+              Indica los medicamentos antihipertensivos, la dosis en mg y la hora habitual de la toma. Aparecerán por defecto los de la toma previa.
+            </p>
+
+            <div id="bpMedsListContainer" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Filas dinámicas generadas desde JS -->
+            </div>
+          </div>
+
+          <datalist id="antihipertensivosList">
+            <option value="Telmisartán"></option>
+            <option value="Amlodipino"></option>
+            <option value="Losartán"></option>
+            <option value="Enalapril"></option>
+            <option value="Valsartán"></option>
+            <option value="Ramipril"></option>
+            <option value="Candesartán"></option>
+            <option value="Bisoprolol"></option>
+            <option value="Nebivolol"></option>
+            <option value="Hidroclorotiazida"></option>
+            <option value="Indapamida"></option>
+            <option value="Espironolactona"></option>
+            <option value="Doxazosina"></option>
+          </datalist>
+
+          <button type="button" class="btn-3d btn-3d-rose btn-block" id="bpSaveBtn" style="padding:12px; font-size:0.95rem; margin-top:4px;">
+            ✓ Guardar Presión Arterial
+          </button>
+        </div>
+      </div>
+
+      <!-- Pestaña Historial -->
+      <div id="bpTabList" style="display:none;">
+        <div id="bpHistoryListContainer" style="display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL / BOTTOM SHEET: AVISO DE PERSISTENCIA Y NOTIFICACIONES A LAS 9:00 AM -->
+  <div class="bottom-sheet-backdrop" id="batteryNoticeBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:85vh; overflow-y:auto;">
+      <div class="bottom-sheet-handle"></div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="background:rgba(6, 182, 212, 0.15); border:1px solid rgba(6, 182, 212, 0.3); border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            🔔
+          </div>
+          <div>
+            <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-main); margin:0;">Recordatorios de Inyección</h2>
+            <div style="font-size:0.75rem; color:#06b6d4; font-weight:700;">Aviso de Inyección y Persistencia</div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeBatteryNoticeBtn" style="width:30px; height:30px;">✕</button>
+      </div>
+
+      <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:12px; padding:14px; margin-bottom:14px; font-size:0.82rem; line-height:1.55; color:var(--text-muted);">
+        <p style="margin:0 0 10px 0; color:var(--text-main); font-weight:700;">
+          ⏰ <span style="color:#ffffff;">MisPep programará automáticamente una alarma a la hora que configures</span> el día que corresponda tu próxima inyección de péptidos para recordártelo puntualmente.
+        </p>
+        <div style="background:rgba(245, 158, 11, 0.08); border-left:3px solid #f59e0b; padding:10px; border-radius:6px; margin-bottom:10px;">
+          <strong style="color:#f59e0b; display:block; margin-bottom:4px; font-size:0.8rem;">⚠️ IMPORTANTE PARA ANDROID:</strong>
+          Para que la notificación suene a la hora elegida con total fiabilidad si el teléfono lleva horas con la pantalla apagada o en reposo profundo (Doze mode), <strong>debes modificar la persistencia de MisPep</strong> para que el sistema operativo no la suspenda ni cierre sus alarmas.
+        </div>
+        <p style="margin:0; font-size:0.75rem;">
+          En la pantalla de ajustes de Android, selecciona <strong>"Sin restricciones"</strong> o permite que MisPep ignore la optimización de ahorro de batería.
+        </p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="button" class="btn-3d btn-3d-cyan btn-block" id="openBatterySettingsBtn" style="padding:13px; font-size:0.9rem; font-weight:800;">
+          ⚙️ Modificar Persistencia / Batería
+        </button>
+        <button type="button" class="btn-3d btn-3d-surface btn-block" id="dismissBatteryNoticeBtn" style="padding:11px; font-size:0.85rem; font-weight:700; color:var(--text-muted);">
+          Entendido ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET MODAL: AYUDA AL PROGRAMADOR / DONACIONES -->
+  <div class="bottom-sheet-backdrop" id="supportDevBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:85vh; overflow-y:auto;">
+      <div class="bottom-sheet-handle"></div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.3); border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            ☕
+          </div>
+          <div>
+            <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-main); margin:0;">Quiero ayudar al programador</h2>
+            <div style="font-size:0.75rem; color:#f59e0b; font-weight:700;">Apoyo al desarrollo de MisPep</div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeSupportDevBtn" style="width:30px; height:30px;">✕</button>
+      </div>
+
+      <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:12px; padding:12px 14px; margin-bottom:14px; font-size:0.82rem; line-height:1.55; color:var(--text-muted);">
+        <p style="margin:0; color:var(--text-main);">
+          Si MisPep te es de ayuda y quieres apoyar su mantenimiento, puedes enviar una propina en criptomonedas. Toca cualquier opción para abrir tu cartera por defecto o copiar la dirección:
+        </p>
+      </div>
+
+      <!-- Opciones de Criptomonedas -->
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+        <!-- Bitcoin On-chain -->
+        <div class="crypto-card" data-crypto="btc" data-uri="bitcoin:bc1pgq54epvkqrg5s3xngtvjq69c0qt7qp4q2z7d07j65y37w5vqjvnq0sy4j7" data-addr="bc1pgq54epvkqrg5s3xngtvjq69c0qt7qp4q2z7d07j65y37w5vqjvnq0sy4j7" data-label="Bitcoin" style="background:var(--card-bg-elevated); border:1px solid rgba(245,158,11,0.25); border-radius:14px; padding:12px 14px; cursor:pointer;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:#f7931a; color:#fff; font-weight:900; font-size:0.95rem;">₿</span>
+              <div>
+                <div style="font-weight:900; color:var(--text-main); font-size:0.9rem;">Bitcoin (BTC)</div>
+                <div style="font-size:0.7rem; color:var(--text-muted);">Red principal (On-Chain)</div>
+              </div>
+            </div>
+            <button type="button" class="btn-3d btn-3d-amber crypto-open-btn" style="padding:5px 10px; font-size:0.75rem; font-weight:800;">
+              🚀 Abrir cartera
+            </button>
+          </div>
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-family:monospace; font-size:0.72rem; color:#fcd34d; word-break:break-all; user-select:all;">bc1pgq54epvkqrg5s3xngtvjq69c0qt7qp4q2z7d07j65y37w5vqjvnq0sy4j7</span>
+            <button type="button" class="icon-btn-3d crypto-copy-btn" title="Copiar dirección" style="width:28px; height:28px; flex-shrink:0; font-size:0.75rem;">📋</button>
+          </div>
+        </div>
+
+        <!-- Lightning Network -->
+        <div class="crypto-card" data-crypto="lightning" data-uri="lightning:lnbc1p4v0h0xpp5dr5jecwynj64cpnf0czwqcucf49n7pme3dx4ztn3tf92h5kpgs3sdqqcqzzgxqyz5vqrzjqf0wu22xsefd8gzu0m9n93g2khea86l6yy26en9v46g9e6hk7v9z8qwwep4vfkhhccqqqqryqqqqthqqpyrzjqfwdd2w9y5ra5z3m4qetfa5ccu6432xfuvk6zrvg9vxwltvukd48dqwwep4vfkhhccqqqqryqqqqthqqpysp5vfdckrfc2e4xsd2v8kxxek26nz0dv62mvv725u22zepx506ak0nq9qrsgqmh32m67yryrwjzmy8mseg7vuppq2efzxn5ct00hhnca0sdwm7vrr4xqep330ptwex8ljge67gh2qj6v2zfjlp8387fdpm8en7y9mpmgpdnfwgh" data-addr="lnbc1p4v0h0xpp5dr5jecwynj64cpnf0czwqcucf49n7pme3dx4ztn3tf92h5kpgs3sdqqcqzzgxqyz5vqrzjqf0wu22xsefd8gzu0m9n93g2khea86l6yy26en9v46g9e6hk7v9z8qwwep4vfkhhccqqqqryqqqqthqqpyrzjqfwdd2w9y5ra5z3m4qetfa5ccu6432xfuvk6zrvg9vxwltvukd48dqwwep4vfkhhccqqqqryqqqqthqqpysp5vfdckrfc2e4xsd2v8kxxek26nz0dv62mvv725u22zepx506ak0nq9qrsgqmh32m67yryrwjzmy8mseg7vuppq2efzxn5ct00hhnca0sdwm7vrr4xqep330ptwex8ljge67gh2qj6v2zfjlp8387fdpm8en7y9mpmgpdnfwgh" data-label="Lightning" style="background:var(--card-bg-elevated); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:12px 14px; cursor:pointer;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:#8b5cf6; color:#fff; font-weight:900; font-size:0.95rem;">⚡</span>
+              <div>
+                <div style="font-weight:900; color:var(--text-main); font-size:0.9rem;">Lightning Network (BTC)</div>
+                <div style="font-size:0.7rem; color:var(--text-muted);">Pagos instantáneos Layer 2</div>
+              </div>
+            </div>
+            <button type="button" class="btn-3d btn-3d-purple crypto-open-btn" style="padding:5px 10px; font-size:0.75rem; font-weight:800;">
+              🚀 Abrir cartera
+            </button>
+          </div>
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-family:monospace; font-size:0.70rem; color:#c4b5fd; word-break:break-all; user-select:all; max-height:48px; overflow-y:auto; display:block;">lnbc1p4v0h0xpp5dr5jecwynj64cpnf0czwqcucf49n7pme3dx4ztn3tf92h5kpgs3sdqqcqzzgxqyz5vqrzjqf0wu22xsefd8gzu0m9n93g2khea86l6yy26en9v46g9e6hk7v9z8qwwep4vfkhhccqqqqryqqqqthqqpyrzjqfwdd2w9y5ra5z3m4qetfa5ccu6432xfuvk6zrvg9vxwltvukd48dqwwep4vfkhhccqqqqryqqqqthqqpysp5vfdckrfc2e4xsd2v8kxxek26nz0dv62mvv725u22zepx506ak0nq9qrsgqmh32m67yryrwjzmy8mseg7vuppq2efzxn5ct00hhnca0sdwm7vrr4xqep330ptwex8ljge67gh2qj6v2zfjlp8387fdpm8en7y9mpmgpdnfwgh</span>
+            <button type="button" class="icon-btn-3d crypto-copy-btn" title="Copiar factura / clave" style="width:28px; height:28px; flex-shrink:0; font-size:0.75rem;">📋</button>
+          </div>
+        </div>
+
+        <!-- Litecoin -->
+        <div class="crypto-card" data-crypto="ltc" data-uri="litecoin:MCm1mySoU8En9rnDRPun4mQrGxUbyU2Uy4" data-addr="MCm1mySoU8En9rnDRPun4mQrGxUbyU2Uy4" data-label="Litecoin" style="background:var(--card-bg-elevated); border:1px solid rgba(6,182,212,0.3); border-radius:14px; padding:12px 14px; cursor:pointer;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:#06b6d4; color:#fff; font-weight:900; font-size:0.95rem;">Ł</span>
+              <div>
+                <div style="font-weight:900; color:var(--text-main); font-size:0.9rem;">Litecoin (LTC)</div>
+                <div style="font-size:0.7rem; color:var(--text-muted);">Red principal Litecoin</div>
+              </div>
+            </div>
+            <button type="button" class="btn-3d btn-3d-cyan crypto-open-btn" style="padding:5px 10px; font-size:0.75rem; font-weight:800;">
+              🚀 Abrir cartera
+            </button>
+          </div>
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-family:monospace; font-size:0.72rem; color:#67e8f9; word-break:break-all; user-select:all;">MCm1mySoU8En9rnDRPun4mQrGxUbyU2Uy4</span>
+            <button type="button" class="icon-btn-3d crypto-copy-btn" title="Copiar dirección" style="width:28px; height:28px; flex-shrink:0; font-size:0.75rem;">📋</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-3d btn-3d-surface btn-block" id="dismissSupportDevBtn" style="padding:11px; font-size:0.85rem; font-weight:700; color:var(--text-muted);">
+        Cerrar
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Simulador PK Retatrutide (Modelo Bicompartimental) -->
+  <div id="retatrutideSimModal" style="display:none; position:fixed; inset:0; z-index:99999; background:#0b1120; flex-direction:column; width:100%; height:100%; overflow:hidden;">
+    <div style="background:#0f172a; border-bottom:1px solid #1e293b; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.15rem;">📊</span>
+        <div>
+          <strong id="simModalHeaderTitle" style="color:#ffffff; font-size:0.9rem; display:block; line-height:1.2;">Simulador PK · Bicompartimental</strong>
+          <span id="simModalHeaderSubtitle" style="color:#06b6d4; font-size:0.68rem; font-weight:700;">Modelo Farmacocinético</span>
+        </div>
+      </div>
+      <button type="button" class="btn-3d btn-3d-surface" onclick="closeRetatrutideSimulator()" style="padding:6px 12px; font-size:0.8rem; font-weight:800; color:#ef4444; border:1px solid rgba(239,68,68,0.3);">
+        ✕ Cerrar
+      </button>
+    </div>
+    <iframe id="retatrutideSimIframe" src="about:blank" style="flex:1; width:100%; height:100%; border:none; background:#0b1120;" allow="fullscreen"></iframe>
+  </div>
+
+  <script src="js/tactile.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
