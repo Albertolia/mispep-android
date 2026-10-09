@@ -4589,8 +4589,9 @@ function initCalendar() {
     ];
     calMonthLabel.textContent = `${monthNames[currentMonth]} de ${currentYear}`;
 
-    // Obtener primer día de la semana y total de días
-    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0=Dom ... 6=Sab
+    // Obtener primer día de la semana y total de días (formato europeo L-D: Lunes=0 ... Domingo=6)
+    const rawDay = new Date(currentYear, currentMonth, 1).getDay(); // 0=Dom ... 6=Sab
+    const firstDayIndex = (rawDay + 6) % 7;
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
 
