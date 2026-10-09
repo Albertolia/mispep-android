@@ -2135,14 +2135,14 @@ function initDashboard() {
   const wGraphNextRange = document.getElementById('wGraphNextRange');
   const wGraphDetailLink = document.getElementById('wGraphDetailLink');
 
-  let currentWRange = 'week';
+  let currentWRange = '1m';
   let wRangeOffset = 0; // Desplazamiento continuo en DÍAS
 
   function shiftWeightRange(deltaDays) {
     if (currentWRange === 'all') {
-      currentWRange = 'week';
+      currentWRange = '1m';
       wGraphTimeframeBtns.forEach(b => {
-        b.classList.toggle('active', b.dataset.wrange === 'week');
+        b.classList.toggle('active', b.dataset.wrange === '1m');
       });
       wRangeOffset = 0;
     }
@@ -2256,9 +2256,10 @@ function initDashboard() {
       windowEnd = latestDate;
       wRangeOffset = 0;
     } else {
-      let spanDays = 7;
-      if (currentWRange === 'month') spanDays = 30;
-      else if (currentWRange === 'year') spanDays = 365;
+      let spanDays = 30;
+      if (currentWRange === '3m') spanDays = 90;
+      else if (currentWRange === '6m') spanDays = 180;
+      else if (currentWRange === '1m' || currentWRange === 'month') spanDays = 30;
 
       // Desplazamiento continuo día a día: ambas fechas ascienden/descienden en 1 día
       windowEnd = new Date(latestDate.getTime() + (wRangeOffset * 86400000));
@@ -2278,16 +2279,22 @@ function initDashboard() {
       }
     }
 
-    // Etiqueta de fechas reales de la ventana visible continua
-    if (wGraphDateRangeLabel) {
-      wGraphDateRangeLabel.textContent = `${fmtShort(windowStart)} - ${fmtShort(windowEnd)}`;
-    }
-
     const startIso = windowStart.toISOString().split('T')[0];
     const endIso = windowEnd.toISOString().split('T')[0];
     const visibleLogs = currentWRange === 'all'
       ? logs
       : logs.filter(l => l.date >= startIso && l.date <= endIso);
+
+    // Etiqueta de fechas reales de la ventana visible continua
+    if (wGraphDateRangeLabel) {
+      if (visibleLogs.length > 1) {
+        const dStart = new Date(visibleLogs[0].date + 'T12:00:00');
+        const dEnd = new Date(visibleLogs[visibleLogs.length - 1].date + 'T12:00:00');
+        wGraphDateRangeLabel.textContent = `${fmtShort(dStart)} - ${fmtShort(dEnd)}`;
+      } else {
+        wGraphDateRangeLabel.textContent = `${fmtShort(windowStart)} - ${fmtShort(windowEnd)}`;
+      }
+    }
 
     // Dimensiones SVG
     const width = 350;
@@ -2339,17 +2346,19 @@ function initDashboard() {
       return;
     }
 
+    const inset = 14;
+    const tFirst = visibleLogs.length > 0 ? new Date(visibleLogs[0].date + 'T12:00:00').getTime() : 0;
+    const tLast = visibleLogs.length > 0 ? new Date(visibleLogs[visibleLogs.length - 1].date + 'T12:00:00').getTime() : 0;
+    const timeSpan = tLast - tFirst;
+
     function getX(l, idx) {
-      if (currentWRange === 'all') {
-        if (visibleLogs.length === 1) return padL + plotW / 2;
-        return padL + (idx / (visibleLogs.length - 1)) * plotW;
+      if (visibleLogs.length === 1) return padL + plotW / 2;
+      if (timeSpan > 0) {
+        const t = new Date(l.date + 'T12:00:00').getTime();
+        const ratio = (t - tFirst) / timeSpan;
+        return (padL + inset) + ratio * (plotW - 2 * inset);
       }
-      const inset = 14;
-      const t = new Date(l.date + 'T12:00:00').getTime();
-      const s = windowStart.getTime();
-      const e = windowEnd.getTime();
-      const ratio = Math.max(0, Math.min(1, (t - s) / (e - s)));
-      return (padL + inset) + ratio * (plotW - 2 * inset);
+      return (padL + inset) + (idx / (visibleLogs.length - 1)) * (plotW - 2 * inset);
     }
 
     const points = visibleLogs.map((l, i) => ({
@@ -2373,16 +2382,32 @@ function initDashboard() {
     }
 
     let nodesHtml = '';
-    points.forEach(pt => {
+    const showAllLabels = points.length <= 8;
+    let lastRenderedLabelX = -999;
+
+    points.forEach((pt, i) => {
       const dObj = new Date(pt.date + 'T12:00:00');
       const dd = String(dObj.getDate()).padStart(2, '0');
       const mm = String(dObj.getMonth() + 1).padStart(2, '0');
       const dateLabel = `${dd}/${mm}`;
 
+      const isFirst = (i === 0);
+      const isLast = (i === points.length - 1);
+      const hasSpace = (pt.x - lastRenderedLabelX) >= 28;
+      const shouldShowLabel = showAllLabels || isFirst || isLast || hasSpace;
+
+      let labelHtml = '';
+      if (shouldShowLabel) {
+        lastRenderedLabelX = pt.x;
+        labelHtml = `
+          <text x="${pt.x.toFixed(1)}" y="${(pt.y - 8).toFixed(1)}" font-size="8.5" font-weight="900" fill="var(--text-main)" text-anchor="middle">${pt.weight}kg</text>
+          <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
+        `;
+      }
+
       nodesHtml += `
         <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.5" fill="#2563eb" stroke="#ffffff" stroke-width="2.2" />
-        <text x="${pt.x.toFixed(1)}" y="${(pt.y - 8).toFixed(1)}" font-size="8.5" font-weight="900" fill="var(--text-main)" text-anchor="middle">${pt.weight}kg</text>
-        <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
+        ${labelHtml}
       `;
     });
 
