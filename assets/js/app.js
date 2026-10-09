@@ -3226,7 +3226,7 @@ function initDashboard() {
   const dashBpDiaVal = document.getElementById('dashBpDiaVal');
   const dashBpStatusVal = document.getElementById('dashBpStatusVal');
 
-  let currentBpRange = 'week';
+  let currentBpRange = '1m';
   let bpRangeOffset = 0;
   let draftBpMeds = [];
 
@@ -3490,9 +3490,9 @@ function initDashboard() {
 
   function shiftBpRange(deltaDays) {
     if (currentBpRange === 'all') {
-      currentBpRange = 'week';
+      currentBpRange = '1m';
       bpGraphTimeframeBtns.forEach(b => {
-        b.classList.toggle('active', b.dataset.bprange === 'week');
+        b.classList.toggle('active', b.dataset.bprange === '1m');
       });
       bpRangeOffset = 0;
     }
@@ -3663,9 +3663,10 @@ function initDashboard() {
       windowEnd = latestBpDate;
       bpRangeOffset = 0;
     } else {
-      let spanDays = 7;
-      if (currentBpRange === 'month') spanDays = 30;
-      else if (currentBpRange === 'year') spanDays = 365;
+      let spanDays = 30;
+      if (currentBpRange === '3m') spanDays = 90;
+      else if (currentBpRange === '6m') spanDays = 180;
+      else if (currentBpRange === '1m' || currentBpRange === 'month') spanDays = 30;
 
       // Desplazamiento continuo día a día: ambas fechas ascienden/descienden en 1 día
       windowEnd = new Date(latestBpDate.getTime() + (bpRangeOffset * 86400000));
@@ -3684,16 +3685,25 @@ function initDashboard() {
       }
     }
 
-    // Etiqueta de fechas reales de la ventana visible continua
-    if (bpGraphDateRangeLabel) {
-      bpGraphDateRangeLabel.textContent = `${fmtShort(windowStart)} - ${fmtShort(windowEnd)}`;
-    }
-
     const startIso = windowStart.toISOString().split('T')[0];
     const endIso = windowEnd.toISOString().split('T')[0];
     const daySummaries = currentBpRange === 'all'
       ? allDaySummaries
       : allDaySummaries.filter(d => d.date >= startIso && d.date <= endIso);
+
+    // Etiqueta de fechas reales de la ventana visible continua
+    if (bpGraphDateRangeLabel) {
+      if (daySummaries.length > 1) {
+        const dStart = new Date(daySummaries[0].date + 'T12:00:00');
+        const dEnd = new Date(daySummaries[daySummaries.length - 1].date + 'T12:00:00');
+        bpGraphDateRangeLabel.textContent = `${fmtShort(dStart)} - ${fmtShort(dEnd)}`;
+      } else if (daySummaries.length === 1) {
+        const dOnly = new Date(daySummaries[0].date + 'T12:00:00');
+        bpGraphDateRangeLabel.textContent = `${fmtShort(dOnly)}`;
+      } else {
+        bpGraphDateRangeLabel.textContent = `${fmtShort(windowStart)} - ${fmtShort(windowEnd)}`;
+      }
+    }
 
     // Dimensiones SVG
     const width = 350;
@@ -3744,18 +3754,19 @@ function initDashboard() {
       return;
     }
 
+    const inset = 18;
+    const tFirst = daySummaries.length > 0 ? new Date(daySummaries[0].date + 'T12:00:00').getTime() : 0;
+    const tLast = daySummaries.length > 0 ? new Date(daySummaries[daySummaries.length - 1].date + 'T12:00:00').getTime() : 0;
+    const timeSpan = tLast - tFirst;
+
     function getX(d, idx) {
-      if (currentBpRange === 'all') {
-        if (daySummaries.length === 1) return padL + plotW / 2;
-        const inset = Math.min(36, plotW * 0.15);
-        return (padL + inset) + (idx / (daySummaries.length - 1)) * (plotW - 2 * inset);
+      if (daySummaries.length === 1) return padL + plotW / 2;
+      if (timeSpan > 0) {
+        const t = new Date(d.date + 'T12:00:00').getTime();
+        const ratio = (t - tFirst) / timeSpan;
+        return (padL + inset) + ratio * (plotW - 2 * inset);
       }
-      const inset = 18;
-      const t = new Date(d.date + 'T12:00:00').getTime();
-      const s = windowStart.getTime();
-      const e = windowEnd.getTime();
-      const ratio = Math.max(0, Math.min(1, (t - s) / (e - s)));
-      return (padL + inset) + ratio * (plotW - 2 * inset);
+      return (padL + inset) + (idx / (daySummaries.length - 1)) * (plotW - 2 * inset);
     }
 
     const pointsSys = daySummaries.map((d, i) => ({ x: getX(d, i), y: getY(d.sys), val: d.sys, date: d.date }));
@@ -3791,6 +3802,10 @@ function initDashboard() {
     let touchColumnsHtml = '';
     let whiskersHtml = '';
 
+    const showAllBpLabels = daySummaries.length <= 8;
+    let lastRenderedSysDiaX = -999;
+    let lastRenderedDateX = -999;
+
     daySummaries.forEach((d, i) => {
       const pt = pointsSys[i];
       const diaPt = pointsDia[i];
@@ -3799,42 +3814,55 @@ function initDashboard() {
       const mm = String(dObj.getMonth() + 1).padStart(2, '0');
       const dateLabel = `${dd}/${mm}`;
 
+      const isFirst = (i === 0);
+      const isLast = (i === daySummaries.length - 1);
+      const hasSpaceForValues = (pt.x - lastRenderedSysDiaX) >= 28;
+      const showValues = showAllBpLabels || isFirst || isLast || hasSpaceForValues;
+
+      const hasSpaceForDate = (pt.x - lastRenderedDateX) >= 30;
+      const showDate = showAllBpLabels || isFirst || isLast || hasSpaceForDate;
+
+      if (showValues) {
+        lastRenderedSysDiaX = pt.x;
+      }
+      if (showDate) {
+        lastRenderedDateX = pt.x;
+      }
+
       if (d.hasMultiple) {
         const isRightEdge = pt.x > width - 70;
         const sysX = isRightEdge ? (pt.x - 9) : (pt.x + 9);
         const diaX = isRightEdge ? (pt.x + 9) : (pt.x - 9);
         const sysAnchor = isRightEdge ? 'end' : 'start';
         const diaAnchor = isRightEdge ? 'start' : 'end';
-        const sysTextX = isRightEdge ? (sysX - 6) : (sysX + 6);
-        const diaTextX = isRightEdge ? (diaX + 6) : (diaX - 6);
+        const sysTextX = isRightEdge ? (sysX - 5) : (sysX + 5);
+        const diaTextX = isRightEdge ? (diaX + 5) : (diaX - 5);
 
         if (d.maxSys !== d.minSys) {
           const ySysTop = getY(d.maxSys);
           const ySysBot = getY(d.minSys);
-          const capHalf = 5.5;
+          const capHalf = 4.5;
 
           whiskersHtml += `
-            <line x1="${sysX.toFixed(1)}" y1="${ySysTop.toFixed(1)}" x2="${sysX.toFixed(1)}" y2="${ySysBot.toFixed(1)}" stroke="#f43f5e" stroke-width="1.3" stroke-opacity="0.9" />
-            <line x1="${(sysX - capHalf).toFixed(1)}" y1="${ySysTop.toFixed(1)}" x2="${(sysX + capHalf).toFixed(1)}" y2="${ySysTop.toFixed(1)}" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" />
-            <line x1="${(sysX - capHalf).toFixed(1)}" y1="${ySysBot.toFixed(1)}" x2="${(sysX + capHalf).toFixed(1)}" y2="${ySysBot.toFixed(1)}" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" />
-            <text x="${sysTextX.toFixed(1)}" y="${(ySysTop + 3).toFixed(1)}" font-size="7.5" font-weight="900" fill="#f43f5e" text-anchor="${sysAnchor}">${d.maxSys}</text>
-            <text x="${sysTextX.toFixed(1)}" y="${(ySysBot + 3).toFixed(1)}" font-size="7.5" font-weight="900" fill="#f43f5e" text-anchor="${sysAnchor}">${d.minSys}</text>
-            <text x="${sysX.toFixed(1)}" y="${((ySysTop + ySysBot) / 2 + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#f43f5e" text-anchor="middle" opacity="0.95">${d.minSys}-${d.maxSys}</text>
+            <line x1="${sysX.toFixed(1)}" y1="${ySysTop.toFixed(1)}" x2="${sysX.toFixed(1)}" y2="${ySysBot.toFixed(1)}" stroke="#f43f5e" stroke-width="1.3" stroke-opacity="0.8" />
+            <line x1="${(sysX - capHalf).toFixed(1)}" y1="${ySysTop.toFixed(1)}" x2="${(sysX + capHalf).toFixed(1)}" y2="${ySysTop.toFixed(1)}" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" />
+            <line x1="${(sysX - capHalf).toFixed(1)}" y1="${ySysBot.toFixed(1)}" x2="${(sysX + capHalf).toFixed(1)}" y2="${ySysBot.toFixed(1)}" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" />
+            <text x="${sysTextX.toFixed(1)}" y="${(ySysTop + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#f43f5e" text-anchor="${sysAnchor}" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${d.maxSys}</text>
+            <text x="${sysTextX.toFixed(1)}" y="${(ySysBot + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#f43f5e" text-anchor="${sysAnchor}" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${d.minSys}</text>
           `;
         }
 
         if (d.maxDia !== d.minDia) {
           const yDiaTop = getY(d.maxDia);
           const yDiaBot = getY(d.minDia);
-          const capHalf = 5.5;
+          const capHalf = 4.5;
 
           whiskersHtml += `
-            <line x1="${diaX.toFixed(1)}" y1="${yDiaTop.toFixed(1)}" x2="${diaX.toFixed(1)}" y2="${yDiaBot.toFixed(1)}" stroke="#06b6d4" stroke-width="1.3" stroke-opacity="0.9" />
-            <line x1="${(diaX - capHalf).toFixed(1)}" y1="${yDiaTop.toFixed(1)}" x2="${(diaX + capHalf).toFixed(1)}" y2="${yDiaTop.toFixed(1)}" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" />
-            <line x1="${(diaX - capHalf).toFixed(1)}" y1="${yDiaBot.toFixed(1)}" x2="${(diaX + capHalf).toFixed(1)}" y2="${yDiaBot.toFixed(1)}" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" />
-            <text x="${diaTextX.toFixed(1)}" y="${(yDiaTop + 3).toFixed(1)}" font-size="7.5" font-weight="900" fill="#06b6d4" text-anchor="${diaAnchor}">${d.maxDia}</text>
-            <text x="${diaTextX.toFixed(1)}" y="${(yDiaBot + 3).toFixed(1)}" font-size="7.5" font-weight="900" fill="#06b6d4" text-anchor="${diaAnchor}">${d.minDia}</text>
-            <text x="${diaX.toFixed(1)}" y="${((yDiaTop + yDiaBot) / 2 + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#06b6d4" text-anchor="middle" opacity="0.95">${d.minDia}-${d.maxDia}</text>
+            <line x1="${diaX.toFixed(1)}" y1="${yDiaTop.toFixed(1)}" x2="${diaX.toFixed(1)}" y2="${yDiaBot.toFixed(1)}" stroke="#06b6d4" stroke-width="1.3" stroke-opacity="0.8" />
+            <line x1="${(diaX - capHalf).toFixed(1)}" y1="${yDiaTop.toFixed(1)}" x2="${(diaX + capHalf).toFixed(1)}" y2="${yDiaTop.toFixed(1)}" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" />
+            <line x1="${(diaX - capHalf).toFixed(1)}" y1="${yDiaBot.toFixed(1)}" x2="${(diaX + capHalf).toFixed(1)}" y2="${yDiaBot.toFixed(1)}" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" />
+            <text x="${diaTextX.toFixed(1)}" y="${(yDiaTop + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#06b6d4" text-anchor="${diaAnchor}" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${d.maxDia}</text>
+            <text x="${diaTextX.toFixed(1)}" y="${(yDiaBot + 3).toFixed(1)}" font-size="7" font-weight="900" fill="#06b6d4" text-anchor="${diaAnchor}" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${d.minDia}</text>
           `;
         }
       }
@@ -3862,15 +3890,30 @@ function initDashboard() {
         }
       }
 
+      // Nodos circulares
       nodesHtml += `
         <circle class="bp-node-sys" data-idx="${i}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.5" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2" style="cursor:pointer;" />
-        <text x="${pt.x.toFixed(1)}" y="${(pt.y - 8).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle">${d.sys}</text>
-
         <circle class="bp-node-dia" data-idx="${i}" cx="${diaPt.x.toFixed(1)}" cy="${diaPt.y.toFixed(1)}" r="5.5" fill="#06b6d4" stroke="#ffffff" stroke-width="2.2" style="cursor:pointer;" />
-        <text x="${diaPt.x.toFixed(1)}" y="${(diaPt.y + 14).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle">${d.dia}</text>
-
-        <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
       `;
+
+      // Textos de valores con halo protector anticolisión
+      if (showValues) {
+        const vertDist = Math.abs(diaPt.y - pt.y);
+        const sysOffset = vertDist < 20 ? 9 : 8;
+        const diaOffset = vertDist < 20 ? 15 : 14;
+
+        nodesHtml += `
+          <text x="${pt.x.toFixed(1)}" y="${(pt.y - sysOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.sys}</text>
+          <text x="${diaPt.x.toFixed(1)}" y="${(diaPt.y + diaOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.dia}</text>
+        `;
+      }
+
+      // Fecha en eje X con halo protector
+      if (showDate) {
+        nodesHtml += `
+          <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${dateLabel}</text>
+        `;
+      }
 
       touchColumnsHtml += `
         <rect class="bp-touch-col" data-idx="${i}" x="${(pt.x - 18).toFixed(1)}" y="${padT}" width="36" height="${plotH}" fill="transparent" style="cursor:pointer;" />
