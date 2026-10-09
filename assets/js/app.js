@@ -32,6 +32,19 @@ function showToast(msg) {
   }, 2600);
 }
 
+// Helper universal de Fecha Local en formato 'YYYY-MM-DD'
+// Sincroniza al 100% con la fecha/hora local del móvil.
+// Evita el bug de desfase de toISOString() (UTC) que entre las 00:00 y las 02:00
+// en España hacía que el calendario y los registros mostraran el día de ayer.
+function getLocalDateStr(dateObj) {
+  const d = dateObj ? (dateObj instanceof Date ? dateObj : new Date(dateObj)) : new Date();
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /* ============================================================
    COPIAS DE SEGURIDAD AUTOMÁTICAS
    - Se escriben en Descargas/MisPep (sobreviven a desinstalar la app)
@@ -468,7 +481,7 @@ function initBackupSystem() {
         }
       }
       const jsonStr = JSON.stringify(backupData, null, 2);
-      const filename = `mispep_backup_${new Date().toISOString().split('T')[0]}.json`;
+      const filename = `mispep_backup_${getLocalDateStr()}.json`;
       saveTextFile(filename, jsonStr, 'application/json', '✓ Copia de seguridad JSON guardada (Privacidad 100%)');
     });
   }
@@ -516,7 +529,7 @@ function initBackupSystem() {
         csv += `"${e.date}","${e.type}","${(e.title || '').replace(/"/g, '""')}","${(e.detail || '').replace(/"/g, '""')}","${isSkip}","${e.time || ''}"\n`;
       });
 
-      const filename = `mispep_historial_${new Date().toISOString().split('T')[0]}.csv`;
+      const filename = `mispep_historial_${getLocalDateStr()}.csv`;
       saveTextFile(filename, csv, 'text/csv', '✓ Exportación CSV guardada (con skipped=yes/no)');
     });
   }
@@ -1331,7 +1344,7 @@ function initDashboard() {
     // 3. Fechas: solo se recalculan si el historial ha cambiado
     if (p.lastInjectionDate !== last.date) {
       p.lastInjectionDate = last.date;
-      p.nextInjectionDate = new Date(last.time + freqMs).toISOString().split('T')[0];
+      p.nextInjectionDate = getLocalDateStr(new Date(last.time + freqMs));
       changed = true;
     } else if (p.nextInjectionDate) {
       // Rodar la próxima dosis hacia adelante si se quedó en el pasado
@@ -1341,9 +1354,9 @@ function initDashboard() {
         nextObj = new Date(nextObj.getTime() + freqMs);
         guard++;
       }
-      if (guard > 0) { p.nextInjectionDate = nextObj.toISOString().split('T')[0]; changed = true; }
+      if (guard > 0) { p.nextInjectionDate = getLocalDateStr(nextObj); changed = true; }
     } else {
-      p.nextInjectionDate = new Date(last.time + freqMs).toISOString().split('T')[0];
+      p.nextInjectionDate = getLocalDateStr(new Date(last.time + freqMs));
       changed = true;
     }
 
@@ -1521,7 +1534,7 @@ function initDashboard() {
       const lastInjDateStr = realInjs[0].date;
       const lastInjObj = new Date(lastInjDateStr + 'T12:00:00');
       nextDateObj = new Date(lastInjObj.getTime() + (freq * 24 * 3600 * 1000));
-      p.nextInjectionDate = nextDateObj.toISOString().split('T')[0];
+      p.nextInjectionDate = getLocalDateStr(nextDateObj);
       p.lastInjectionDate = lastInjDateStr;
       localStorage.setItem('mispep_health_profile', JSON.stringify(p));
     } else if (p.nextInjectionDate) {
@@ -2351,8 +2364,8 @@ function initDashboard() {
       }
     }
 
-    const startIso = windowStart.toISOString().split('T')[0];
-    const endIso = windowEnd.toISOString().split('T')[0];
+    const startIso = getLocalDateStr(windowStart);
+    const endIso = getLocalDateStr(windowEnd);
     const visibleLogs = currentWRange === 'all'
       ? logs
       : logs.filter(l => l.date >= startIso && l.date <= endIso);
@@ -2889,7 +2902,7 @@ function initDashboard() {
     let logs = p.weightLogs || [];
 
     if (logs.length === 0) {
-      logs = [{ date: new Date().toISOString().split('T')[0], weight: p.currentWeight || 91.0 }];
+      logs = [{ date: getLocalDateStr(), weight: p.currentWeight || 91.0 }];
       p.weightLogs = logs;
       saveProfile(p);
     }
@@ -2992,7 +3005,7 @@ function initDashboard() {
   if (wSaveRecordBtn) {
     wSaveRecordBtn.addEventListener('click', () => {
       const weight = parseFloat(wInputWeight.value);
-      const date = wInputDate.value || new Date().toISOString().split('T')[0];
+      const date = wInputDate.value || getLocalDateStr();
       if (!weight || weight <= 0) {
         showToast('Introduce un peso válido');
         return;
@@ -3236,7 +3249,7 @@ function initDashboard() {
       wEditIndex.value = '-1';
       wFormHeaderTitle.textContent = '＋ Registrar Nuevo Pesaje';
       wInputWeight.value = (getHealthProfile().currentWeight || 91.0).toFixed(1);
-      wInputDate.value = new Date().toISOString().split('T')[0];
+      wInputDate.value = getLocalDateStr();
       wCancelEditBtn.style.display = 'none';
       openWeightModal('add');
     });
@@ -3247,7 +3260,7 @@ function initDashboard() {
       wEditIndex.value = '-1';
       wFormHeaderTitle.textContent = '＋ Registrar Nuevo Pesaje';
       wInputWeight.value = (getHealthProfile().currentWeight || 91.0).toFixed(1);
-      wInputDate.value = new Date().toISOString().split('T')[0];
+      wInputDate.value = getLocalDateStr();
       wCancelEditBtn.style.display = 'none';
       openWeightModal('add');
     });
@@ -3461,7 +3474,7 @@ function initDashboard() {
     if (bpTabNewBtn) bpTabNewBtn.textContent = '＋ Nueva Lectura';
     if (bpSaveBtn) bpSaveBtn.textContent = '✓ Guardar Presión Arterial';
 
-    if (bpInputDate) bpInputDate.value = new Date().toISOString().split('T')[0];
+    if (bpInputDate) bpInputDate.value = getLocalDateStr();
     if (bpInputTime) bpInputTime.value = new Date().toTimeString().slice(0, 5);
 
     const logs = getBpLogs();
@@ -3757,8 +3770,8 @@ function initDashboard() {
       }
     }
 
-    const startIso = windowStart.toISOString().split('T')[0];
-    const endIso = windowEnd.toISOString().split('T')[0];
+    const startIso = getLocalDateStr(windowStart);
+    const endIso = getLocalDateStr(windowEnd);
     const daySummaries = currentBpRange === 'all'
       ? allDaySummaries
       : allDaySummaries.filter(d => d.date >= startIso && d.date <= endIso);
@@ -4128,7 +4141,7 @@ function initDashboard() {
   if (bpLogDirectBtn && bpSheetBackdrop) {
     bpLogDirectBtn.addEventListener('click', () => {
       triggerHaptic(16);
-      if (bpInputDate) bpInputDate.value = new Date().toISOString().split('T')[0];
+      if (bpInputDate) bpInputDate.value = getLocalDateStr();
       if (bpInputTime) bpInputTime.value = new Date().toTimeString().slice(0, 5);
       prepareNewBpForm();
       renderBpHistoryList();
@@ -4186,7 +4199,7 @@ function initDashboard() {
       if (newTab) newTab.classList.add('active');
       bpTabNew.style.display = 'block';
       bpTabList.style.display = 'none';
-      if (bpInputDate) bpInputDate.value = new Date().toISOString().split('T')[0];
+      if (bpInputDate) bpInputDate.value = getLocalDateStr();
       if (bpInputTime) bpInputTime.value = new Date().toTimeString().slice(0, 5);
       prepareNewBpForm();
       bpSheetBackdrop.classList.add('open');
@@ -4198,7 +4211,7 @@ function initDashboard() {
     bpSaveBtn.addEventListener('click', () => {
       triggerHaptic(20);
       const editId = bpEditId ? bpEditId.value : '';
-      const d = bpInputDate.value || new Date().toISOString().split('T')[0];
+      const d = bpInputDate.value || getLocalDateStr();
       const tm = bpInputTime.value || new Date().toTimeString().slice(0, 5);
       const sys = parseInt(bpInputSys.value, 10) || 120;
       const dia = parseInt(bpInputDia.value, 10) || 80;
@@ -4417,12 +4430,13 @@ function initCalendar() {
   const remSaveBtn = document.getElementById('remSaveBtn');
   const remTestBtn = document.getElementById('remTestBtn');
 
-  // Estado del Calendario
+  // Estado del Calendario (Sincronizado con fecha local del móvil)
   const today = new Date();
   let currentYear = today.getFullYear();
   let currentMonth = today.getMonth(); // 0-11
-  let selectedDateStr = today.toISOString().split('T')[0]; // "YYYY-MM-DD"
+  let selectedDateStr = getLocalDateStr(today); // "YYYY-MM-DD"
   let currentFilter = 'all';
+  let userManuallySelectedDate = false;
 
   // Subpestañas: Calendario vs Cronología vs Recordatorios
   modeSubtabs.forEach(btn => {
@@ -4593,8 +4607,12 @@ function initCalendar() {
       html += `<div class="cal-day other-month">${d}</div>`;
     }
 
-    // Días del mes actual
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Días del mes actual (hora local del dispositivo)
+    const nowDevice = new Date();
+    const todayStr = getLocalDateStr(nowDevice);
+    if (!userManuallySelectedDate) {
+      selectedDateStr = todayStr;
+    }
 
     for (let d = 1; d <= daysInMonth; d++) {
       const mStr = String(currentMonth + 1).padStart(2, '0');
@@ -4641,6 +4659,7 @@ function initCalendar() {
     calDaysGrid.querySelectorAll('.cal-day:not(.other-month)').forEach(dayEl => {
       dayEl.addEventListener('click', () => {
         triggerHaptic(12);
+        userManuallySelectedDate = true;
         selectedDateStr = dayEl.dataset.date;
         renderCalendar();
       });
@@ -4648,6 +4667,27 @@ function initCalendar() {
 
     renderDayDetail();
   }
+
+  // Sincronización automática de fecha local al volver a la app o pasar la medianoche
+  function syncCalendarDate() {
+    const now = new Date();
+    const todayLocal = getLocalDateStr(now);
+    if (!userManuallySelectedDate) {
+      currentYear = now.getFullYear();
+      currentMonth = now.getMonth();
+      selectedDateStr = todayLocal;
+    }
+    if (typeof renderCalendar === 'function') renderCalendar();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncCalendarDate();
+      if (window.renderBenchDashboard) window.renderBenchDashboard();
+      if (window.renderPkGraph) window.renderPkGraph();
+    }
+  });
+  document.addEventListener('resume', syncCalendarDate, false);
 
   // Renderizar detalle del día seleccionado
   function renderDayDetail() {
@@ -5212,7 +5252,7 @@ function initAddDoseModal() {
     // Rango fecha próxima dosis por defecto: freqDays días desde la fecha de inyección (ej. 7 días)
     const baseInjDate = injectionDateOverride ? new Date(injectionDateOverride + 'T12:00:00') : new Date();
     const hpFreq = parseInt(p.freqDays, 10) || 7;
-    const nextD = new Date(baseInjDate.getTime() + hpFreq * 24 * 3600 * 1000).toISOString().split('T')[0];
+    const nextD = getLocalDateStr(new Date(baseInjDate.getTime() + hpFreq * 24 * 3600 * 1000));
     const rc = JSON.parse(localStorage.getItem('mispep_reminder_config') || '{}');
     if (nextDateInput) nextDateInput.value = nextD;
     if (nextTimeInput) nextTimeInput.value = p.injReminderTime || rc.time || '09:00';
@@ -5432,7 +5472,7 @@ function initAddDoseModal() {
     confirmBtn.addEventListener('click', () => {
       triggerHaptic(22);
       const isSkip = skippedToggle && skippedToggle.checked;
-      const targetDate = injectionDateOverride || new Date().toISOString().split('T')[0];
+      const targetDate = injectionDateOverride || getLocalDateStr();
       const curTime = new Date().toTimeString().slice(0, 5);
 
       if (isSkip) {
@@ -5491,7 +5531,7 @@ function initAddDoseModal() {
       const targetObj = new Date(targetDate + 'T12:00:00');
       const hpFreq = parseInt(hp.freqDays, 10) || 7;
       const nextInjObj = new Date(targetObj.getTime() + (hpFreq * 24 * 3600 * 1000));
-      hp.nextInjectionDate = (nextDateInput && nextDateInput.value) ? nextDateInput.value : nextInjObj.toISOString().split('T')[0];
+      hp.nextInjectionDate = (nextDateInput && nextDateInput.value) ? nextDateInput.value : getLocalDateStr(nextInjObj);
       if (nextTimeInput && nextTimeInput.value) {
         hp.reminderTime = nextTimeInput.value;
       }
@@ -6118,7 +6158,7 @@ function initPlan() {
         const match = (e.title || '').match(/([0-9]+(?:[\.,][0-9]+)?)\s*(?:mg|mcg)/i);
         let doseVal = e.dose ? parseFloat(e.dose) : (match ? parseFloat(match[1].replace(',', '.')) : doseMg);
         if (e.title && e.title.includes('mcg')) doseVal = doseVal / 1000;
-        const dayKey = dObj.toISOString().split('T')[0];
+        const dayKey = getLocalDateStr(dObj);
         allDosesMap.set(dayKey, { time: dObj.getTime(), dose: doseVal });
       }
     });
@@ -6127,7 +6167,7 @@ function initPlan() {
     const pkCustomDoses = JSON.parse(localStorage.getItem('mispep_pk_doses') || '[]');
     pkCustomDoses.forEach(d => {
       const dObj = new Date(d.date);
-      const dayKey = dObj.toISOString().split('T')[0];
+      const dayKey = getLocalDateStr(dObj);
       allDosesMap.set(dayKey, { time: dObj.getTime(), dose: parseFloat(d.doseMg) || doseMg });
     });
 
@@ -6151,7 +6191,7 @@ function initPlan() {
     if (hp.nextInjectionDate && nextInjTime > nowTime) {
       allDosesMap.set(hp.nextInjectionDate, { time: nextInjTime, dose: protocolDose });
       for (let t = nextInjTime + freqMs; t <= endTime; t += freqMs) {
-        const kDay = new Date(t).toISOString().split('T')[0];
+        const kDay = getLocalDateStr(new Date(t));
         allDosesMap.set(kDay, { time: t, dose: protocolDose });
       }
     }
@@ -6171,7 +6211,7 @@ function initPlan() {
       pkSeries.push(buildBatemanSeries({
         key: 'base', label: hp.activeMed || 'Protocolo', color: medDescriptor(hp.activeMed).color,
         halfLife: halfLifeDays, isActive: true, index: 0,
-        doses: injectionEvents.map(ev => ({ time: ev.time, dose: ev.dose, date: new Date(ev.time).toISOString().split('T')[0] }))
+        doses: injectionEvents.map(ev => ({ time: ev.time, dose: ev.dose, date: getLocalDateStr(new Date(ev.time)) }))
       }, {}));
     }
 
@@ -6860,7 +6900,7 @@ function initInventory() {
   const formLoc = document.getElementById('invFormLoc');
 
   if (formDate) {
-    formDate.value = new Date().toISOString().split('T')[0];
+    formDate.value = getLocalDateStr();
   }
 
   let inventory = JSON.parse(localStorage.getItem('mispep_inventory') || '[]');
@@ -6911,7 +6951,7 @@ function initInventory() {
   function showForm() {
     if (formCard) {
       formCard.style.display = 'block';
-      if (formDate) formDate.value = new Date().toISOString().split('T')[0];
+      if (formDate) formDate.value = getLocalDateStr();
       if (formName) {
         formName.value = '';
         formName.focus();
@@ -6966,7 +7006,7 @@ function initLabel() {
   const bacIn = document.getElementById('labelBac');
   const dateIn = document.getElementById('labelDate');
 
-  dateIn.value = new Date().toISOString().split('T')[0];
+  dateIn.value = getLocalDateStr();
 
   function drawLabel() {
     ctx.fillStyle = '#ffffff';
