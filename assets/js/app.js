@@ -6105,7 +6105,7 @@ function initPlan() {
     const intervalDays = parseFloat(pkIntervalInput.value) || 7;
 
     const now = new Date();
-    now.setHours(12, 0, 0, 0);
+    const nowTime = now.getTime();
 
     // 1. Recopilar y unificar exclusivamente las inyecciones reales registradas
     let allDosesMap = new Map();
@@ -6132,10 +6132,6 @@ function initPlan() {
     });
 
     // C) Parámetros clínicos del protocolo vigente.
-    // OJO: initPlan/renderPkGraph viven en el ámbito superior del fichero, donde
-    // getHealthProfile() NO existe (está dentro del bloque interno). Llamarla
-    // aquí lanzaba "ReferenceError: getHealthProfile is not defined", abortaba
-    // initPlan y dejaba el gráfico PK y su inspector sin pintar.
     let hp = {};
     try { hp = JSON.parse(localStorage.getItem('mispep_health_profile') || '{}') || {}; } catch (_) { hp = {}; }
     const protocolDose = parseFloat(hp.nextDoseMg) || 1.5;
@@ -6145,19 +6141,18 @@ function initPlan() {
     let pastDays = Math.round(pkRangeDays * 0.5); // e.g. 7 días pasado para 14d
     let futureDays = pkRangeDays - pastDays;      // e.g. 7 días futuro para 14d
 
-    const startTime = now.getTime() - (pastDays * 24 * 3600 * 1000);
-    const endTime = now.getTime() + (futureDays * 24 * 3600 * 1000);
+    const startTime = nowTime - (pastDays * 24 * 3600 * 1000);
+    const endTime = nowTime + (futureDays * 24 * 3600 * 1000);
     const totalDuration = endTime - startTime;
 
     // D) Próxima inyección programada (Previsión futura exclusivamente)
-    if (hp.nextInjectionDate) {
-      const nextTime = new Date(hp.nextInjectionDate + 'T12:00:00').getTime();
-      if (nextTime > now.getTime()) {
-        allDosesMap.set(hp.nextInjectionDate, { time: nextTime, dose: protocolDose });
-        for (let t = nextTime + (protocolFreq * 24 * 3600 * 1000); t <= endTime; t += protocolFreq * 24 * 3600 * 1000) {
-          const kDay = new Date(t).toISOString().split('T')[0];
-          allDosesMap.set(kDay, { time: t, dose: protocolDose });
-        }
+    const freqMs = protocolFreq * 24 * 3600 * 1000;
+    const nextInjTime = hp.nextInjectionDate ? new Date(hp.nextInjectionDate + 'T12:00:00').getTime() : (nowTime + freqMs);
+    if (hp.nextInjectionDate && nextInjTime > nowTime) {
+      allDosesMap.set(hp.nextInjectionDate, { time: nextInjTime, dose: protocolDose });
+      for (let t = nextInjTime + freqMs; t <= endTime; t += freqMs) {
+        const kDay = new Date(t).toISOString().split('T')[0];
+        allDosesMap.set(kDay, { time: t, dose: protocolDose });
       }
     }
 
@@ -6167,9 +6162,9 @@ function initPlan() {
     // (color propio, vida media propia) superpuesta a la anterior.
     const pkSegments = getProtocolSegments();
     const pkSeries = pkSegments.map(seg => buildBatemanSeries(seg, {
-      projectFrom: hp.nextInjectionDate ? new Date(hp.nextInjectionDate + 'T12:00:00').getTime() : endTime,
+      projectFrom: nextInjTime,
       projectUntil: endTime,
-      projectEvery: protocolFreq * 24 * 3600 * 1000,
+      projectEvery: freqMs,
       projectDose: protocolDose
     }));
     if (pkSeries.length === 0) {
@@ -6182,7 +6177,7 @@ function initPlan() {
 
     // Si el punto seleccionado es nulo o está fuera de rango, seleccionar por defecto el momento actual (Hoy)
     if (pkSelectedTimestamp === null || pkSelectedTimestamp < startTime || pkSelectedTimestamp > endTime) {
-      pkSelectedTimestamp = now.getTime();
+      pkSelectedTimestamp = nowTime;
     }
 
     // Modelo farmacocinético de absorción y eliminación subcutánea.
@@ -6196,11 +6191,37 @@ function initPlan() {
     pkSelectedLevel.textContent = fmtNum(selectedLevel, 2);
     pkSelectedUnit.textContent = 'mg';
 
+    // Desglose de fármacos activos en la fecha/momento seleccionado
+    const breakdownParts = pkSeries
+      .map(sr => ({ label: sr.seg.label, v: sr.at(pkSelectedTimestamp), color: sr.seg.color }))
+      .filter(x => x.v >= 0.02);
+    let elBreakdown = document.getElementById('pkSelectedBreakdown');
+    if (!elBreakdown) {
+      const parentWrap = pkSelectedLevel.parentElement;
+      if (parentWrap && parentWrap.parentElement) {
+        elBreakdown = document.createElement('div');
+        elBreakdown.id = 'pkSelectedBreakdown';
+        elBreakdown.style.fontSize = '0.72rem';
+        elBreakdown.style.fontWeight = '800';
+        elBreakdown.style.marginTop = '4px';
+        parentWrap.parentElement.appendChild(elBreakdown);
+      }
+    }
+    if (elBreakdown) {
+      if (breakdownParts.length > 1) {
+        elBreakdown.innerHTML = breakdownParts
+          .map(p => `<span style="color:${p.color}; margin-right:8px;">● ${p.label}: ${fmtNum(p.v, 2)} mg</span>`)
+          .join('');
+      } else {
+        elBreakdown.innerHTML = '';
+      }
+    }
+
     const selDateObj = new Date(pkSelectedTimestamp);
     pkSelectedDate.textContent = selDateObj.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
 
     // Etiqueta relativa (Historial en morado, Hoy en ámbar, Previsión en cian)
-    const dayDiff = Math.round((pkSelectedTimestamp - now.getTime()) / (24 * 3600 * 1000));
+    const dayDiff = Math.round((pkSelectedTimestamp - nowTime) / (24 * 3600 * 1000));
     let relText = 'Historial';
     let relColor = '#8b5cf6';
     let relBg = 'rgba(139, 92, 246, 0.15)';
@@ -6253,22 +6274,22 @@ function initPlan() {
       return padT + plotH - ((v / maxLevel) * plotH);
     }
 
-    const todayX = getX(now.getTime());
+    const todayX = getX(nowTime);
     const selX = getX(pkSelectedTimestamp);
     const selY = getY(selectedLevel);
 
-    // Partir la curva en Historial (t <= now) y Previsión (t >= now)
+    // Partir la curva en Historial (t <= nowTime) y Previsión (t >= nowTime)
     let dHist = '';
     let dPrev = '';
     let dHistArea = `M ${getX(points[0].time)},${getY(0)} `;
     let dPrevArea = `M ${todayX.toFixed(1)},${getY(0)} `;
 
-    let pastPoints = points.filter(p => p.time <= now.getTime());
-    let futurePoints = points.filter(p => p.time >= now.getTime());
+    let pastPoints = points.filter(p => p.time <= nowTime);
+    let futurePoints = points.filter(p => p.time >= nowTime);
 
-    const levelAtNow = calcLevel(now.getTime());
-    pastPoints.push({ time: now.getTime(), val: levelAtNow });
-    futurePoints.unshift({ time: now.getTime(), val: levelAtNow });
+    const levelAtNow = calcLevel(nowTime);
+    pastPoints.push({ time: nowTime, val: levelAtNow });
+    futurePoints.unshift({ time: nowTime, val: levelAtNow });
 
     pastPoints.forEach((p, idx) => {
       const px = getX(p.time);
@@ -6343,6 +6364,70 @@ function initPlan() {
         ).join('');
       }
 
+      function renderPkFloatingBadges(currX, currY, currTime) {
+        const activeSeries = pkSeries.map(sr => ({
+          label: sr.seg.label,
+          val: sr.at(currTime),
+          color: sr.seg.color
+        })).filter(s => s.val >= 0.02);
+
+        if (activeSeries.length === 0 && pkSeries.length > 0) {
+          const lastSr = pkSeries[pkSeries.length - 1];
+          activeSeries.push({
+            label: lastSr.seg.label,
+            val: lastSr.at(currTime),
+            color: lastSr.seg.color
+          });
+        }
+
+        const isNearHoy = Math.abs(currX - todayX) < 32;
+        const badgeY = (currY < padT + 22 && isNearHoy) ? (currY + 18) : Math.max(padT + 4, currY - 24);
+
+        if (activeSeries.length === 1) {
+          const s = activeSeries[0];
+          const badgeW = 54;
+          const badgeX = Math.max(padL + badgeW / 2, Math.min(width - padR - badgeW / 2, currX));
+          return `
+            <g transform="translate(${badgeX.toFixed(1)}, ${badgeY.toFixed(1)})">
+              <rect x="${(-badgeW / 2).toFixed(1)}" y="-10" width="${badgeW}" height="20" rx="6" fill="${s.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+              <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(s.val, 2)}mg</text>
+            </g>
+          `;
+        }
+
+        if (activeSeries.length >= 2) {
+          const sLeft = activeSeries[0];
+          const sRight = activeSeries[1];
+          const badgeW = 50;
+          let leftX = currX - 3;
+          let rightX = currX + 3;
+
+          if (leftX - badgeW < padL) {
+            const shift = padL - (leftX - badgeW);
+            leftX += shift;
+            rightX += shift;
+          } else if (rightX + badgeW > width - padR) {
+            const shift = (rightX + badgeW) - (width - padR);
+            leftX -= shift;
+            rightX -= shift;
+          }
+
+          return `
+            <!-- Etiqueta izquierda: ${sLeft.label} -->
+            <g transform="translate(${leftX.toFixed(1)}, ${badgeY.toFixed(1)})">
+              <rect x="${-badgeW}" y="-10" width="${badgeW}" height="20" rx="5" fill="${sLeft.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+              <text x="${(-badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sLeft.val, 2)}mg</text>
+            </g>
+            <!-- Etiqueta derecha: ${sRight.label} -->
+            <g transform="translate(${rightX.toFixed(1)}, ${badgeY.toFixed(1)})">
+              <rect x="0" y="-10" width="${badgeW}" height="20" rx="5" fill="${sRight.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+              <text x="${(badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sRight.val, 2)}mg</text>
+            </g>
+          `;
+        }
+        return '';
+      }
+
       plotContent = `
         <!-- Rellenos de referencia (historial / previsión) -->
         <path d="${dHistArea}" fill="url(#pkHistGrad)" />
@@ -6357,11 +6442,8 @@ function initPlan() {
         <!-- Nodo Interactivo Seleccionado (Anillo Verde Menta con centro blanco) -->
         <circle cx="${selX.toFixed(1)}" cy="${selY.toFixed(1)}" r="7.5" fill="#10b981" stroke="#ffffff" stroke-width="2" />
 
-        <!-- Etiqueta Flotante sobre el punto seleccionado (idéntica a Shotlee) -->
-        <g transform="translate(${selX.toFixed(1)}, ${((selY < padT + 22 && Math.abs(selX - todayX) < 32) ? (selY + 18) : Math.max(padT + 4, selY - 24)).toFixed(1)})">
-          <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#10b981" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
-          <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">${fmtNum(selectedLevel, 2)}mg</text>
-        </g>
+        <!-- Etiquetas Flotantes por cada péptido circulante -->
+        ${renderPkFloatingBadges(selX, selY, pkSelectedTimestamp)}
       `;
     } else {
       // Vista de Barras Diarias (Estilo Shotlee con Diana y Gradientes)
@@ -6393,7 +6475,7 @@ function initPlan() {
         const by = padT + plotH - bh;
 
         const isSelected = (i === selectedBarIdx);
-        const isPast = barTime <= (now.getTime() + 12 * 3600 * 1000);
+        const isPast = barTime <= (nowTime + 12 * 3600 * 1000);
         const hideDayNum = tooLeft(bx) || tooRight(bx);
 
         let fillGrad = 'url(#pkBarPastGrad)';
@@ -6405,14 +6487,10 @@ function initPlan() {
 
         let activeIndicator = '';
         if (isSelected) {
-          const barDoseY = (by < padT + 22 && Math.abs(bx - todayX) < 32) ? (by + 18) : Math.max(padT + 4, by - 24);
           activeIndicator = `
             <circle cx="${bx}" cy="${by}" r="7" fill="#f43f5e" />
             <circle cx="${bx}" cy="${by}" r="3.2" fill="#ffffff" />
-            <g transform="translate(${bx}, ${barDoseY})">
-              <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
-              <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">${fmtNum(bLevel, 2)}mg</text>
-            </g>
+            ${renderPkFloatingBadges(bx, by, barTime)}
           `;
         }
 
