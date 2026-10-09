@@ -695,6 +695,14 @@
       subtabs[3].textContent = t('dash_tab_all');
     }
 
+    var bpSubtabs = document.querySelectorAll('#bpGraphTimeframe .subtab-btn');
+    if (bpSubtabs.length >= 4) {
+      bpSubtabs[0].textContent = t('dash_tab_1m');
+      bpSubtabs[1].textContent = t('dash_tab_3m');
+      bpSubtabs[2].textContent = t('dash_tab_6m');
+      bpSubtabs[3].textContent = t('dash_tab_all');
+    }
+
     var logWBtn = document.querySelector('#dashLogWeightBtn span:last-child');
     if (logWBtn) logWBtn.textContent = t('dash_add_weight_btn');
 
