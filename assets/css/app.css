@@ -1044,6 +1044,10 @@ body {
   text-transform: uppercase;
 }
 
+.cal-weekdays span:last-child {
+  color: #f43f5e;
+}
+
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1071,6 +1075,25 @@ body {
 .cal-day.other-month {
   color: var(--text-muted);
   opacity: 0.35;
+}
+
+.cal-day.sunday {
+  color: #f43f5e;
+  font-weight: 800;
+}
+
+.cal-day.sunday.other-month {
+  color: #f43f5e;
+  opacity: 0.45;
+}
+
+.cal-day.sunday.today {
+  color: #f43f5e;
+  border-color: #f59e0b;
+}
+
+.cal-day.sunday.selected {
+  color: #ffffff;
 }
 
 .cal-day.today {
