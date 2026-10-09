@@ -361,9 +361,9 @@
       dash_curr_bmi: 'IMC ACTUAL',
       dash_weight_evo: 'Evolución del Peso',
       dash_global_tracking: 'Seguimiento global ›',
-      dash_tab_week: 'Semana',
-      dash_tab_month: 'Mes',
-      dash_tab_year: 'Año',
+      dash_tab_1m: '1 mes',
+      dash_tab_3m: '3 meses',
+      dash_tab_6m: '6 meses',
       dash_tab_all: 'Todo',
       dash_add_weight_btn: 'Añadir nuevo peso',
       dash_bp_evo: 'Evolución Presión Arterial',
@@ -451,9 +451,9 @@
       dash_curr_bmi: 'CURRENT BMI',
       dash_weight_evo: 'Weight Evolution',
       dash_global_tracking: 'Global tracking ›',
-      dash_tab_week: 'Week',
-      dash_tab_month: 'Month',
-      dash_tab_year: 'Year',
+      dash_tab_1m: '1 month',
+      dash_tab_3m: '3 months',
+      dash_tab_6m: '6 months',
       dash_tab_all: 'All',
       dash_add_weight_btn: 'Log new weight',
       dash_bp_evo: 'Blood Pressure Evolution',
@@ -689,9 +689,9 @@
 
     var subtabs = document.querySelectorAll('#wGraphTimeframe .subtab-btn');
     if (subtabs.length >= 4) {
-      subtabs[0].textContent = t('dash_tab_week');
-      subtabs[1].textContent = t('dash_tab_month');
-      subtabs[2].textContent = t('dash_tab_year');
+      subtabs[0].textContent = t('dash_tab_1m');
+      subtabs[1].textContent = t('dash_tab_3m');
+      subtabs[2].textContent = t('dash_tab_6m');
       subtabs[3].textContent = t('dash_tab_all');
     }
 
@@ -1125,6 +1125,8 @@
   "0 (Ninguno)": "0 (None)",
   "1 copia semanal": "1 weekly backup",
   "1 mes": "1 month",
+  "3 meses": "3 months",
+  "6 meses": "6 months",
   "1 vez al mes": "Once a month",
   "1 vez por semana": "Once a week",
   "1. Grupo terapéutico o indicación": "1. Therapeutic group or indication",
