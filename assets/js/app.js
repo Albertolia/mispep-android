@@ -4605,7 +4605,9 @@ function initCalendar() {
     // Días del mes anterior
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const d = prevMonthDays - i;
-      html += `<div class="cal-day other-month">${d}</div>`;
+      const colIdx = firstDayIndex - 1 - i;
+      const isSun = (colIdx === 6);
+      html += `<div class="cal-day other-month${isSun ? ' sunday' : ''}">${d}</div>`;
     }
 
     // Días del mes actual (hora local del dispositivo)
@@ -4623,6 +4625,8 @@ function initCalendar() {
       const isToday = dateKey === todayStr;
       const isSelected = dateKey === selectedDateStr;
       const isScheduled = dateKey === nextInjDate;
+      const dayOfWeek = (firstDayIndex + d - 1) % 7; // 0=Lun ... 6=Dom
+      const isSunday = (dayOfWeek === 6);
 
       // Filtrar entradas para este día
       let dayEntries = entries.filter(e => e.date === dateKey);
@@ -4642,6 +4646,7 @@ function initCalendar() {
       }
 
       let classes = ['cal-day'];
+      if (isSunday) classes.push('sunday');
       if (isToday) classes.push('today');
       if (isSelected) classes.push('selected');
       if (isScheduled && !isSelected) classes.push('scheduled');
