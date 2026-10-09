@@ -1717,10 +1717,10 @@ function initDashboard() {
     const benchSvg = document.getElementById('benchCirculatingSvg');
     if (benchSvg) {
       const width = 360;
-      const height = 170;
+      const height = 175;
       const padL = 26;
       const padR = 24;
-      const padT = 24;
+      const padT = 26;
       const padB = 36;
       const plotW = width - padL - padR;
       const plotH = height - padT - padB;
@@ -1905,6 +1905,67 @@ function initDashboard() {
         curMonth = nextMonth;
       }
 
+      function renderScrubBadges(currX, currTime) {
+        const activeSeries = series.map(sr => ({
+          label: sr.seg.label,
+          val: sr.at(currTime),
+          color: sr.seg.color
+        })).filter(s => s.val >= 0.02);
+
+        if (activeSeries.length === 0 && series.length > 0) {
+          const lastSr = series[series.length - 1];
+          activeSeries.push({
+            label: lastSr.seg.label,
+            val: lastSr.at(currTime),
+            color: lastSr.seg.color
+          });
+        }
+
+        if (activeSeries.length === 1) {
+          const s = activeSeries[0];
+          const badgeW = 54;
+          const badgeX = Math.max(padL + badgeW / 2, Math.min(width - padR - badgeW / 2, currX));
+          return `
+            <g transform="translate(${badgeX.toFixed(1)}, 3)">
+              <rect x="${(-badgeW / 2).toFixed(1)}" y="0" width="${badgeW}" height="15" rx="4" fill="${s.color}" stroke="#ffffff" stroke-width="1.2" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.6))" />
+              <text x="0" y="11" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.5); stroke-width:1.8px;">${fmtNum(s.val, 2)} mg</text>
+            </g>
+          `;
+        }
+
+        if (activeSeries.length >= 2) {
+          const sLeft = activeSeries[0];
+          const sRight = activeSeries[1];
+          const badgeW = 50;
+          let leftX = currX - 3;
+          let rightX = currX + 3;
+
+          if (leftX - badgeW < padL) {
+            const shift = padL - (leftX - badgeW);
+            leftX += shift;
+            rightX += shift;
+          } else if (rightX + badgeW > width - padR) {
+            const shift = (rightX + badgeW) - (width - padR);
+            leftX -= shift;
+            rightX -= shift;
+          }
+
+          return `
+            <!-- Etiqueta izquierda con color y dosis de ${sLeft.label} -->
+            <g transform="translate(${leftX.toFixed(1)}, 3)">
+              <rect x="${-badgeW}" y="0" width="${badgeW}" height="15" rx="4" fill="${sLeft.color}" stroke="#ffffff" stroke-width="1.2" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.6))" />
+              <text x="${(-badgeW / 2).toFixed(1)}" y="11" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.5); stroke-width:1.8px;">${fmtNum(sLeft.val, 2)} mg</text>
+            </g>
+            <!-- Etiqueta derecha con color y dosis de ${sRight.label} -->
+            <g transform="translate(${rightX.toFixed(1)}, 3)">
+              <rect x="0" y="0" width="${badgeW}" height="15" rx="4" fill="${sRight.color}" stroke="#ffffff" stroke-width="1.2" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.6))" />
+              <text x="${(badgeW / 2).toFixed(1)}" y="11" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.5); stroke-width:1.8px;">${fmtNum(sRight.val, 2)} mg</text>
+            </g>
+          `;
+        }
+        return '';
+      }
+
       benchSvg.innerHTML = `
         <defs>
           <linearGradient id="benchCurveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1934,9 +1995,14 @@ function initDashboard() {
         <!-- Badges superiores de cambio de dosis y fármaco (escalonados) -->
         ${upperBadgesHtml}
 
-        <!-- Línea interactiva vertical del Scrubber -->
-        <line id="benchScrubLine" x1="${getX(nowTime)}" y1="${padT}" x2="${getX(nowTime)}" y2="${padT + plotH}" stroke="#ffffff" stroke-width="1.4" opacity="0.8" />
-        <circle id="benchScrubNode" cx="${getX(nowTime)}" cy="${getY(totalAt(nowTime))}" r="4.5" fill="${activeColor}" stroke="#ffffff" stroke-width="1.8" />
+        <!-- Línea interactiva vertical del Scrubber más alta -->
+        <line id="benchScrubLine" x1="${getX(nowTime).toFixed(1)}" y1="3" x2="${getX(nowTime).toFixed(1)}" y2="${(padT + plotH).toFixed(1)}" stroke="#ffffff" stroke-width="1.6" opacity="0.85" />
+        <circle id="benchScrubNode" cx="${getX(nowTime).toFixed(1)}" cy="${getY(totalAt(nowTime)).toFixed(1)}" r="4.5" fill="${activeColor}" stroke="#ffffff" stroke-width="1.8" />
+        
+        <!-- Etiquetas superiores de dosis en la línea vertical -->
+        <g id="benchScrubBadges">
+          ${renderScrubBadges(getX(nowTime), nowTime)}
+        </g>
       `;
 
       // Leyenda de protocolos superpuestos
@@ -1967,13 +2033,19 @@ function initDashboard() {
 
         const sLine = document.getElementById('benchScrubLine');
         const sNode = document.getElementById('benchScrubNode');
+        const sBadges = document.getElementById('benchScrubBadges');
         if (sLine) {
           sLine.setAttribute('x1', boundedX.toFixed(1));
           sLine.setAttribute('x2', boundedX.toFixed(1));
+          sLine.setAttribute('y1', '3');
+          sLine.setAttribute('y2', (padT + plotH).toFixed(1));
         }
         if (sNode) {
           sNode.setAttribute('cx', boundedX.toFixed(1));
           sNode.setAttribute('cy', getY(scrubVal).toFixed(1));
+        }
+        if (sBadges) {
+          sBadges.innerHTML = renderScrubBadges(boundedX, scrubTime);
         }
 
         const dateObj = new Date(scrubTime);
@@ -6108,10 +6180,8 @@ function initPlan() {
       }, {}));
     }
 
-    // Si el punto seleccionado es nulo, seleccionar por defecto 2 días atrás (ej. Sep 16)
-    if (pkSelectedTimestamp === null) {
-      pkSelectedTimestamp = now.getTime() - (2 * 24 * 3600 * 1000);
-    } else if (pkSelectedTimestamp < startTime || pkSelectedTimestamp > endTime) {
+    // Si el punto seleccionado es nulo o está fuera de rango, seleccionar por defecto el momento actual (Hoy)
+    if (pkSelectedTimestamp === null || pkSelectedTimestamp < startTime || pkSelectedTimestamp > endTime) {
       pkSelectedTimestamp = now.getTime();
     }
 
@@ -6168,10 +6238,10 @@ function initPlan() {
 
     // Dimensiones SVG
     const width = 360;
-    const height = 185;
+    const height = 195;
     const padL = 34;
     const padR = 24;
-    const padT = 26;
+    const padT = 32;
     const padB = 26;
     const plotW = width - padL - padR;
     const plotH = height - padT - padB;
@@ -6288,8 +6358,8 @@ function initPlan() {
         <circle cx="${selX.toFixed(1)}" cy="${selY.toFixed(1)}" r="7.5" fill="#10b981" stroke="#ffffff" stroke-width="2" />
 
         <!-- Etiqueta Flotante sobre el punto seleccionado (idéntica a Shotlee) -->
-        <g transform="translate(${selX.toFixed(1)}, ${Math.max(padT - 6, selY - 26).toFixed(1)})">
-          <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+        <g transform="translate(${selX.toFixed(1)}, ${((selY < padT + 22 && Math.abs(selX - todayX) < 32) ? (selY + 18) : Math.max(padT + 4, selY - 24)).toFixed(1)})">
+          <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#10b981" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
           <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">${fmtNum(selectedLevel, 2)}mg</text>
         </g>
       `;
@@ -6335,11 +6405,12 @@ function initPlan() {
 
         let activeIndicator = '';
         if (isSelected) {
+          const barDoseY = (by < padT + 22 && Math.abs(bx - todayX) < 32) ? (by + 18) : Math.max(padT + 4, by - 24);
           activeIndicator = `
             <circle cx="${bx}" cy="${by}" r="7" fill="#f43f5e" />
             <circle cx="${bx}" cy="${by}" r="3.2" fill="#ffffff" />
-            <g transform="translate(${bx}, ${Math.max(padT - 6, by - 24)})">
-              <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+            <g transform="translate(${bx}, ${barDoseY})">
+              <rect x="-26" y="-10" width="52" height="20" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
               <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">${fmtNum(bLevel, 2)}mg</text>
             </g>
           `;
@@ -6389,13 +6460,13 @@ function initPlan() {
         <line x1="${padL}" y1="${yRefY}" x2="${width - padR}" y2="${yRefY}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6" />
         <text x="${padL - 6}" y="${yRefY + 3.5}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="end">${yRefVal.toFixed(1)} mg</text>
 
-        <!-- Línea Vertical fija de 'Hoy' (Discontinua Ámbar) -->
-        <line x1="${todayX}" y1="${padT - 8}" x2="${todayX}" y2="${getY(0)}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,4" />
+        <!-- Línea Vertical fija de 'Hoy' (Discontinua Ámbar) más alta -->
+        <line x1="${todayX}" y1="${padT - 16}" x2="${todayX}" y2="${getY(0)}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,4" />
         
-        <!-- Badge 'Hoy' fijo en la parte superior de la línea vertical -->
-        <g transform="translate(${todayX}, ${padT - 10})">
-          <rect x="-14" y="-8" width="28" height="15" rx="5" fill="#f59e0b" />
-          <text x="0" y="2.5" font-size="7.5" font-weight="900" fill="#1a1408" text-anchor="middle">Hoy</text>
+        <!-- Badge 'Hoy' fijo en la parte superior de la línea vertical (más alto para no quedar tapado) -->
+        <g transform="translate(${todayX}, ${padT - 20})">
+          <rect x="-15" y="-8" width="30" height="15" rx="5" fill="#f59e0b" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.5))" />
+          <text x="0" y="3" font-size="8" font-weight="900" fill="#1a1408" text-anchor="middle">Hoy</text>
         </g>
 
         <!-- Contenido principal (Curva o Barras) -->
