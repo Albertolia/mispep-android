@@ -2590,6 +2590,7 @@ function initDashboard() {
   const wOpenZoomBtn = document.getElementById('wOpenZoomBtn');
 
   let currentWZoomCenterIdx = -1;
+  let lastWeightZoomOpenedAt = 0;
 
   function openWeightZoomModal(logIdx) {
     const p = getHealthProfile();
@@ -2605,6 +2606,7 @@ function initDashboard() {
     }
     currentWZoomCenterIdx = logIdx;
     renderWeightZoomView(currentWZoomCenterIdx);
+    lastWeightZoomOpenedAt = Date.now();
     if (weightZoomSheetBackdrop) {
       weightZoomSheetBackdrop.classList.add('open');
     }
@@ -2756,9 +2758,7 @@ function initDashboard() {
       // Fondo de la columna del pesaje
       if (isCenter) {
         columnsBgHtml += `
-          <rect x="${(pt.x - colW / 2 + 2).toFixed(1)}" y="${padT - 18}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 34).toFixed(1)}" rx="10" fill="rgba(37, 99, 235, 0.15)" stroke="rgba(37, 99, 235, 0.55)" stroke-width="1.6" />
-          <rect x="${(pt.x - 22).toFixed(1)}" y="${(padT - 28).toFixed(1)}" width="44" height="13" rx="4" fill="#2563eb" />
-          <text x="${pt.x.toFixed(1)}" y="${(padT - 19).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">TOCADO</text>
+          <rect x="${(pt.x - colW / 2 + 2).toFixed(1)}" y="${padT - 18}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 34).toFixed(1)}" rx="10" fill="rgba(37, 99, 235, 0.16)" stroke="rgba(37, 99, 235, 0.6)" stroke-width="1.6" />
         `;
       } else {
         columnsBgHtml += `
@@ -2835,7 +2835,7 @@ function initDashboard() {
 
       let relBadge = '';
       if (isCenter) {
-        relBadge = `<span style="background:#2563eb; color:#ffffff; font-size:0.68rem; font-weight:900; padding:2px 8px; border-radius:6px; letter-spacing:0.5px;">⭐ TOCADO (SELECCIONADO)</span>`;
+        relBadge = `<span style="background:#2563eb; color:#ffffff; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:0.5px;">⭐ SELECCIONADO</span>`;
       } else if (l.relDiff < 0) {
         relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${Math.abs(l.relDiff)} pesaje(s) antes</span>`;
       } else {
@@ -2852,24 +2852,12 @@ function initDashboard() {
         const dColor = isLoss ? '#10b981' : (diffKg > 0 ? '#ef4444' : 'var(--text-muted)');
         const icon = isLoss ? '📉' : (diffKg > 0 ? '📈' : '➖');
         diffPrevHtml = `
-          <span style="color:${dColor}; font-weight:800; font-size:0.8rem;">
-            ${icon} ${diffSign}${diffKg.toFixed(2)} kg <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">(vs pesaje anterior)</span>
-          </span>
-        `;
-      } else {
-        diffPrevHtml = `<span style="color:var(--text-muted); font-size:0.75rem; font-style:italic;">Primer pesaje registrado</span>`;
-      }
-
-      // Comparación con el pesaje TOCADO
-      let diffTocadoHtml = '';
-      if (!isCenter) {
-        const diffFromTocado = l.weight - targetLog.weight;
-        const dSign = diffFromTocado > 0 ? '+' : '';
-        diffTocadoHtml = `
-          <div style="font-size:0.74rem; color:var(--text-muted); margin-top:2px;">
-            Diferencia vs Tocado: <strong style="color:${diffFromTocado <= 0 ? '#10b981' : '#f59e0b'};">${dSign}${diffFromTocado.toFixed(2)} kg</strong>
+          <div style="font-size:0.82rem; font-weight:800; color:${dColor}; margin-top:3px;">
+            ${icon} Diferencia vs peso anterior: <strong>${diffSign}${diffKg.toFixed(2)} kg</strong>
           </div>
         `;
+      } else {
+        diffPrevHtml = `<div style="color:var(--text-muted); font-size:0.75rem; font-style:italic; margin-top:3px;">Primer pesaje registrado</div>`;
       }
 
       // IMC
@@ -2907,8 +2895,7 @@ function initDashboard() {
                 <span style="font-size:1.8rem; font-weight:900; color:#ffffff; letter-spacing:0.5px;">${l.weight}</span>
                 <span style="font-size:0.9rem; font-weight:800; color:#3b82f6;">kg</span>
               </div>
-              <div style="margin-top:2px;">${diffPrevHtml}</div>
-              ${diffTocadoHtml}
+              ${diffPrevHtml}
               ${origenStr ? `<div style="margin-top:4px;">${origenStr}</div>` : ''}
             </div>
 
@@ -2964,6 +2951,7 @@ function initDashboard() {
 
   if (weightZoomSheetBackdrop) {
     weightZoomSheetBackdrop.addEventListener('click', (e) => {
+      if (Date.now() - lastWeightZoomOpenedAt < 450) return;
       if (e.target === weightZoomSheetBackdrop) {
         weightZoomSheetBackdrop.classList.remove('open');
       }
@@ -4260,7 +4248,7 @@ function initDashboard() {
         const totalDx = curX - bpTouchStartX;
         const totalDy = curY - bpTouchStartY;
 
-        if (!bpIsSwiping && Math.abs(totalDx) > Math.abs(totalDy) && Math.abs(totalDx) > 8) {
+        if (!bpIsSwiping && Math.abs(totalDx) > Math.abs(totalDy) && Math.abs(totalDx) > 22) {
           bpIsSwiping = true;
         }
 
@@ -4283,12 +4271,16 @@ function initDashboard() {
         const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : bpTouchStartX;
         const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : bpTouchStartY;
         const dist = Math.hypot(endX - bpTouchStartX, endY - bpTouchStartY);
-        if (dist < 15) {
+        if (dist < 25) {
           handleBpSvgTap(endX);
         }
       }
       bpIsSwiping = false;
     }, { passive: true });
+
+    bpSvgContainer.addEventListener('click', (e) => {
+      handleBpSvgTap(e.clientX);
+    });
   }
 
   function handleBpSvgTap(clientX) {
@@ -4781,10 +4773,6 @@ function initDashboard() {
           <div style="font-size:0.82rem; color:#ffffff;">${medsList}</div>
           ${diffHtml}
         </div>
-
-        <button type="button" class="btn-3d btn-3d-cyan bp-open-zoom-from-scrubber" style="width:100%; margin-top:8px; padding:7px; font-size:0.78rem; font-weight:800; border:1px solid rgba(6,182,212,0.35);">
-          🔍 Ver amplitud y detalle en pantalla ampliada (±2 días)
-        </button>
       `;
 
       const scrubberEditBtn = bpScrubberInfo.querySelector('.bp-edit-scrubber-btn');
@@ -4805,15 +4793,6 @@ function initDashboard() {
           openBpMedTimeModal(medIdx, logId);
         });
       });
-
-      const scrubberZoomBtn = bpScrubberInfo.querySelector('.bp-open-zoom-from-scrubber');
-      if (scrubberZoomBtn) {
-        scrubberZoomBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          triggerHaptic(12);
-          openBpZoomModal(d.date);
-        });
-      }
     }
 
     bpSvgContainer.querySelectorAll('.bp-touch-col, .bp-diff-marker, .bp-node-sys, .bp-node-dia').forEach(el => {
@@ -4845,6 +4824,8 @@ function initDashboard() {
   // ============================================================
   // PANTALLA / MODAL AMPLIADO DE PRESIÓN ARTERIAL (VENTANA ±2 DÍAS)
   // ============================================================
+  let lastBpZoomOpenedAt = 0;
+
   function openBpZoomModal(targetDate) {
     const logs = getBpLogs();
     if (!logs || logs.length === 0) return;
@@ -4852,6 +4833,7 @@ function initDashboard() {
       targetDate = logs[logs.length - 1].date;
     }
     currentBpZoomDate = targetDate;
+    lastBpZoomOpenedAt = Date.now();
     if (bpZoomSheetBackdrop) {
       bpZoomSheetBackdrop.classList.add('open');
     }
@@ -5051,7 +5033,7 @@ function initDashboard() {
       const relDiff = i - centerIdxInWindow;
       let relLabel = '';
       if (isCenter) {
-        relLabel = 'TOCADO';
+        relLabel = '';
       } else if (relDiff < 0) {
         relLabel = `${relDiff}d`;
       } else {
@@ -5061,9 +5043,7 @@ function initDashboard() {
       // Fondo de la columna del día
       if (isCenter) {
         columnsBgHtml += `
-          <rect x="${(colX - colW / 2 + 2).toFixed(1)}" y="${padT - 16}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 28).toFixed(1)}" rx="10" fill="rgba(59, 130, 246, 0.12)" stroke="rgba(59, 130, 246, 0.45)" stroke-width="1.5" />
-          <rect x="${(colX - 22).toFixed(1)}" y="${(padT - 28).toFixed(1)}" width="44" height="13" rx="4" fill="#3b82f6" />
-          <text x="${colX.toFixed(1)}" y="${(padT - 19).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">TOCADO</text>
+          <rect x="${(colX - colW / 2 + 2).toFixed(1)}" y="${padT - 16}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 28).toFixed(1)}" rx="10" fill="rgba(59, 130, 246, 0.14)" stroke="rgba(59, 130, 246, 0.55)" stroke-width="1.6" />
         `;
       } else {
         columnsBgHtml += `
@@ -5358,6 +5338,7 @@ function initDashboard() {
 
   if (bpZoomSheetBackdrop) {
     bpZoomSheetBackdrop.addEventListener('click', (e) => {
+      if (Date.now() - lastBpZoomOpenedAt < 450) return;
       if (e.target === bpZoomSheetBackdrop) {
         bpZoomSheetBackdrop.classList.remove('open');
       }
