@@ -295,15 +295,10 @@
           </div>
 
           <!-- Contenedor SVG Interactivo de la Gráfica de Peso -->
-          <div id="weightSvgContainer" style="width:100%; min-height:185px; position:relative;"></div>
-
-          <!-- Botón de Pantalla Ampliada de Pesajes (Lupa de ±4 pesajes) -->
-          <button type="button" class="btn-3d btn-3d-surface btn-block" id="wOpenZoomBtn" style="margin-top:8px; padding:9px 12px; font-size:0.8rem; font-weight:800; color:#3b82f6; border:1px solid rgba(59,130,246,0.35); display:flex; align-items:center; justify-content:center; gap:6px;">
-            <span>🔍</span> <span>Ver pantalla ampliada (±4 pesajes y variación)</span>
-          </button>
+          <div id="weightSvgContainer" style="width:100%; min-height:185px; position:relative; cursor:pointer; touch-action:pan-y;"></div>
 
           <!-- Botón Unificado Añadir Nuevo Peso -->
-          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogWeightBtn" style="margin-top:8px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
+          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogWeightBtn" style="margin-top:12px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
             <span>⚖️</span> <span>Añadir nuevo peso</span>
           </button>
         </div>
@@ -353,7 +348,7 @@
           </div>
 
           <!-- Contenedor SVG Interactivo de la Gráfica de PA -->
-          <div id="bpSvgContainer" style="width:100%; min-height:190px; position:relative;"></div>
+          <div id="bpSvgContainer" style="width:100%; min-height:190px; position:relative; cursor:pointer; touch-action:pan-y;"></div>
 
           <!-- Leyenda de Curvas y Variación de Medicación -->
           <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; margin-top:8px; font-size:0.72rem; color:var(--text-muted); font-weight:700;">
