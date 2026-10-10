@@ -2985,6 +2985,57 @@
     </div>
   </div>
 
+  <!-- MODAL / BOTTOM SHEET: VENTANA AMPLIADA DE PRESIÓN ARTERIAL (AMPLITUD DE RANGO ±2 DÍAS) -->
+  <div class="bottom-sheet-backdrop" id="bpZoomSheetBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:92vh; overflow-y:auto; padding:14px 16px 32px;">
+      <div class="bottom-sheet-handle"></div>
+
+      <!-- Cabecera del Modal -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.3rem;">🩺</span>
+            <h2 style="font-size:1.2rem; font-weight:900; color:var(--text-main); margin:0;" id="bpZoomModalTitle">Detalle y Amplitud de Presión</h2>
+          </div>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin:4px 0 0 0;" id="bpZoomModalSubtitle">
+            Ventana de 5 días (±2 días) · Amplitud de rangos SYS/DIA y todas las medidas
+          </p>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeBpZoomSheetBtn" style="width:32px; height:32px; margin-left:8px;">✕</button>
+      </div>
+
+      <!-- Barra de Navegación Rápida entre Días -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:6px 10px; margin-bottom:12px;">
+        <button type="button" class="icon-btn-3d" id="bpZoomPrevDayBtn" style="width:32px; height:32px; font-size:1.1rem; font-weight:900;">‹</button>
+        <div style="text-align:center; flex:1; padding:0 8px;">
+          <div style="font-size:0.85rem; font-weight:900; color:var(--text-main);" id="bpZoomFocusDateLabel">--</div>
+          <div style="font-size:0.68rem; font-weight:700; color:#3b82f6; margin-top:1px;" id="bpZoomFocusSubLabel">Día seleccionado</div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="bpZoomNextDayBtn" style="width:32px; height:32px; font-size:1.1rem; font-weight:900;">›</button>
+      </div>
+
+      <!-- Gráfico Ampliado de Amplitud (SVG grande) -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:12px 10px 8px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:0 4px;">
+          <span style="font-size:0.74rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Evolución y Amplitud de Rango</span>
+          <div style="display:flex; gap:10px; font-size:0.72rem; font-weight:800;">
+            <span style="color:#f43f5e;">● Sistólica</span>
+            <span style="color:#06b6d4;">● Diastólica</span>
+          </div>
+        </div>
+        <div id="bpZoomSvgContainer" style="width:100%; min-height:260px; position:relative;"></div>
+      </div>
+
+      <!-- Tarjetas de Detalle Diario de los 5 Días -->
+      <div style="margin-top:6px;">
+        <div style="font-size:0.78rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">
+          📋 Detalle diario de tomas y variación de rango
+        </div>
+        <div id="bpZoomCardsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL / BOTTOM SHEET: AVISO DE PERSISTENCIA Y NOTIFICACIONES A LAS 9:00 AM -->
   <div class="bottom-sheet-backdrop" id="batteryNoticeBackdrop">
     <div class="bottom-sheet-panel" style="max-height:85vh; overflow-y:auto;">

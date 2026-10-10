@@ -3311,6 +3311,16 @@ function initDashboard() {
   const dashBpDiaVal = document.getElementById('dashBpDiaVal');
   const dashBpStatusVal = document.getElementById('dashBpStatusVal');
 
+  const bpZoomSheetBackdrop = document.getElementById('bpZoomSheetBackdrop');
+  const closeBpZoomSheetBtn = document.getElementById('closeBpZoomSheetBtn');
+  const bpZoomPrevDayBtn = document.getElementById('bpZoomPrevDayBtn');
+  const bpZoomNextDayBtn = document.getElementById('bpZoomNextDayBtn');
+  const bpZoomFocusDateLabel = document.getElementById('bpZoomFocusDateLabel');
+  const bpZoomFocusSubLabel = document.getElementById('bpZoomFocusSubLabel');
+  const bpZoomSvgContainer = document.getElementById('bpZoomSvgContainer');
+  const bpZoomCardsContainer = document.getElementById('bpZoomCardsContainer');
+  let currentBpZoomDate = null;
+
   let currentBpRange = '1m';
   let bpRangeOffset = 0;
   let draftBpMeds = [];
@@ -4115,6 +4125,10 @@ function initDashboard() {
           <div style="font-size:0.82rem; color:#ffffff;">${medsList}</div>
           ${diffHtml}
         </div>
+
+        <button type="button" class="btn-3d btn-3d-cyan bp-open-zoom-from-scrubber" style="width:100%; margin-top:8px; padding:7px; font-size:0.78rem; font-weight:800; border:1px solid rgba(6,182,212,0.35);">
+          🔍 Ver amplitud y detalle en pantalla ampliada (±2 días)
+        </button>
       `;
 
       const scrubberEditBtn = bpScrubberInfo.querySelector('.bp-edit-scrubber-btn');
@@ -4125,6 +4139,15 @@ function initDashboard() {
           openBpEditModal(d.last.id);
         });
       }
+
+      const scrubberZoomBtn = bpScrubberInfo.querySelector('.bp-open-zoom-from-scrubber');
+      if (scrubberZoomBtn) {
+        scrubberZoomBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerHaptic(12);
+          openBpZoomModal(d.date);
+        });
+      }
     }
 
     bpSvgContainer.querySelectorAll('.bp-touch-col, .bp-diff-marker, .bp-node-sys, .bp-node-dia').forEach(el => {
@@ -4132,11 +4155,527 @@ function initDashboard() {
         triggerHaptic(12);
         const idx = parseInt(el.dataset.idx, 10);
         updateScrubber(idx);
+        const d = daySummaries[idx];
+        if (d) {
+          openBpZoomModal(d.date);
+        }
       });
     });
 
     updateScrubber(daySummaries.length - 1);
+
+    if (bpZoomSheetBackdrop && bpZoomSheetBackdrop.classList.contains('open') && currentBpZoomDate) {
+      renderBpZoomView(currentBpZoomDate);
+    }
   }
+
+  // ============================================================
+  // PANTALLA / MODAL AMPLIADO DE PRESIÓN ARTERIAL (VENTANA ±2 DÍAS)
+  // ============================================================
+  function openBpZoomModal(targetDate) {
+    const logs = getBpLogs();
+    if (!logs || logs.length === 0) return;
+    if (!targetDate) {
+      targetDate = logs[logs.length - 1].date;
+    }
+    currentBpZoomDate = targetDate;
+    renderBpZoomView(currentBpZoomDate);
+    if (bpZoomSheetBackdrop) {
+      bpZoomSheetBackdrop.classList.add('open');
+    }
+  }
+
+  function renderBpZoomView(centerDate) {
+    if (!bpZoomSvgContainer || !bpZoomCardsContainer) return;
+    let logs = getBpLogs();
+    const isEn = window.MISPEP_I18N && window.MISPEP_I18N.getLang() === 'en';
+    if (!logs || logs.length === 0) {
+      bpZoomSvgContainer.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px;">${isEn ? 'No blood pressure records' : 'Sin registros de presión arterial'}</p>`;
+      bpZoomCardsContainer.innerHTML = '';
+      return;
+    }
+
+    logs = [...logs].sort((a, b) => new Date(a.date + 'T' + (a.time || '00:00')) - new Date(b.date + 'T' + (b.time || '00:00')));
+
+    const dayGroupsMap = {};
+    logs.forEach(l => {
+      if (!dayGroupsMap[l.date]) dayGroupsMap[l.date] = [];
+      dayGroupsMap[l.date].push(l);
+    });
+
+    const uniqueDates = Object.keys(dayGroupsMap).sort((a, b) => new Date(a) - new Date(b));
+    if (uniqueDates.length === 0) return;
+
+    const allDaySummaries = uniqueDates.map(date => {
+      const readings = dayGroupsMap[date].sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+      const last = readings[readings.length - 1];
+      const maxSys = Math.max(...readings.map(r => r.sys));
+      const minSys = Math.min(...readings.map(r => r.sys));
+      const maxDia = Math.max(...readings.map(r => r.dia));
+      const minDia = Math.min(...readings.map(r => r.dia));
+      const sysRange = maxSys - minSys;
+      const diaRange = maxDia - minDia;
+      const avgSys = Math.round(readings.reduce((sum, r) => sum + r.sys, 0) / readings.length);
+      const avgDia = Math.round(readings.reduce((sum, r) => sum + r.dia, 0) / readings.length);
+      const pulses = readings.map(r => r.pulse || 70);
+      const minPulse = Math.min(...pulses);
+      const maxPulse = Math.max(...pulses);
+      const hasMultiple = readings.length >= 2;
+
+      return {
+        date,
+        readings,
+        last,
+        hasMultiple,
+        maxSys,
+        minSys,
+        sysRange,
+        maxDia,
+        minDia,
+        diaRange,
+        avgSys,
+        avgDia,
+        minPulse,
+        maxPulse,
+        sys: last.sys,
+        dia: last.dia,
+        pulse: last.pulse,
+        meds: last.meds,
+        id: last.id
+      };
+    });
+
+    let centerIdx = allDaySummaries.findIndex(d => d.date === centerDate);
+    if (centerIdx === -1) {
+      centerIdx = allDaySummaries.length - 1;
+    }
+    currentBpZoomDate = allDaySummaries[centerIdx].date;
+    const targetDay = allDaySummaries[centerIdx];
+
+    // Ventana de hasta 5 mediciones/días (±2 días alrededor del tocado, incluido este)
+    const startIdx = Math.max(0, centerIdx - 2);
+    const endIdx = Math.min(allDaySummaries.length - 1, centerIdx + 2);
+    const windowDays = allDaySummaries.slice(startIdx, endIdx + 1);
+
+    // Navegación en cabecera
+    if (bpZoomPrevDayBtn) {
+      if (centerIdx <= 0) {
+        bpZoomPrevDayBtn.style.opacity = '0.35';
+        bpZoomPrevDayBtn.style.pointerEvents = 'none';
+      } else {
+        bpZoomPrevDayBtn.style.opacity = '1';
+        bpZoomPrevDayBtn.style.pointerEvents = 'auto';
+        bpZoomPrevDayBtn.onclick = () => {
+          triggerHaptic(12);
+          renderBpZoomView(allDaySummaries[centerIdx - 1].date);
+        };
+      }
+    }
+
+    if (bpZoomNextDayBtn) {
+      if (centerIdx >= allDaySummaries.length - 1) {
+        bpZoomNextDayBtn.style.opacity = '0.35';
+        bpZoomNextDayBtn.style.pointerEvents = 'none';
+      } else {
+        bpZoomNextDayBtn.style.opacity = '1';
+        bpZoomNextDayBtn.style.pointerEvents = 'auto';
+        bpZoomNextDayBtn.onclick = () => {
+          triggerHaptic(12);
+          renderBpZoomView(allDaySummaries[centerIdx + 1].date);
+        };
+      }
+    }
+
+    // Cabecera de fechas
+    const [tY, tM, tD] = targetDay.date.split('-').map(Number);
+    const targetDateObj = new Date(tY, tM - 1, tD, 12, 0, 0);
+    const daysEs = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const shortDaysEs = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+    const targetDayName = daysEs[targetDateObj.getDay()];
+    const targetMonthName = monthsEs[tM - 1];
+
+    if (bpZoomFocusDateLabel) {
+      bpZoomFocusDateLabel.textContent = `📅 ${targetDayName}, ${tD} de ${targetMonthName}`;
+    }
+    if (bpZoomFocusSubLabel) {
+      const nReadings = targetDay.readings.length;
+      bpZoomFocusSubLabel.innerHTML = `<span style="color:#3b82f6; font-weight:800;">Día seleccionado</span> · ${nReadings} ${nReadings === 1 ? 'medición' : 'mediciones'}`;
+    }
+
+    // ==========================================
+    // GRÁFICO SVG AMPLIADO (360 x 270 px)
+    // ==========================================
+    const width = 360;
+    const height = 270;
+    const padL = 34;
+    const padR = 32;
+    const padT = 38;
+    const padB = 30;
+    const plotW = width - padL - padR;
+    const plotH = height - padT - padB;
+
+    const allSys = windowDays.flatMap(w => w.readings.map(r => r.sys));
+    const allDia = windowDays.flatMap(w => w.readings.map(r => r.dia));
+    const minVal = Math.min(50, Math.floor((Math.min(...allDia) - 5) / 10) * 10);
+    const maxVal = Math.max(150, Math.ceil((Math.max(...allSys) + 5) / 10) * 10);
+    const yRange = Math.max(30, maxVal - minVal);
+
+    function getY(val) {
+      return padT + plotH - (((val - minVal) / yRange) * plotH);
+    }
+
+    const y140 = getY(140);
+    const y120 = getY(120);
+    const y80 = getY(80);
+    const y60 = getY(60);
+
+    let gridLinesHtml = `
+      <line x1="${padL}" y1="${y140.toFixed(1)}" x2="${width - padR}" y2="${y140.toFixed(1)}" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3" opacity="0.45" />
+      <text x="${width - 4}" y="${(y140 + 3).toFixed(1)}" font-size="7.5" font-weight="800" fill="#ef4444" text-anchor="end">140</text>
+
+      <line x1="${padL}" y1="${y120.toFixed(1)}" x2="${width - padR}" y2="${y120.toFixed(1)}" stroke="#f43f5e" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5" />
+      <text x="${width - 4}" y="${(y120 + 3).toFixed(1)}" font-size="7.5" font-weight="800" fill="#f43f5e" text-anchor="end">120</text>
+
+      <line x1="${padL}" y1="${y80.toFixed(1)}" x2="${width - padR}" y2="${y80.toFixed(1)}" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5" />
+      <text x="${width - 4}" y="${(y80 + 3).toFixed(1)}" font-size="7.5" font-weight="800" fill="#06b6d4" text-anchor="end">80</text>
+
+      <line x1="${padL}" y1="${y60.toFixed(1)}" x2="${width - padR}" y2="${y60.toFixed(1)}" stroke="#64748b" stroke-width="0.8" stroke-dasharray="2,3" opacity="0.35" />
+      <text x="${width - 4}" y="${(y60 + 3).toFixed(1)}" font-size="7.5" font-weight="700" fill="#64748b" text-anchor="end">60</text>
+    `;
+
+    for (let v = minVal; v <= maxVal; v += 20) {
+      const yP = getY(v);
+      gridLinesHtml += `
+        <line x1="${padL - 3}" y1="${yP.toFixed(1)}" x2="${padL}" y2="${yP.toFixed(1)}" stroke="var(--border-color)" stroke-width="1" />
+        <text x="${padL - 5}" y="${(yP + 3).toFixed(1)}" font-size="7.2" font-weight="700" fill="var(--text-muted)" text-anchor="end">${v}</text>
+      `;
+    }
+
+    const nDays = windowDays.length;
+    const colW = plotW / nDays;
+    let columnsBgHtml = '';
+    let dayElementsHtml = '';
+    let touchColumnsHtml = '';
+    const sysTrendPts = [];
+    const diaTrendPts = [];
+
+    windowDays.forEach((d, i) => {
+      const colX = padL + (i + 0.5) * colW;
+      const isCenter = (d.date === targetDay.date);
+      const [dy, dm, dd] = d.date.split('-').map(Number);
+      const dDateObj = new Date(dy, dm - 1, dd, 12, 0, 0);
+      const dayNameShort = shortDaysEs[dDateObj.getDay()];
+      const dateLabelShort = `${dayNameShort} ${String(dd).padStart(2, '0')}/${String(dm).padStart(2, '0')}`;
+
+      const centerIdxInWindow = windowDays.findIndex(x => x.date === targetDay.date);
+      const relDiff = i - centerIdxInWindow;
+      let relLabel = '';
+      if (isCenter) {
+        relLabel = 'TOCADO';
+      } else if (relDiff < 0) {
+        relLabel = `${relDiff}d`;
+      } else {
+        relLabel = `+${relDiff}d`;
+      }
+
+      // Fondo de la columna del día
+      if (isCenter) {
+        columnsBgHtml += `
+          <rect x="${(colX - colW / 2 + 2).toFixed(1)}" y="${padT - 16}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 28).toFixed(1)}" rx="10" fill="rgba(59, 130, 246, 0.12)" stroke="rgba(59, 130, 246, 0.45)" stroke-width="1.5" />
+          <rect x="${(colX - 22).toFixed(1)}" y="${(padT - 28).toFixed(1)}" width="44" height="13" rx="4" fill="#3b82f6" />
+          <text x="${colX.toFixed(1)}" y="${(padT - 19).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">TOCADO</text>
+        `;
+      } else {
+        columnsBgHtml += `
+          <rect x="${(colX - colW / 2 + 2).toFixed(1)}" y="${padT - 16}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 28).toFixed(1)}" rx="10" fill="rgba(255, 255, 255, 0.02)" stroke="var(--border-color)" stroke-width="0.8" opacity="0.6" />
+          <text x="${colX.toFixed(1)}" y="${(padT - 20).toFixed(1)}" font-size="7.5" font-weight="800" fill="var(--text-muted)" text-anchor="middle">${relLabel}</text>
+        `;
+      }
+
+      // Etiqueta superior del día y fecha
+      columnsBgHtml += `
+        <text x="${colX.toFixed(1)}" y="${(padT - 4).toFixed(1)}" font-size="8.5" font-weight="${isCenter ? '900' : '700'}" fill="${isCenter ? '#ffffff' : 'var(--text-main)'}" text-anchor="middle">${dateLabelShort}</text>
+        <text x="${colX.toFixed(1)}" y="${(height - 8).toFixed(1)}" font-size="7.5" font-weight="700" fill="${isCenter ? '#3b82f6' : 'var(--text-muted)'}" text-anchor="middle">${d.readings.length} ${d.readings.length === 1 ? 'toma' : 'tomas'}</text>
+      `;
+
+      // Posicionamiento horizontal de SYS (izquierda) y DIA (derecha)
+      const sysX = colW >= 48 ? (colX - 11) : (colX - 8);
+      const diaX = colW >= 48 ? (colX + 11) : (colX + 8);
+
+      sysTrendPts.push({ x: sysX, y: getY(d.avgSys) });
+      diaTrendPts.push({ x: diaX, y: getY(d.avgDia) });
+
+      // SISTÓLICA (SYS)
+      if (d.hasMultiple && d.maxSys !== d.minSys) {
+        const ySysTop = getY(d.maxSys);
+        const ySysBot = getY(d.minSys);
+        const barH = Math.max(16, ySysBot - ySysTop);
+        const ySysMid = (ySysTop + ySysBot) / 2;
+
+        dayElementsHtml += `
+          <rect x="${(sysX - 7).toFixed(1)}" y="${ySysTop.toFixed(1)}" width="14" height="${barH.toFixed(1)}" rx="7" fill="rgba(244, 63, 94, 0.22)" stroke="#f43f5e" stroke-width="1.8" />
+          <rect x="${(sysX - 11).toFixed(1)}" y="${(ySysMid - 6).toFixed(1)}" width="22" height="12" rx="3" fill="#f43f5e" />
+          <text x="${sysX.toFixed(1)}" y="${(ySysMid + 3.2).toFixed(1)}" font-size="7" font-weight="900" fill="#ffffff" text-anchor="middle">Δ${d.sysRange}</text>
+          <text x="${sysX.toFixed(1)}" y="${(ySysTop - 5).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.maxSys}</text>
+          <text x="${sysX.toFixed(1)}" y="${(ySysBot + 12).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.minSys}</text>
+        `;
+
+        d.readings.forEach(r => {
+          const yr = getY(r.sys);
+          dayElementsHtml += `
+            <circle cx="${sysX.toFixed(1)}" cy="${yr.toFixed(1)}" r="4.2" fill="#f43f5e" stroke="#ffffff" stroke-width="1.8" />
+          `;
+        });
+      } else {
+        const yr = getY(d.sys);
+        dayElementsHtml += `
+          <circle cx="${sysX.toFixed(1)}" cy="${yr.toFixed(1)}" r="6" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2" />
+          <text x="${sysX.toFixed(1)}" y="${(yr - 8).toFixed(1)}" font-size="9" font-weight="900" fill="#f43f5e" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.sys}</text>
+        `;
+      }
+
+      // DIASTÓLICA (DIA)
+      if (d.hasMultiple && d.maxDia !== d.minDia) {
+        const yDiaTop = getY(d.maxDia);
+        const yDiaBot = getY(d.minDia);
+        const barH = Math.max(16, yDiaBot - yDiaTop);
+        const yDiaMid = (yDiaTop + yDiaBot) / 2;
+
+        dayElementsHtml += `
+          <rect x="${(diaX - 7).toFixed(1)}" y="${yDiaTop.toFixed(1)}" width="14" height="${barH.toFixed(1)}" rx="7" fill="rgba(6, 182, 212, 0.22)" stroke="#06b6d4" stroke-width="1.8" />
+          <rect x="${(diaX - 11).toFixed(1)}" y="${(yDiaMid - 6).toFixed(1)}" width="22" height="12" rx="3" fill="#06b6d4" />
+          <text x="${diaX.toFixed(1)}" y="${(yDiaMid + 3.2).toFixed(1)}" font-size="7" font-weight="900" fill="#ffffff" text-anchor="middle">Δ${d.diaRange}</text>
+          <text x="${diaX.toFixed(1)}" y="${(yDiaTop - 5).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.maxDia}</text>
+          <text x="${diaX.toFixed(1)}" y="${(yDiaBot + 12).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.minDia}</text>
+        `;
+
+        d.readings.forEach(r => {
+          const yr = getY(r.dia);
+          dayElementsHtml += `
+            <circle cx="${diaX.toFixed(1)}" cy="${yr.toFixed(1)}" r="4.2" fill="#06b6d4" stroke="#ffffff" stroke-width="1.8" />
+          `;
+        });
+      } else {
+        const yr = getY(d.dia);
+        dayElementsHtml += `
+          <circle cx="${diaX.toFixed(1)}" cy="${yr.toFixed(1)}" r="6" fill="#06b6d4" stroke="#ffffff" stroke-width="2.2" />
+          <text x="${diaX.toFixed(1)}" y="${(yr + 16).toFixed(1)}" font-size="9" font-weight="900" fill="#06b6d4" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3px;">${d.dia}</text>
+        `;
+      }
+
+      // Zona táctil de columna
+      touchColumnsHtml += `
+        <rect class="bp-zoom-svg-col" data-date="${d.date}" x="${(colX - colW / 2).toFixed(1)}" y="${padT - 16}" width="${colW.toFixed(1)}" height="${(plotH + 42).toFixed(1)}" fill="transparent" style="cursor:pointer;" />
+      `;
+    });
+
+    // Líneas de tendencia suaves entre días
+    let trendLinesHtml = '';
+    if (windowDays.length >= 2) {
+      let pathSys = `M ${sysTrendPts[0].x.toFixed(1)} ${sysTrendPts[0].y.toFixed(1)}`;
+      let pathDia = `M ${diaTrendPts[0].x.toFixed(1)} ${diaTrendPts[0].y.toFixed(1)}`;
+      for (let k = 0; k < windowDays.length - 1; k++) {
+        const sp0 = sysTrendPts[k], sp1 = sysTrendPts[k + 1];
+        const smx = (sp0.x + sp1.x) / 2;
+        pathSys += ` C ${smx.toFixed(1)} ${sp0.y.toFixed(1)}, ${smx.toFixed(1)} ${sp1.y.toFixed(1)}, ${sp1.x.toFixed(1)} ${sp1.y.toFixed(1)}`;
+
+        const dp0 = diaTrendPts[k], dp1 = diaTrendPts[k + 1];
+        const dmx = (dp0.x + dp1.x) / 2;
+        pathDia += ` C ${dmx.toFixed(1)} ${dp0.y.toFixed(1)}, ${dmx.toFixed(1)} ${dp1.y.toFixed(1)}, ${dp1.x.toFixed(1)} ${dp1.y.toFixed(1)}`;
+      }
+      trendLinesHtml = `
+        <path d="${pathSys}" fill="none" stroke="#f43f5e" stroke-width="1.8" stroke-dasharray="4,3" opacity="0.75" />
+        <path d="${pathDia}" fill="none" stroke="#06b6d4" stroke-width="1.8" stroke-dasharray="4,3" opacity="0.75" />
+      `;
+    }
+
+    bpZoomSvgContainer.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; overflow:visible;">
+        ${gridLinesHtml}
+        ${columnsBgHtml}
+        ${trendLinesHtml}
+        ${dayElementsHtml}
+        ${touchColumnsHtml}
+      </svg>
+    `;
+
+    // Interacción al tocar columnas en el gráfico
+    bpZoomSvgContainer.querySelectorAll('.bp-zoom-svg-col').forEach(col => {
+      col.addEventListener('click', () => {
+        triggerHaptic(12);
+        const clickedDate = col.dataset.date;
+        renderBpZoomView(clickedDate);
+        const targetCard = document.getElementById('bpZoomCard_' + clickedDate);
+        if (targetCard) targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    });
+
+    // ==========================================
+    // TARJETAS DETALLADAS DÍA POR DÍA
+    // ==========================================
+    const cardsHtml = windowDays.map(d => {
+      const [dy, dm, dd] = d.date.split('-').map(Number);
+      const dDateObj = new Date(dy, dm - 1, dd, 12, 0, 0);
+      const dayNameFull = daysEs[dDateObj.getDay()];
+      const monthNameFull = monthsEs[dm - 1];
+      const isCenter = (d.date === targetDay.date);
+
+      const centerIdxInWindow = windowDays.findIndex(x => x.date === targetDay.date);
+      const relDiff = windowDays.indexOf(d) - centerIdxInWindow;
+      let relBadge = '';
+      if (isCenter) {
+        relBadge = `<span style="background:rgba(59,130,246,0.2); color:#60a5fa; border:1px solid rgba(59,130,246,0.4); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:800;">🎯 Día seleccionado</span>`;
+      } else if (relDiff < 0) {
+        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${Math.abs(relDiff)} ${Math.abs(relDiff) === 1 ? 'día antes' : 'días antes'}</span>`;
+      } else {
+        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${relDiff} ${relDiff === 1 ? 'día después' : 'días después'}</span>`;
+      }
+
+      let amplitudeBoxHtml = '';
+      if (d.hasMultiple) {
+        amplitudeBoxHtml = `
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:12px; padding:10px 12px; margin:8px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:0.74rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Amplitud del rango diario (${d.readings.length} tomas):</span>
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Media: <strong style="color:#f43f5e;">${d.avgSys}</strong> / <strong style="color:#06b6d4;">${d.avgDia}</strong> mmHg</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.22); border-radius:8px; padding:8px 10px;">
+                <div style="font-size:0.68rem; font-weight:800; color:#f43f5e; text-transform:uppercase;">Rango Sistólica</div>
+                <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
+                  <span style="font-size:1.1rem; font-weight:900; color:#ffffff;">${d.minSys} - ${d.maxSys}</span>
+                  <span style="font-size:0.72rem; color:var(--text-muted);">mmHg</span>
+                </div>
+                <div style="margin-top:3px; font-size:0.73rem; font-weight:800; color:#f43f5e;">
+                  Amplitud: <strong>Δ ${d.sysRange} mmHg</strong>
+                </div>
+              </div>
+              <div style="background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.22); border-radius:8px; padding:8px 10px;">
+                <div style="font-size:0.68rem; font-weight:800; color:#06b6d4; text-transform:uppercase;">Rango Diastólica</div>
+                <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
+                  <span style="font-size:1.1rem; font-weight:900; color:#ffffff;">${d.minDia} - ${d.maxDia}</span>
+                  <span style="font-size:0.72rem; color:var(--text-muted);">mmHg</span>
+                </div>
+                <div style="margin-top:3px; font-size:0.73rem; font-weight:800; color:#06b6d4;">
+                  Amplitud: <strong>Δ ${d.diaRange} mmHg</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        amplitudeBoxHtml = `
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:8px 12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.76rem; color:var(--text-muted); font-weight:700;">Toma única registrada ese día:</span>
+            <span style="font-size:0.88rem; font-weight:900; color:#ffffff;">
+              <span style="color:#f43f5e;">${d.sys}</span> / <span style="color:#06b6d4;">${d.dia}</span> mmHg · <span style="color:var(--text-muted); font-size:0.75rem;">💓 ${d.pulse || 70} ppm</span>
+            </span>
+          </div>
+        `;
+      }
+
+      const readingsListHtml = d.readings.map(r => {
+        let stText = 'Óptimo';
+        let stColor = '#10b981';
+        if (r.sys < 120 && r.dia < 80) {
+          stText = 'Óptimo';
+          stColor = '#10b981';
+        } else if (r.sys <= 129 && r.dia < 80) {
+          stText = 'Normal';
+          stColor = '#3b82f6';
+        } else if (r.sys <= 139 || r.dia <= 89) {
+          stText = 'HTA 1';
+          stColor = '#f59e0b';
+        } else {
+          stText = 'HTA 2';
+          stColor = '#ef4444';
+        }
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:8px; padding:7px 10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.78rem; font-weight:800; color:#06b6d4; background:rgba(6,182,212,0.12); padding:2px 6px; border-radius:4px;">
+                ⏰ ${r.time || '--:--'}
+              </span>
+              <span style="font-size:0.95rem; font-weight:900;">
+                <span style="color:#f43f5e;">${r.sys}</span> / <span style="color:#06b6d4;">${r.dia}</span>
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">mmHg</span>
+              </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">
+                💓 ${r.pulse || 70} ppm
+              </span>
+              <span style="background:${stColor}22; color:${stColor}; border:1px solid ${stColor}44; border-radius:4px; padding:1px 6px; font-size:0.68rem; font-weight:800;">
+                ${stText}
+              </span>
+              <button type="button" class="btn-3d btn-3d-surface bp-zoom-edit-btn" data-id="${r.id}" style="padding:2px 7px; font-size:0.7rem; font-weight:800; color:#06b6d4; border:1px solid rgba(6,182,212,0.3);">
+                ✏️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const medsList = Array.isArray(d.meds) && d.meds.length > 0
+        ? d.meds.filter(m => (m.name || '').trim()).map(m => `<strong>${m.name}</strong> ${m.doseMg}mg${m.time ? ` <span style="color:#06b6d4; font-size:0.72rem; font-weight:700;">(⏰ ${m.time})</span>` : ''}`).join(' · ')
+        : '<span style="color:var(--text-muted); font-style:italic;">Sin medicación registrada</span>';
+
+      return `
+        <div id="bpZoomCard_${d.date}" style="background:var(--card-bg); border:${isCenter ? '1.8px solid #3b82f6' : '1px solid var(--border-color)'}; ${isCenter ? 'box-shadow:0 0 16px rgba(59,130,246,0.18);' : ''} border-radius:14px; padding:12px; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <div style="font-size:0.88rem; font-weight:900; color:var(--text-main);">
+              📅 ${dayNameFull}, ${dd} de ${monthNameFull}
+            </div>
+            ${relBadge}
+          </div>
+          ${amplitudeBoxHtml}
+          <div style="margin-top:6px;">
+            <div style="font-size:0.68rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.4px;">
+              Mediciones registradas (${d.readings.length}):
+            </div>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              ${readingsListHtml}
+            </div>
+          </div>
+          <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:0.73rem; color:var(--text-muted);">
+            💊 <strong>Medicación:</strong> ${medsList}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    bpZoomCardsContainer.innerHTML = cardsHtml;
+
+    // Listener para botones de edición dentro del zoom
+    bpZoomCardsContainer.querySelectorAll('.bp-zoom-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(14);
+        const readingId = btn.dataset.id;
+        if (bpZoomSheetBackdrop) bpZoomSheetBackdrop.classList.remove('open');
+        openBpEditModal(readingId);
+      });
+    });
+  }
+
+  if (closeBpZoomSheetBtn && bpZoomSheetBackdrop) {
+    closeBpZoomSheetBtn.addEventListener('click', () => {
+      triggerHaptic(12);
+      bpZoomSheetBackdrop.classList.remove('open');
+    });
+  }
+
+  if (bpZoomSheetBackdrop) {
+    bpZoomSheetBackdrop.addEventListener('click', (e) => {
+      if (e.target === bpZoomSheetBackdrop) {
+        bpZoomSheetBackdrop.classList.remove('open');
+      }
+    });
+  }
+
   // Bottom Sheet Modal de PA
   if (bpLogDirectBtn && bpSheetBackdrop) {
     bpLogDirectBtn.addEventListener('click', () => {
