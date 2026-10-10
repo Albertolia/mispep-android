@@ -297,8 +297,13 @@
           <!-- Contenedor SVG Interactivo de la Gráfica de Peso -->
           <div id="weightSvgContainer" style="width:100%; min-height:185px; position:relative;"></div>
 
+          <!-- Botón de Pantalla Ampliada de Pesajes (Lupa de ±4 pesajes) -->
+          <button type="button" class="btn-3d btn-3d-surface btn-block" id="wOpenZoomBtn" style="margin-top:8px; padding:9px 12px; font-size:0.8rem; font-weight:800; color:#3b82f6; border:1px solid rgba(59,130,246,0.35); display:flex; align-items:center; justify-content:center; gap:6px;">
+            <span>🔍</span> <span>Ver pantalla ampliada (±4 pesajes y variación)</span>
+          </button>
+
           <!-- Botón Unificado Añadir Nuevo Peso -->
-          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogWeightBtn" style="margin-top:12px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
+          <button type="button" class="btn-3d btn-3d-cyan btn-block" id="dashLogWeightBtn" style="margin-top:8px; padding:12px 16px; font-size:0.88rem; font-weight:800;">
             <span>⚖️</span> <span>Añadir nuevo peso</span>
           </button>
         </div>
@@ -3050,6 +3055,57 @@
       <button type="button" class="btn-3d btn-3d-cyan btn-block" id="bpMedTimeApplyBtn" style="padding:12px; font-size:0.95rem; font-weight:900;">
         ✓ Aplicar Hora a la Medicación
       </button>
+    </div>
+  </div>
+
+  <!-- MODAL / BOTTOM SHEET: VENTANA AMPLIADA DE PESO (LUPA DE ±4 PESAJES) -->
+  <div class="bottom-sheet-backdrop" id="weightZoomSheetBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:92vh; overflow-y:auto; padding:14px 16px 32px;">
+      <div class="bottom-sheet-handle"></div>
+
+      <!-- Cabecera del Modal -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.3rem;">⚖️</span>
+            <h2 style="font-size:1.2rem; font-weight:900; color:var(--text-main); margin:0;" id="wZoomModalTitle">Detalle y Amplitud de Peso</h2>
+          </div>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin:4px 0 0 0;" id="wZoomModalSubtitle">
+            Ventana de ±4 pesajes (hasta 9 pesajes) · Variación exacta y amplitudes
+          </p>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeWeightZoomSheetBtn" style="width:32px; height:32px; margin-left:8px;">✕</button>
+      </div>
+
+      <!-- Barra de Navegación Rápida entre Pesajes -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:6px 10px; margin-bottom:12px;">
+        <button type="button" class="icon-btn-3d" id="wZoomPrevLogBtn" style="width:32px; height:32px; font-size:1.1rem; font-weight:900;">‹</button>
+        <div style="text-align:center; flex:1; padding:0 8px;">
+          <div style="font-size:0.88rem; font-weight:900; color:var(--text-main);" id="wZoomFocusDateLabel">--</div>
+          <div style="font-size:0.7rem; font-weight:700; color:#3b82f6; margin-top:1px;" id="wZoomFocusSubLabel">Pesaje seleccionado</div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="wZoomNextLogBtn" style="width:32px; height:32px; font-size:1.1rem; font-weight:900;">›</button>
+      </div>
+
+      <!-- Gráfico Ampliado de Amplitud (SVG grande) -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:12px 10px 8px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:0 4px;">
+          <span style="font-size:0.74rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Evolución y Variación de Peso</span>
+          <div style="display:flex; gap:10px; font-size:0.72rem; font-weight:800;">
+            <span style="color:#2563eb;">● Peso (kg)</span>
+            <span style="color:#10b981;" id="wZoomDeltaTotalSpan">Δ Total: --</span>
+          </div>
+        </div>
+        <div id="weightZoomSvgContainer" style="width:100%; min-height:260px; position:relative;"></div>
+      </div>
+
+      <!-- Tarjetas de Detalle Diario de los Pesajes -->
+      <div style="margin-top:6px;">
+        <div style="font-size:0.78rem; font-weight:800; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">
+          📋 Detalle de cada pesaje (±4 registros)
+        </div>
+        <div id="weightZoomCardsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
     </div>
   </div>
 
