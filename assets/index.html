@@ -2985,6 +2985,74 @@
     </div>
   </div>
 
+  <!-- MODAL / BOTTOM SHEET: AJUSTE RÁPIDO DE HORA DE MEDICACIÓN ANTIHIPERTENSIVA -->
+  <div class="bottom-sheet-backdrop" id="bpMedTimeModalBackdrop" style="z-index:1100;">
+    <div class="bottom-sheet-panel" style="max-height:80vh; overflow-y:auto; padding:16px 18px 28px;">
+      <div class="bottom-sheet-handle"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.3rem;">⏰</span>
+          <div>
+            <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-main); margin:0;">Hora de la Medicación</h2>
+            <div style="font-size:0.75rem; color:#06b6d4; font-weight:700;" id="bpMedTimeTargetMedName">Fármaco antihipertensivo</div>
+          </div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeBpMedTimeModalBtn" style="width:30px; height:30px;">✕</button>
+      </div>
+
+      <!-- Pantalla digital de la hora seleccionada -->
+      <div style="background:var(--card-bg); border:1.5px solid rgba(6,182,212,0.4); border-radius:14px; padding:12px; text-align:center; margin-bottom:14px;">
+        <div style="font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Hora asignada a la toma</div>
+        <div style="font-size:2.2rem; font-weight:900; color:#06b6d4; letter-spacing:2px; font-variant-numeric:tabular-nums; margin:4px 0;" id="bpMedTimeDisplay">21:30</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">Pauta nocturna habitual del usuario: 21:30</div>
+      </div>
+
+      <!-- Botones de Acceso Rápido / Horas Típicas -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Horas habituales y frecuentes:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="btn-3d btn-3d-cyan bp-quick-time-preset" data-time="21:30" style="padding:6px 10px; font-size:0.8rem; font-weight:800;">⭐ 21:30 (Habitual)</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="21:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">21:00</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="22:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">22:00</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="22:30" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">22:30</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="20:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">20:00</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="20:30" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">20:30</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="08:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">08:00 (Mañana)</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="09:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">09:00 (Mañana)</button>
+          <button type="button" class="btn-3d btn-3d-surface bp-quick-time-preset" data-time="14:00" style="padding:6px 10px; font-size:0.8rem; font-weight:700;">14:00 (Mediodía)</button>
+        </div>
+      </div>
+
+      <!-- Ajuste fino de Hora y Minuto -->
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-bottom:14px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label class="field-label" style="text-align:center;">Hora (00 - 23)</label>
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+              <button type="button" class="icon-btn-3d" id="bpMedTimeHourMinus" style="width:36px; height:36px; font-size:1.2rem; font-weight:900;">−</button>
+              <input type="number" id="bpMedTimeHourInput" value="21" min="0" max="23" style="width:52px; background:var(--card-bg-elevated); color:#ffffff; border:1px solid var(--border-color); border-radius:8px; padding:8px 4px; font-size:1.15rem; font-weight:900; text-align:center;">
+              <button type="button" class="icon-btn-3d" id="bpMedTimeHourPlus" style="width:36px; height:36px; font-size:1.2rem; font-weight:900;">＋</button>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" style="text-align:center;">Minuto (00 - 59)</label>
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+              <button type="button" class="icon-btn-3d" id="bpMedTimeMinMinus" style="width:36px; height:36px; font-size:1.2rem; font-weight:900;">−</button>
+              <input type="number" id="bpMedTimeMinInput" value="30" min="0" max="59" step="5" style="width:52px; background:var(--card-bg-elevated); color:#ffffff; border:1px solid var(--border-color); border-radius:8px; padding:8px 4px; font-size:1.15rem; font-weight:900; text-align:center;">
+              <button type="button" class="icon-btn-3d" id="bpMedTimeMinPlus" style="width:36px; height:36px; font-size:1.2rem; font-weight:900;">＋</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón de Confirmación -->
+      <button type="button" class="btn-3d btn-3d-cyan btn-block" id="bpMedTimeApplyBtn" style="padding:12px; font-size:0.95rem; font-weight:900;">
+        ✓ Aplicar Hora a la Medicación
+      </button>
+    </div>
+  </div>
+
   <!-- MODAL / BOTTOM SHEET: VENTANA AMPLIADA DE PRESIÓN ARTERIAL (AMPLITUD DE RANGO ±2 DÍAS) -->
   <div class="bottom-sheet-backdrop" id="bpZoomSheetBackdrop">
     <div class="bottom-sheet-panel" style="max-height:92vh; overflow-y:auto; padding:14px 16px 32px;">
