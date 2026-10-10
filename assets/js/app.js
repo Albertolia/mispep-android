@@ -2281,7 +2281,7 @@ function initDashboard() {
         const totalDx = curX - wTouchStartX;
         const totalDy = curY - wTouchStartY;
 
-        if (!wIsSwiping && Math.abs(totalDx) > Math.abs(totalDy) && Math.abs(totalDx) > 8) {
+        if (!wIsSwiping && Math.abs(totalDx) > Math.abs(totalDy) && Math.abs(totalDx) > 20) {
           wIsSwiping = true;
         }
 
@@ -2299,9 +2299,45 @@ function initDashboard() {
       }
     }, { passive: true });
 
-    weightSvgContainer.addEventListener('touchend', () => {
+    weightSvgContainer.addEventListener('touchend', (e) => {
+      if (!wIsSwiping && wTouchStartX) {
+        const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : wTouchStartX;
+        const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : wTouchStartY;
+        const dist = Math.hypot(endX - wTouchStartX, endY - wTouchStartY);
+        if (dist < 25) {
+          handleWeightSvgTap(endX);
+        }
+      }
       wIsSwiping = false;
     }, { passive: true });
+
+    weightSvgContainer.addEventListener('click', (e) => {
+      handleWeightSvgTap(e.clientX);
+    });
+  }
+
+  function handleWeightSvgTap(clientX) {
+    if (!weightSvgContainer || !window._currentWeightPoints || window._currentWeightPoints.length === 0) return;
+    const rect = weightSvgContainer.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const svgW = rect.width || 350;
+    const svgX = (relX / svgW) * 350;
+
+    let closestIdx = 0;
+    let minDiff = 999999;
+    window._currentWeightPoints.forEach((pt, i) => {
+      const diff = Math.abs(svgX - pt.x);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = i;
+      }
+    });
+
+    const pt = window._currentWeightPoints[closestIdx];
+    if (pt) {
+      triggerHaptic(14);
+      openWeightZoomModal(pt.origIdx);
+    }
   }
 
   if (wGraphDetailLink) {
@@ -2446,12 +2482,17 @@ function initDashboard() {
       return (padL + inset) + (idx / (visibleLogs.length - 1)) * (plotW - 2 * inset);
     }
 
-    const points = visibleLogs.map((l, i) => ({
-      x: getX(l, i),
-      y: getY(l.weight),
-      weight: l.weight,
-      date: l.date
-    }));
+    const points = visibleLogs.map((l, i) => {
+      const origIdx = logs.findIndex(item => item.date === l.date && item.weight === l.weight);
+      return {
+        x: getX(l, i),
+        y: getY(l.weight),
+        weight: l.weight,
+        date: l.date,
+        origIdx: origIdx >= 0 ? origIdx : i
+      };
+    });
+    window._currentWeightPoints = points;
 
     let pathD = '';
     let areaD = '';
@@ -2469,6 +2510,7 @@ function initDashboard() {
     let nodesHtml = '';
     const showAllLabels = points.length <= 8;
     let lastRenderedLabelX = -999;
+    const colHitW = Math.max(34, (plotW / points.length));
 
     points.forEach((pt, i) => {
       const dObj = new Date(pt.date + 'T12:00:00');
@@ -2491,7 +2533,8 @@ function initDashboard() {
       }
 
       nodesHtml += `
-        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.5" fill="#2563eb" stroke="#ffffff" stroke-width="2.2" />
+        <rect class="w-node-hit" data-orig-idx="${pt.origIdx}" x="${(pt.x - colHitW / 2).toFixed(1)}" y="0" width="${colHitW.toFixed(1)}" height="${height}" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer;" />
+        <circle class="w-node-circle" data-orig-idx="${pt.origIdx}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6" fill="#2563eb" stroke="#ffffff" stroke-width="2.2" pointer-events="all" style="cursor:pointer;" />
         ${labelHtml}
       `;
     });
@@ -2512,6 +2555,426 @@ function initDashboard() {
         ${nodesHtml}
       </svg>
     `;
+
+    weightSvgContainer.querySelectorAll('.w-node-hit, .w-node-circle').forEach(el => {
+      const onPick = (e) => {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        triggerHaptic(14);
+        const origIdx = parseInt(el.dataset.origIdx, 10);
+        openWeightZoomModal(origIdx);
+      };
+      el.addEventListener('click', onPick);
+      el.addEventListener('touchend', (e) => {
+        if (!wIsSwiping) onPick(e);
+      });
+    });
+  }
+
+  // ============================================================
+  // PANTALLA AMPLIADA / VISOR DE PESO (LUPA DE ±4 PESAJES)
+  // ============================================================
+  const weightZoomSheetBackdrop = document.getElementById('weightZoomSheetBackdrop');
+  const closeWeightZoomSheetBtn = document.getElementById('closeWeightZoomSheetBtn');
+  const wZoomModalTitle = document.getElementById('wZoomModalTitle');
+  const wZoomModalSubtitle = document.getElementById('wZoomModalSubtitle');
+  const wZoomPrevLogBtn = document.getElementById('wZoomPrevLogBtn');
+  const wZoomNextLogBtn = document.getElementById('wZoomNextLogBtn');
+  const wZoomFocusDateLabel = document.getElementById('wZoomFocusDateLabel');
+  const wZoomFocusSubLabel = document.getElementById('wZoomFocusSubLabel');
+  const weightZoomSvgContainer = document.getElementById('weightZoomSvgContainer');
+  const weightZoomCardsContainer = document.getElementById('weightZoomCardsContainer');
+  const wZoomDeltaTotalSpan = document.getElementById('wZoomDeltaTotalSpan');
+  const wOpenZoomBtn = document.getElementById('wOpenZoomBtn');
+
+  let currentWZoomCenterIdx = -1;
+
+  function openWeightZoomModal(logIdx) {
+    const p = getHealthProfile();
+    let logs = [...(p.weightLogs || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (logs.length === 0) {
+      showToast('No hay registros de peso guardados');
+      return;
+    }
+    if (logIdx === undefined || logIdx === null || logIdx < 0) {
+      logIdx = logs.length - 1;
+    } else {
+      logIdx = Math.max(0, Math.min(logs.length - 1, logIdx));
+    }
+    currentWZoomCenterIdx = logIdx;
+    renderWeightZoomView(currentWZoomCenterIdx);
+    if (weightZoomSheetBackdrop) {
+      weightZoomSheetBackdrop.classList.add('open');
+    }
+  }
+
+  function renderWeightZoomView(centerIdx) {
+    if (!weightZoomSvgContainer || !weightZoomCardsContainer) return;
+    const p = getHealthProfile();
+    let logs = [...(p.weightLogs || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (logs.length === 0) return;
+
+    centerIdx = Math.max(0, Math.min(logs.length - 1, centerIdx));
+    currentWZoomCenterIdx = centerIdx;
+    const targetLog = logs[centerIdx];
+
+    // Ventana de -4 y +4 pesajes (hasta 9 pesajes consecutivos)
+    const startIdx = Math.max(0, centerIdx - 4);
+    const endIdx = Math.min(logs.length - 1, centerIdx + 4);
+    const windowLogs = [];
+    for (let k = startIdx; k <= endIdx; k++) {
+      windowLogs.push({
+        ...logs[k],
+        origIdx: k,
+        relDiff: k - centerIdx
+      });
+    }
+
+    // Botones de navegación
+    if (wZoomPrevLogBtn) {
+      wZoomPrevLogBtn.disabled = (centerIdx <= 0);
+      wZoomPrevLogBtn.style.opacity = (centerIdx <= 0) ? '0.35' : '1';
+    }
+    if (wZoomNextLogBtn) {
+      wZoomNextLogBtn.disabled = (centerIdx >= logs.length - 1);
+      wZoomNextLogBtn.style.opacity = (centerIdx >= logs.length - 1) ? '0.35' : '1';
+    }
+
+    // Etiquetas de la cabecera
+    const dTargetObj = new Date(targetLog.date + 'T12:00:00');
+    const fullDaysEs = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const targetDateFormatted = `${fullDaysEs[dTargetObj.getDay()]}, ${dTargetObj.getDate()} de ${monthsEs[dTargetObj.getMonth()]}`;
+
+    if (wZoomFocusDateLabel) {
+      wZoomFocusDateLabel.textContent = `📅 ${targetDateFormatted}`;
+    }
+    if (wZoomFocusSubLabel) {
+      wZoomFocusSubLabel.textContent = `Pesaje #${centerIdx + 1} de ${logs.length} · ${targetLog.weight} kg`;
+    }
+
+    // Amplitud y estadísticas de la ventana
+    const weights = windowLogs.map(l => l.weight);
+    const minW = Math.min(...weights);
+    const maxW = Math.max(...weights);
+    const deltaRange = (maxW - minW).toFixed(2);
+    const firstW = windowLogs[0].weight;
+    const lastW = windowLogs[windowLogs.length - 1].weight;
+    const deltaTotal = (lastW - firstW).toFixed(2);
+    const deltaSign = (lastW - firstW) > 0 ? '+' : '';
+
+    if (wZoomDeltaTotalSpan) {
+      wZoomDeltaTotalSpan.textContent = `Δ Total: ${deltaSign}${deltaTotal} kg (Amplitud: ${deltaRange} kg)`;
+      wZoomDeltaTotalSpan.style.color = (lastW <= firstW) ? '#10b981' : '#f59e0b';
+    }
+
+    // Renderizar Gráfico SVG Ampliado
+    const width = 360;
+    const height = 240;
+    const padL = 38;
+    const padR = 20;
+    const padT = 34;
+    const padB = 36;
+    const plotW = width - padL - padR;
+    const plotH = height - padT - padB;
+
+    const targetGoal = parseFloat(p.targetWeight) || 87.0;
+    const yMin = Math.floor(Math.min(minW, targetGoal) - 0.6);
+    const yMax = Math.ceil(Math.max(maxW, targetGoal) + 0.6);
+    const yRange = Math.max(2, yMax - yMin);
+
+    function getY(w) {
+      return padT + plotH - (((w - yMin) / yRange) * plotH);
+    }
+
+    // Líneas de cuadrícula horizontales
+    let gridLinesHtml = '';
+    const stepY = (yRange > 8) ? 2 : 1;
+    for (let wVal = yMin; wVal <= yMax; wVal += stepY) {
+      const yP = getY(wVal);
+      gridLinesHtml += `
+        <line x1="${padL - 4}" y1="${yP.toFixed(1)}" x2="${width - padR}" y2="${yP.toFixed(1)}" stroke="var(--border-color)" stroke-width="0.8" opacity="0.5" />
+        <text x="${padL - 6}" y="${(yP + 3).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="end">${wVal}k</text>
+      `;
+    }
+
+    // Línea de objetivo
+    const goalY = getY(targetGoal);
+    const goalHtml = `
+      <line x1="${padL}" y1="${goalY.toFixed(1)}" x2="${width - padR}" y2="${goalY.toFixed(1)}" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.65" />
+      <text x="${width - padR}" y="${(goalY - 3).toFixed(1)}" font-size="7.2" font-weight="800" fill="#3b82f6" text-anchor="end">Objetivo (${targetGoal}kg)</text>
+    `;
+
+    // Columnas y coordenadas de los puntos
+    const n = windowLogs.length;
+    const colW = plotW / n;
+    const pts = windowLogs.map((l, i) => {
+      const x = padL + (i + 0.5) * colW;
+      const y = getY(l.weight);
+      return { ...l, x, y };
+    });
+
+    // Spline curve
+    let pathD = '';
+    let areaD = '';
+    if (pts.length >= 2) {
+      pathD = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i];
+        const p1 = pts[i + 1];
+        const mx = (p0.x + p1.x) / 2;
+        pathD += ` C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+      }
+      areaD = `${pathD} L ${pts[pts.length - 1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
+    }
+
+    let columnsBgHtml = '';
+    let nodesHtml = '';
+    let hitColsHtml = '';
+
+    pts.forEach((pt, i) => {
+      const isCenter = (pt.origIdx === centerIdx);
+      const dObj = new Date(pt.date + 'T12:00:00');
+      const shortDaysEs = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const dayShort = shortDaysEs[dObj.getDay()];
+      const dd = String(dObj.getDate()).padStart(2, '0');
+      const mm = String(dObj.getMonth() + 1).padStart(2, '0');
+      const dateLabel = `${dayShort} ${dd}/${mm}`;
+
+      // Etiqueta relativa superior
+      let relBadgeText = '';
+      if (isCenter) {
+        relBadgeText = 'TOCADO';
+      } else if (pt.relDiff < 0) {
+        relBadgeText = `${pt.relDiff}p`;
+      } else {
+        relBadgeText = `+${pt.relDiff}p`;
+      }
+
+      // Fondo de la columna del pesaje
+      if (isCenter) {
+        columnsBgHtml += `
+          <rect x="${(pt.x - colW / 2 + 2).toFixed(1)}" y="${padT - 18}" width="${(colW - 4).toFixed(1)}" height="${(plotH + 34).toFixed(1)}" rx="10" fill="rgba(37, 99, 235, 0.15)" stroke="rgba(37, 99, 235, 0.55)" stroke-width="1.6" />
+          <rect x="${(pt.x - 22).toFixed(1)}" y="${(padT - 28).toFixed(1)}" width="44" height="13" rx="4" fill="#2563eb" />
+          <text x="${pt.x.toFixed(1)}" y="${(padT - 19).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">TOCADO</text>
+        `;
+      } else {
+        columnsBgHtml += `
+          <rect x="${(pt.x - colW / 2 + 3).toFixed(1)}" y="${padT - 12}" width="${(colW - 6).toFixed(1)}" height="${(plotH + 26).toFixed(1)}" rx="6" fill="rgba(255, 255, 255, 0.02)" />
+          <text x="${pt.x.toFixed(1)}" y="${(padT - 14).toFixed(1)}" font-size="7" font-weight="800" fill="var(--text-muted)" text-anchor="middle">${relBadgeText}</text>
+        `;
+      }
+
+      // Diferencia respecto al pesaje anterior
+      let diffHtml = '';
+      if (i > 0) {
+        const prevPt = pts[i - 1];
+        const dKg = pt.weight - prevPt.weight;
+        const dKgStr = (dKg > 0 ? '+' : '') + dKg.toFixed(2);
+        const dColor = dKg < 0 ? '#10b981' : (dKg > 0 ? '#f59e0b' : 'var(--text-muted)');
+        diffHtml = `
+          <text x="${pt.x.toFixed(1)}" y="${(pt.y + 13).toFixed(1)}" font-size="7" font-weight="800" fill="${dColor}" text-anchor="middle">${dKgStr}</text>
+        `;
+      }
+
+      // Nodo
+      const rOuter = isCenter ? 7.5 : 5.5;
+      const rInner = isCenter ? 4 : 2.5;
+      nodesHtml += `
+        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rOuter}" fill="${isCenter ? '#2563eb' : '#3b82f6'}" stroke="#ffffff" stroke-width="${isCenter ? 2.5 : 1.8}" />
+        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rInner}" fill="#ffffff" />
+        <text x="${pt.x.toFixed(1)}" y="${(pt.y - 10).toFixed(1)}" font-size="${isCenter ? '9' : '8.2'}" font-weight="900" fill="${isCenter ? '#60a5fa' : 'var(--text-main)'}" text-anchor="middle">${pt.weight}</text>
+        ${diffHtml}
+        <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
+      `;
+
+      // Zona táctil interactiva
+      hitColsHtml += `
+        <rect class="w-zoom-col-hit" data-orig-idx="${pt.origIdx}" x="${(pt.x - colW / 2).toFixed(1)}" y="0" width="${colW.toFixed(1)}" height="${height}" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer;" />
+      `;
+    });
+
+    weightZoomSvgContainer.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; overflow:visible;">
+        <defs>
+          <linearGradient id="wZoomAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01" />
+          </linearGradient>
+        </defs>
+
+        ${gridLinesHtml}
+        ${goalHtml}
+        ${columnsBgHtml}
+        ${areaD ? `<path d="${areaD}" fill="url(#wZoomAreaGrad)" />` : ''}
+        ${pathD ? `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+        ${nodesHtml}
+        ${hitColsHtml}
+      </svg>
+    `;
+
+    // Listeners para tocar columnas dentro del gráfico ampliado
+    weightZoomSvgContainer.querySelectorAll('.w-zoom-col-hit').forEach(col => {
+      col.addEventListener('click', () => {
+        triggerHaptic(14);
+        const newIdx = parseInt(col.dataset.origIdx, 10);
+        renderWeightZoomView(newIdx);
+      });
+    });
+
+    // Renderizar Tarjetas de Detalle Inferior
+    const heightCm = parseFloat(p.heightCm) || 0;
+    let cardsHtml = '';
+
+    windowLogs.forEach((l, i) => {
+      const isCenter = (l.origIdx === centerIdx);
+      const dObj = new Date(l.date + 'T12:00:00');
+      const dateFullStr = `${fullDaysEs[dObj.getDay()]}, ${dObj.getDate()} de ${monthsEs[dObj.getMonth()]} de ${dObj.getFullYear()}`;
+
+      let relBadge = '';
+      if (isCenter) {
+        relBadge = `<span style="background:#2563eb; color:#ffffff; font-size:0.68rem; font-weight:900; padding:2px 8px; border-radius:6px; letter-spacing:0.5px;">⭐ TOCADO (SELECCIONADO)</span>`;
+      } else if (l.relDiff < 0) {
+        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${Math.abs(l.relDiff)} pesaje(s) antes</span>`;
+      } else {
+        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${l.relDiff} pesaje(s) después</span>`;
+      }
+
+      // Comparación con el pesaje anterior en la serie global
+      let diffPrevHtml = '';
+      if (l.origIdx > 0) {
+        const prevGlobalLog = logs[l.origIdx - 1];
+        const diffKg = l.weight - prevGlobalLog.weight;
+        const diffSign = diffKg > 0 ? '+' : '';
+        const isLoss = diffKg < 0;
+        const dColor = isLoss ? '#10b981' : (diffKg > 0 ? '#ef4444' : 'var(--text-muted)');
+        const icon = isLoss ? '📉' : (diffKg > 0 ? '📈' : '➖');
+        diffPrevHtml = `
+          <span style="color:${dColor}; font-weight:800; font-size:0.8rem;">
+            ${icon} ${diffSign}${diffKg.toFixed(2)} kg <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">(vs pesaje anterior)</span>
+          </span>
+        `;
+      } else {
+        diffPrevHtml = `<span style="color:var(--text-muted); font-size:0.75rem; font-style:italic;">Primer pesaje registrado</span>`;
+      }
+
+      // Comparación con el pesaje TOCADO
+      let diffTocadoHtml = '';
+      if (!isCenter) {
+        const diffFromTocado = l.weight - targetLog.weight;
+        const dSign = diffFromTocado > 0 ? '+' : '';
+        diffTocadoHtml = `
+          <div style="font-size:0.74rem; color:var(--text-muted); margin-top:2px;">
+            Diferencia vs Tocado: <strong style="color:${diffFromTocado <= 0 ? '#10b981' : '#f59e0b'};">${dSign}${diffFromTocado.toFixed(2)} kg</strong>
+          </div>
+        `;
+      }
+
+      // IMC
+      let imcHtml = '';
+      if (heightCm > 0) {
+        const heightM = heightCm / 100;
+        const imcVal = (l.weight / (heightM * heightM)).toFixed(1);
+        let imcLabel = 'Normal';
+        let imcColor = '#10b981';
+        if (imcVal >= 30) { imcLabel = 'Obesidad'; imcColor = '#ef4444'; }
+        else if (imcVal >= 25) { imcLabel = 'Sobrepeso'; imcColor = '#f59e0b'; }
+        else if (imcVal < 18.5) { imcLabel = 'Bajo peso'; imcColor = '#3b82f6'; }
+        imcHtml = `
+          <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; text-align:center;">
+            <div style="font-size:0.65rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">IMC</div>
+            <div style="font-size:0.95rem; font-weight:900; color:${imcColor};">${imcVal}</div>
+            <div style="font-size:0.65rem; font-weight:700; color:var(--text-muted);">${imcLabel}</div>
+          </div>
+        `;
+      }
+
+      // Origen del pesaje
+      const origenStr = l.origen ? `<span style="font-size:0.68rem; color:var(--text-muted);">📡 ${l.origen}</span>` : '';
+
+      cardsHtml += `
+        <div style="background:var(--card-bg-elevated); border:${isCenter ? '1.8px solid #2563eb' : '1px solid var(--border-color)'}; border-radius:14px; padding:12px 14px; ${isCenter ? 'box-shadow:0 0 16px rgba(37,99,235,0.22);' : ''}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:0.84rem; font-weight:800; color:var(--text-main);">${dateFullStr}</div>
+            ${relBadge}
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="display:flex; align-items:baseline; gap:4px;">
+                <span style="font-size:1.8rem; font-weight:900; color:#ffffff; letter-spacing:0.5px;">${l.weight}</span>
+                <span style="font-size:0.9rem; font-weight:800; color:#3b82f6;">kg</span>
+              </div>
+              <div style="margin-top:2px;">${diffPrevHtml}</div>
+              ${diffTocadoHtml}
+              ${origenStr ? `<div style="margin-top:4px;">${origenStr}</div>` : ''}
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${imcHtml}
+              <button type="button" class="btn-3d btn-3d-surface w-zoom-edit-btn" data-date="${l.date}" data-weight="${l.weight}" style="padding:6px 10px; font-size:0.75rem; font-weight:800; color:#3b82f6; border:1px solid rgba(59,130,246,0.35);" title="Modificar este registro">
+                ✏️
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    weightZoomCardsContainer.innerHTML = cardsHtml;
+
+    // Listener para botones de edición
+    weightZoomCardsContainer.querySelectorAll('.w-zoom-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(14);
+        if (weightZoomSheetBackdrop) weightZoomSheetBackdrop.classList.remove('open');
+        openWeightModal('records');
+      });
+    });
+  }
+
+  if (wZoomPrevLogBtn) {
+    wZoomPrevLogBtn.addEventListener('click', () => {
+      triggerHaptic(12);
+      if (currentWZoomCenterIdx > 0) {
+        renderWeightZoomView(currentWZoomCenterIdx - 1);
+      }
+    });
+  }
+  if (wZoomNextLogBtn) {
+    wZoomNextLogBtn.addEventListener('click', () => {
+      triggerHaptic(12);
+      const p = getHealthProfile();
+      const logs = p.weightLogs || [];
+      if (currentWZoomCenterIdx < logs.length - 1) {
+        renderWeightZoomView(currentWZoomCenterIdx + 1);
+      }
+    });
+  }
+
+  if (closeWeightZoomSheetBtn && weightZoomSheetBackdrop) {
+    closeWeightZoomSheetBtn.addEventListener('click', () => {
+      triggerHaptic(10);
+      weightZoomSheetBackdrop.classList.remove('open');
+    });
+  }
+
+  if (weightZoomSheetBackdrop) {
+    weightZoomSheetBackdrop.addEventListener('click', (e) => {
+      if (e.target === weightZoomSheetBackdrop) {
+        weightZoomSheetBackdrop.classList.remove('open');
+      }
+    });
+  }
+
+  if (wOpenZoomBtn) {
+    wOpenZoomBtn.addEventListener('click', () => {
+      triggerHaptic(14);
+      openWeightZoomModal();
+    });
   }
 
   // Marcar inyección como administrada (Abre el modal completo Añadir Dosis)
