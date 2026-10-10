@@ -3321,6 +3321,23 @@ function initDashboard() {
   const bpZoomCardsContainer = document.getElementById('bpZoomCardsContainer');
   let currentBpZoomDate = null;
 
+  const bpMedTimeModalBackdrop = document.getElementById('bpMedTimeModalBackdrop');
+  const closeBpMedTimeModalBtn = document.getElementById('closeBpMedTimeModalBtn');
+  const bpMedTimeTargetMedName = document.getElementById('bpMedTimeTargetMedName');
+  const bpMedTimeDisplay = document.getElementById('bpMedTimeDisplay');
+  const bpMedTimeHourMinus = document.getElementById('bpMedTimeHourMinus');
+  const bpMedTimeHourInput = document.getElementById('bpMedTimeHourInput');
+  const bpMedTimeHourPlus = document.getElementById('bpMedTimeHourPlus');
+  const bpMedTimeMinMinus = document.getElementById('bpMedTimeMinMinus');
+  const bpMedTimeMinInput = document.getElementById('bpMedTimeMinInput');
+  const bpMedTimeMinPlus = document.getElementById('bpMedTimeMinPlus');
+  const bpMedTimeApplyBtn = document.getElementById('bpMedTimeApplyBtn');
+
+  let bpMedTimeTargetIdx = -1;
+  let bpMedTimeDirectLogId = null;
+  let currentMedHour = 21;
+  let currentMedMin = 30;
+
   let currentBpRange = '1m';
   let bpRangeOffset = 0;
   let draftBpMeds = [];
@@ -3523,7 +3540,7 @@ function initDashboard() {
       <div style="display:flex; align-items:center; gap:6px; font-size:0.68rem; color:var(--text-muted); font-weight:800; padding:0 2px 2px 2px; text-transform:uppercase;">
         <span style="flex:1;">Fármaco</span>
         <span style="width:58px; text-align:center;">Dosis</span>
-        <span style="width:78px; text-align:center;">⏰ Toma</span>
+        <span style="width:84px; text-align:center;">⏰ Toma</span>
         <span style="width:28px;"></span>
       </div>
     `;
@@ -3535,7 +3552,10 @@ function initDashboard() {
             <input type="number" class="bp-med-dose-input" placeholder="MG" value="${m.doseMg !== undefined ? m.doseMg : ''}" min="0" step="0.5" style="width:52px; background:var(--card-bg-elevated); color:#ffffff; border:1.5px solid rgba(6,182,212,0.4); border-radius:8px; padding:7px 4px; font-size:0.85rem; font-weight:800; text-align:center;">
             <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">mg</span>
           </div>
-          <input type="time" class="bp-med-time-input" value="${m.time || '21:30'}" title="Hora habitual de toma" style="width:78px; flex-shrink:0; background:var(--card-bg-elevated); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; padding:6px 4px; font-size:0.8rem; font-weight:700; text-align:center;">
+          <button type="button" class="btn-3d btn-3d-surface bp-med-time-btn" data-idx="${idx}" style="width:84px; flex-shrink:0; padding:6px 4px; font-size:0.8rem; font-weight:800; color:#06b6d4; border:1.5px solid rgba(6,182,212,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; gap:4px;" title="Toca para cambiar la hora de la toma">
+            <span>⏰</span>
+            <span class="bp-med-time-text">${m.time || '21:30'}</span>
+          </button>
           <button type="button" class="icon-btn-3d bp-del-med-row-btn" data-idx="${idx}" style="width:28px; height:28px; color:#ef4444; flex-shrink:0;" title="Quitar fármaco">✕</button>
         </div>
       `;
@@ -3556,14 +3576,12 @@ function initDashboard() {
         if (draftBpMeds[idx]) draftBpMeds[idx].doseMg = parseFloat(e.target.value) || 0;
       });
     });
-    bpMedsListContainer.querySelectorAll('.bp-med-time-input').forEach(input => {
-      const handler = (e) => {
-        const row = e.target.closest('.bp-med-row');
-        const idx = parseInt(row.dataset.idx, 10);
-        if (draftBpMeds[idx]) draftBpMeds[idx].time = e.target.value;
-      };
-      input.addEventListener('input', handler);
-      input.addEventListener('change', handler);
+    bpMedsListContainer.querySelectorAll('.bp-med-time-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic(14);
+        const idx = parseInt(btn.dataset.idx, 10);
+        openBpMedTimeModal(idx);
+      });
     });
     bpMedsListContainer.querySelectorAll('.bp-del-med-row-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3572,6 +3590,144 @@ function initDashboard() {
         draftBpMeds.splice(idx, 1);
         renderBpMedRows();
       });
+    });
+  }
+
+  function openBpMedTimeModal(medIdx, logId = null) {
+    bpMedTimeTargetIdx = medIdx;
+    bpMedTimeDirectLogId = logId;
+
+    let initTime = '21:30';
+    let medName = 'Fármaco antihipertensivo';
+
+    if (logId) {
+      const logs = getBpLogs();
+      const item = logs.find(l => l.id === logId);
+      if (item && item.meds && item.meds[medIdx]) {
+        initTime = item.meds[medIdx].time || '21:30';
+        medName = item.meds[medIdx].name || medName;
+      }
+    } else if (draftBpMeds[medIdx]) {
+      initTime = draftBpMeds[medIdx].time || '21:30';
+      medName = draftBpMeds[medIdx].name || medName;
+    }
+
+    if (bpMedTimeTargetMedName) bpMedTimeTargetMedName.textContent = medName;
+
+    const parts = initTime.split(':');
+    currentMedHour = parseInt(parts[0], 10);
+    if (isNaN(currentMedHour)) currentMedHour = 21;
+    currentMedMin = parseInt(parts[1], 10);
+    if (isNaN(currentMedMin)) currentMedMin = 30;
+    updateMedTimeDisplay();
+
+    if (bpMedTimeModalBackdrop) {
+      bpMedTimeModalBackdrop.classList.add('open');
+    }
+  }
+
+  function updateMedTimeDisplay() {
+    currentMedHour = Math.min(23, Math.max(0, currentMedHour));
+    currentMedMin = Math.min(59, Math.max(0, currentMedMin));
+    const hStr = String(currentMedHour).padStart(2, '0');
+    const mStr = String(currentMedMin).padStart(2, '0');
+    const timeStr = `${hStr}:${mStr}`;
+    if (bpMedTimeDisplay) bpMedTimeDisplay.textContent = timeStr;
+    if (bpMedTimeHourInput) bpMedTimeHourInput.value = currentMedHour;
+    if (bpMedTimeMinInput) bpMedTimeMinInput.value = currentMedMin;
+  }
+
+  if (bpMedTimeHourMinus) {
+    bpMedTimeHourMinus.addEventListener('click', () => {
+      triggerHaptic(10);
+      currentMedHour = (currentMedHour - 1 + 24) % 24;
+      updateMedTimeDisplay();
+    });
+  }
+  if (bpMedTimeHourPlus) {
+    bpMedTimeHourPlus.addEventListener('click', () => {
+      triggerHaptic(10);
+      currentMedHour = (currentMedHour + 1) % 24;
+      updateMedTimeDisplay();
+    });
+  }
+  if (bpMedTimeMinMinus) {
+    bpMedTimeMinMinus.addEventListener('click', () => {
+      triggerHaptic(10);
+      currentMedMin = (currentMedMin - 5 + 60) % 60;
+      updateMedTimeDisplay();
+    });
+  }
+  if (bpMedTimeMinPlus) {
+    bpMedTimeMinPlus.addEventListener('click', () => {
+      triggerHaptic(10);
+      currentMedMin = (currentMedMin + 5) % 60;
+      updateMedTimeDisplay();
+    });
+  }
+  if (bpMedTimeHourInput) {
+    bpMedTimeHourInput.addEventListener('input', (e) => {
+      currentMedHour = parseInt(e.target.value, 10) || 0;
+      updateMedTimeDisplay();
+    });
+  }
+  if (bpMedTimeMinInput) {
+    bpMedTimeMinInput.addEventListener('input', (e) => {
+      currentMedMin = parseInt(e.target.value, 10) || 0;
+      updateMedTimeDisplay();
+    });
+  }
+
+  document.querySelectorAll('.bp-quick-time-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      triggerHaptic(12);
+      const t = btn.dataset.time || '21:30';
+      const [h, m] = t.split(':').map(Number);
+      currentMedHour = h || 0;
+      currentMedMin = m || 0;
+      updateMedTimeDisplay();
+    });
+  });
+
+  if (bpMedTimeApplyBtn) {
+    bpMedTimeApplyBtn.addEventListener('click', () => {
+      triggerHaptic(16);
+      const hStr = String(currentMedHour).padStart(2, '0');
+      const mStr = String(currentMedMin).padStart(2, '0');
+      const finalTime = `${hStr}:${mStr}`;
+
+      if (bpMedTimeDirectLogId) {
+        let logs = getBpLogs();
+        const idx = logs.findIndex(l => l.id === bpMedTimeDirectLogId);
+        if (idx >= 0 && logs[idx].meds && logs[idx].meds[bpMedTimeTargetIdx]) {
+          logs[idx].meds[bpMedTimeTargetIdx].time = finalTime;
+          saveBpLogs(logs);
+          showToast(`✓ Hora de medicación actualizada: ${finalTime}`);
+        }
+      } else if (bpMedTimeTargetIdx >= 0 && draftBpMeds[bpMedTimeTargetIdx]) {
+        draftBpMeds[bpMedTimeTargetIdx].time = finalTime;
+        renderBpMedRows();
+        showToast(`✓ Hora de medicación: ${finalTime}`);
+      }
+
+      if (bpMedTimeModalBackdrop) {
+        bpMedTimeModalBackdrop.classList.remove('open');
+      }
+    });
+  }
+
+  if (closeBpMedTimeModalBtn && bpMedTimeModalBackdrop) {
+    closeBpMedTimeModalBtn.addEventListener('click', () => {
+      triggerHaptic(10);
+      bpMedTimeModalBackdrop.classList.remove('open');
+    });
+  }
+
+  if (bpMedTimeModalBackdrop) {
+    bpMedTimeModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === bpMedTimeModalBackdrop) {
+        bpMedTimeModalBackdrop.classList.remove('open');
+      }
     });
   }
 
@@ -4092,7 +4248,7 @@ function initDashboard() {
       };
 
       const medsList = Array.isArray(d.meds) && d.meds.length > 0
-        ? d.meds.filter(m => (m.name || '').trim()).map(m => `<strong>${m.name}</strong> ${m.doseMg}mg${m.time ? ` <span style="color:#06b6d4; font-size:0.75rem; font-weight:700;">(⏰ ${m.time})</span>` : ''}`).join(' · ')
+        ? d.meds.filter(m => (m.name || '').trim()).map((m, mIdx) => `<strong>${m.name}</strong> ${m.doseMg}mg <button type="button" class="btn-3d btn-3d-surface bp-quick-change-time-btn" data-log-id="${d.last.id}" data-med-idx="${mIdx}" style="padding:2px 7px; font-size:0.75rem; font-weight:800; color:#06b6d4; border:1px solid rgba(6,182,212,0.4); border-radius:6px; margin-left:3px;" title="Cambiar hora de esta medicación">⏰ ${m.time || '21:30'} ✏️</button>`).join(' · ')
         : '<span style="color:var(--text-muted); font-style:italic;">Sin medicación antihipertensiva</span>';
 
       let diffHtml = '';
@@ -4176,6 +4332,16 @@ function initDashboard() {
           openBpEditModal(d.last.id);
         });
       }
+
+      bpScrubberInfo.querySelectorAll('.bp-quick-change-time-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerHaptic(14);
+          const logId = btn.dataset.logId;
+          const medIdx = parseInt(btn.dataset.medIdx, 10) || 0;
+          openBpMedTimeModal(medIdx, logId);
+        });
+      });
 
       const scrubberZoomBtn = bpScrubberInfo.querySelector('.bp-open-zoom-from-scrubber');
       if (scrubberZoomBtn) {
@@ -4669,7 +4835,7 @@ function initDashboard() {
       }).join('');
 
       const medsList = Array.isArray(d.meds) && d.meds.length > 0
-        ? d.meds.filter(m => (m.name || '').trim()).map(m => `<strong>${m.name}</strong> ${m.doseMg}mg${m.time ? ` <span style="color:#06b6d4; font-size:0.72rem; font-weight:700;">(⏰ ${m.time})</span>` : ''}`).join(' · ')
+        ? d.meds.filter(m => (m.name || '').trim()).map((m, mIdx) => `<strong>${m.name}</strong> ${m.doseMg}mg <button type="button" class="btn-3d btn-3d-surface bp-quick-change-time-btn" data-log-id="${d.last.id}" data-med-idx="${mIdx}" style="padding:2px 7px; font-size:0.75rem; font-weight:800; color:#06b6d4; border:1px solid rgba(6,182,212,0.4); border-radius:6px; margin-left:3px;" title="Cambiar hora de esta medicación">⏰ ${m.time || '21:30'} ✏️</button>`).join(' · ')
         : '<span style="color:var(--text-muted); font-style:italic;">Sin medicación registrada</span>';
 
       return `
@@ -4706,6 +4872,16 @@ function initDashboard() {
         const readingId = btn.dataset.id;
         if (bpZoomSheetBackdrop) bpZoomSheetBackdrop.classList.remove('open');
         openBpEditModal(readingId);
+      });
+    });
+
+    bpZoomCardsContainer.querySelectorAll('.bp-quick-change-time-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerHaptic(14);
+        const logId = btn.dataset.logId;
+        const medIdx = parseInt(btn.dataset.medIdx, 10) || 0;
+        openBpMedTimeModal(medIdx, logId);
       });
     });
   }
