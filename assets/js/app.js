@@ -3659,9 +3659,43 @@ function initDashboard() {
       }
     }, { passive: true });
 
-    bpSvgContainer.addEventListener('touchend', () => {
+    bpSvgContainer.addEventListener('touchend', (e) => {
+      if (!bpIsSwiping && bpTouchStartX) {
+        const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : bpTouchStartX;
+        const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : bpTouchStartY;
+        const dist = Math.hypot(endX - bpTouchStartX, endY - bpTouchStartY);
+        if (dist < 15) {
+          handleBpSvgTap(endX);
+        }
+      }
       bpIsSwiping = false;
     }, { passive: true });
+  }
+
+  function handleBpSvgTap(clientX) {
+    if (!bpSvgContainer || !window._currentBpDaySummaries || window._currentBpDaySummaries.length === 0) return;
+    const rect = bpSvgContainer.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const svgW = rect.width || 350;
+    const svgX = (relX / svgW) * 350;
+
+    let closestIdx = 0;
+    let minDiff = 999999;
+    window._currentBpDaySummaries.forEach((d, i) => {
+      const ptX = d._x !== undefined ? d._x : 0;
+      const diff = Math.abs(svgX - ptX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = i;
+      }
+    });
+
+    const d = window._currentBpDaySummaries[closestIdx];
+    if (d) {
+      triggerHaptic(14);
+      if (window._updateBpScrubber) window._updateBpScrubber(closestIdx);
+      openBpZoomModal(d.date);
+    }
   }
 
   function renderBpGraph() {
@@ -3866,6 +3900,9 @@ function initDashboard() {
 
     const pointsSys = daySummaries.map((d, i) => ({ x: getX(d, i), y: getY(d.sys), val: d.sys, date: d.date }));
     const pointsDia = daySummaries.map((d, i) => ({ x: getX(d, i), y: getY(d.dia), val: d.dia, date: d.date }));
+    daySummaries.forEach((d, i) => { d._x = pointsSys[i].x; });
+    window._currentBpDaySummaries = daySummaries;
+    window._updateBpScrubber = updateScrubber;
 
     let pathDSys = '';
     let areaDSys = '';
@@ -3987,8 +4024,8 @@ function initDashboard() {
 
       // Nodos circulares
       nodesHtml += `
-        <circle class="bp-node-sys" data-idx="${i}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.5" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2" style="cursor:pointer;" />
-        <circle class="bp-node-dia" data-idx="${i}" cx="${diaPt.x.toFixed(1)}" cy="${diaPt.y.toFixed(1)}" r="5.5" fill="#06b6d4" stroke="#ffffff" stroke-width="2.2" style="cursor:pointer;" />
+        <circle class="bp-node-sys" data-idx="${i}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6" fill="#f43f5e" stroke="#ffffff" stroke-width="2.2" pointer-events="all" style="cursor:pointer; pointer-events:all;" />
+        <circle class="bp-node-dia" data-idx="${i}" cx="${diaPt.x.toFixed(1)}" cy="${diaPt.y.toFixed(1)}" r="6" fill="#06b6d4" stroke="#ffffff" stroke-width="2.2" pointer-events="all" style="cursor:pointer; pointer-events:all;" />
       `;
 
       // Textos de valores con halo protector anticolisión
@@ -3998,20 +4035,20 @@ function initDashboard() {
         const diaOffset = vertDist < 20 ? 15 : 14;
 
         nodesHtml += `
-          <text x="${pt.x.toFixed(1)}" y="${(pt.y - sysOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.sys}</text>
-          <text x="${diaPt.x.toFixed(1)}" y="${(diaPt.y + diaOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.dia}</text>
+          <text x="${pt.x.toFixed(1)}" y="${(pt.y - sysOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#f43f5e" text-anchor="middle" pointer-events="none" style="pointer-events:none; paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.sys}</text>
+          <text x="${diaPt.x.toFixed(1)}" y="${(diaPt.y + diaOffset).toFixed(1)}" font-size="8.5" font-weight="900" fill="#06b6d4" text-anchor="middle" pointer-events="none" style="pointer-events:none; paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:3.2px; stroke-linejoin:round;">${d.dia}</text>
         `;
       }
 
       // Fecha en eje X con halo protector
       if (showDate) {
         nodesHtml += `
-          <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle" style="paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${dateLabel}</text>
+          <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle" pointer-events="none" style="pointer-events:none; paint-order:stroke fill; stroke:var(--card-bg-elevated,#0f172a); stroke-width:2.5px;">${dateLabel}</text>
         `;
       }
 
       touchColumnsHtml += `
-        <rect class="bp-touch-col" data-idx="${i}" x="${(pt.x - 18).toFixed(1)}" y="${padT}" width="36" height="${plotH}" fill="transparent" style="cursor:pointer;" />
+        <rect class="bp-touch-col" data-idx="${i}" x="${(pt.x - 22).toFixed(1)}" y="${padT}" width="44" height="${plotH}" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer; pointer-events:all;" />
       `;
     });
 
@@ -4151,14 +4188,21 @@ function initDashboard() {
     }
 
     bpSvgContainer.querySelectorAll('.bp-touch-col, .bp-diff-marker, .bp-node-sys, .bp-node-dia').forEach(el => {
-      el.addEventListener('click', () => {
-        triggerHaptic(12);
+      const onPick = (e) => {
+        if (e) {
+          e.stopPropagation();
+        }
+        triggerHaptic(14);
         const idx = parseInt(el.dataset.idx, 10);
         updateScrubber(idx);
         const d = daySummaries[idx];
         if (d) {
           openBpZoomModal(d.date);
         }
+      };
+      el.addEventListener('click', onPick);
+      el.addEventListener('touchend', (e) => {
+        if (!bpIsSwiping) onPick(e);
       });
     });
 
@@ -4179,11 +4223,16 @@ function initDashboard() {
       targetDate = logs[logs.length - 1].date;
     }
     currentBpZoomDate = targetDate;
-    renderBpZoomView(currentBpZoomDate);
     if (bpZoomSheetBackdrop) {
       bpZoomSheetBackdrop.classList.add('open');
     }
+    try {
+      renderBpZoomView(currentBpZoomDate);
+    } catch (err) {
+      console.error('Error renderBpZoomView:', err);
+    }
   }
+  window.openBpZoomModal = openBpZoomModal;
 
   function renderBpZoomView(centerDate) {
     if (!bpZoomSvgContainer || !bpZoomCardsContainer) return;
