@@ -226,6 +226,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const APP_VERSION = 'v1.0.17';
+  document.querySelectorAll('.app-version-badge').forEach(el => {
+    el.textContent = APP_VERSION;
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      triggerHaptic(12);
+      showToast(`MisPep ${APP_VERSION} (Build 18)`);
+    });
+  });
+
   initNavigation();
   initTheme();
   initDashboard();
