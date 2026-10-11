@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.17';
+  const APP_VERSION = 'v1.0.19';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2271,9 +2271,10 @@ function initDashboard() {
     });
   }
 
+  let wIsSwiping = false;
   // Swipe y arrastre continuo en el gráfico de peso (día a día en tiempo real)
   if (weightSvgContainer) {
-    let wTouchStartX = 0, wTouchStartY = 0, wLastDragX = 0, wIsSwiping = false;
+    let wTouchStartX = 0, wTouchStartY = 0, wLastDragX = 0;
     const PX_PER_DAY = 26; // Cada 26px de arrastre desplaza 1 día continuo
 
     weightSvgContainer.addEventListener('touchstart', (e) => {
@@ -2645,6 +2646,19 @@ function initDashboard() {
       });
     }
 
+    // Idioma
+    const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
+
+    if (wZoomModalTitle) {
+      wZoomModalTitle.textContent = isEn ? 'Detalle y Amplitud de Peso' : 'Detalle y Amplitud de Peso';
+      if (isEn) wZoomModalTitle.textContent = 'Weight Detail & Amplitude';
+    }
+    if (wZoomModalSubtitle) {
+      wZoomModalSubtitle.textContent = isEn
+        ? '±4 weigh-ins window (up to 9 logs) · Exact variation and amplitudes'
+        : 'Ventana de ±4 pesajes (hasta 9 pesajes) · Variación exacta y amplitudes';
+    }
+
     // Botones de navegación
     if (wZoomPrevLogBtn) {
       wZoomPrevLogBtn.disabled = (centerIdx <= 0);
@@ -2657,15 +2671,20 @@ function initDashboard() {
 
     // Etiquetas de la cabecera
     const dTargetObj = new Date(targetLog.date + 'T12:00:00');
-    const fullDaysEs = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const targetDateFormatted = `${fullDaysEs[dTargetObj.getDay()]}, ${dTargetObj.getDate()} de ${monthsEs[dTargetObj.getMonth()]}`;
+    const fullDays = isEn ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] : ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const months = isEn ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] : ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const shortDays = isEn ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const targetDateFormatted = isEn
+      ? `${fullDays[dTargetObj.getDay()]}, ${months[dTargetObj.getMonth()]} ${dTargetObj.getDate()}`
+      : `${fullDays[dTargetObj.getDay()]}, ${dTargetObj.getDate()} de ${months[dTargetObj.getMonth()]}`;
 
     if (wZoomFocusDateLabel) {
       wZoomFocusDateLabel.textContent = `📅 ${targetDateFormatted}`;
     }
     if (wZoomFocusSubLabel) {
-      wZoomFocusSubLabel.textContent = `Pesaje #${centerIdx + 1} de ${logs.length} · ${targetLog.weight} kg`;
+      wZoomFocusSubLabel.textContent = isEn
+        ? `Weigh-in #${centerIdx + 1} of ${logs.length} · ${targetLog.weight} kg`
+        : `Pesaje #${centerIdx + 1} de ${logs.length} · ${targetLog.weight} kg`;
     }
 
     // Amplitud y estadísticas de la ventana
@@ -2679,7 +2698,8 @@ function initDashboard() {
     const deltaSign = (lastW - firstW) > 0 ? '+' : '';
 
     if (wZoomDeltaTotalSpan) {
-      wZoomDeltaTotalSpan.textContent = `Δ Total: ${deltaSign}${deltaTotal} kg (Amplitud: ${deltaRange} kg)`;
+      const ampWord = isEn ? 'Amplitude' : 'Amplitud';
+      wZoomDeltaTotalSpan.textContent = `Δ Total: ${deltaSign}${deltaTotal} kg (${ampWord}: ${deltaRange} kg)`;
       wZoomDeltaTotalSpan.style.color = (lastW <= firstW) ? '#10b981' : '#f59e0b';
     }
 
@@ -2750,20 +2770,15 @@ function initDashboard() {
     pts.forEach((pt, i) => {
       const isCenter = (pt.origIdx === centerIdx);
       const dObj = new Date(pt.date + 'T12:00:00');
-      const shortDaysEs = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-      const dayShort = shortDaysEs[dObj.getDay()];
+      const dayShort = shortDays[dObj.getDay()];
       const dd = String(dObj.getDate()).padStart(2, '0');
       const mm = String(dObj.getMonth() + 1).padStart(2, '0');
       const dateLabel = `${dayShort} ${dd}/${mm}`;
 
       // Etiqueta relativa superior
       let relBadgeText = '';
-      if (isCenter) {
-        relBadgeText = 'TOCADO';
-      } else if (pt.relDiff < 0) {
-        relBadgeText = `${pt.relDiff}p`;
-      } else {
-        relBadgeText = `+${pt.relDiff}p`;
+      if (!isCenter) {
+        relBadgeText = pt.relDiff < 0 ? `${pt.relDiff}p` : `+${pt.relDiff}p`;
       }
 
       // Fondo de la columna del pesaje
@@ -2842,19 +2857,25 @@ function initDashboard() {
     windowLogs.forEach((l, i) => {
       const isCenter = (l.origIdx === centerIdx);
       const dObj = new Date(l.date + 'T12:00:00');
-      const dateFullStr = `${fullDaysEs[dObj.getDay()]}, ${dObj.getDate()} de ${monthsEs[dObj.getMonth()]} de ${dObj.getFullYear()}`;
+      const dateFullStr = isEn
+        ? `${fullDays[dObj.getDay()]}, ${months[dObj.getMonth()]} ${dObj.getDate()}, ${dObj.getFullYear()}`
+        : `${fullDays[dObj.getDay()]}, ${dObj.getDate()} de ${months[dObj.getMonth()]} de ${dObj.getFullYear()}`;
 
       let relBadge = '';
       if (isCenter) {
-        relBadge = `<span style="background:#2563eb; color:#ffffff; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:0.5px;">⭐ SELECCIONADO</span>`;
+        relBadge = `<span style="background:#2563eb; color:#ffffff; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:0.5px;">⭐ ${isEn ? 'SELECTED' : 'SELECCIONADO'}</span>`;
       } else if (l.relDiff < 0) {
-        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${Math.abs(l.relDiff)} pesaje(s) antes</span>`;
+        const count = Math.abs(l.relDiff);
+        const text = isEn ? `${count} weigh-in(s) before` : `${count} pesaje(s) antes`;
+        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${text}</span>`;
       } else {
-        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${l.relDiff} pesaje(s) después</span>`;
+        const text = isEn ? `${l.relDiff} weigh-in(s) after` : `${l.relDiff} pesaje(s) después`;
+        relBadge = `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:6px;">${text}</span>`;
       }
 
       // Comparación con el pesaje anterior en la serie global
       let diffPrevHtml = '';
+      const diffLabel = isEn ? 'Difference vs previous weight:' : 'Diferencia vs peso anterior:';
       if (l.origIdx > 0) {
         const prevGlobalLog = logs[l.origIdx - 1];
         const diffKg = l.weight - prevGlobalLog.weight;
@@ -2864,11 +2885,12 @@ function initDashboard() {
         const icon = isLoss ? '📉' : (diffKg > 0 ? '📈' : '➖');
         diffPrevHtml = `
           <div style="font-size:0.82rem; font-weight:800; color:${dColor}; margin-top:3px;">
-            ${icon} Diferencia vs peso anterior: <strong>${diffSign}${diffKg.toFixed(2)} kg</strong>
+            ${icon} ${diffLabel} <strong>${diffSign}${diffKg.toFixed(2)} kg</strong>
           </div>
         `;
       } else {
-        diffPrevHtml = `<div style="color:var(--text-muted); font-size:0.75rem; font-style:italic; margin-top:3px;">Primer pesaje registrado</div>`;
+        const firstLabel = isEn ? 'First recorded weigh-in' : 'Primer pesaje registrado';
+        diffPrevHtml = `<div style="color:var(--text-muted); font-size:0.75rem; font-style:italic; margin-top:3px;">${firstLabel}</div>`;
       }
 
       // IMC
@@ -2878,9 +2900,9 @@ function initDashboard() {
         const imcVal = (l.weight / (heightM * heightM)).toFixed(1);
         let imcLabel = 'Normal';
         let imcColor = '#10b981';
-        if (imcVal >= 30) { imcLabel = 'Obesidad'; imcColor = '#ef4444'; }
-        else if (imcVal >= 25) { imcLabel = 'Sobrepeso'; imcColor = '#f59e0b'; }
-        else if (imcVal < 18.5) { imcLabel = 'Bajo peso'; imcColor = '#3b82f6'; }
+        if (imcVal >= 30) { imcLabel = isEn ? 'Obese' : 'Obesidad'; imcColor = '#ef4444'; }
+        else if (imcVal >= 25) { imcLabel = isEn ? 'Overweight' : 'Sobrepeso'; imcColor = '#f59e0b'; }
+        else if (imcVal < 18.5) { imcLabel = isEn ? 'Underweight' : 'Bajo peso'; imcColor = '#3b82f6'; }
         imcHtml = `
           <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; text-align:center;">
             <div style="font-size:0.65rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">IMC</div>
@@ -4238,9 +4260,10 @@ function initDashboard() {
     });
   }
 
+  let bpIsSwiping = false;
   // Swipe y arrastre continuo lateral en el gráfico de tensiones (día a día en tiempo real)
   if (bpSvgContainer) {
-    let bpTouchStartX = 0, bpTouchStartY = 0, bpLastDragX = 0, bpIsSwiping = false;
+    let bpTouchStartX = 0, bpTouchStartY = 0, bpLastDragX = 0;
     const PX_PER_DAY = 26; // Cada 26px de arrastre desplaza 1 día continuo
 
     bpSvgContainer.addEventListener('touchstart', (e) => {
@@ -4960,19 +4983,32 @@ function initDashboard() {
     // Cabecera de fechas
     const [tY, tM, tD] = targetDay.date.split('-').map(Number);
     const targetDateObj = new Date(tY, tM - 1, tD, 12, 0, 0);
-    const daysEs = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const shortDaysEs = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const days = isEn ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] : ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const shortDays = isEn ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const months = isEn ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] : ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    const targetDayName = daysEs[targetDateObj.getDay()];
-    const targetMonthName = monthsEs[tM - 1];
+    const targetDayName = days[targetDateObj.getDay()];
+    const targetMonthName = months[tM - 1];
+
+    if (bpZoomModalTitle) {
+      bpZoomModalTitle.textContent = isEn ? 'Blood Pressure Detail & Amplitude' : 'Detalle y Amplitud de Presión';
+    }
+    if (bpZoomModalSubtitle) {
+      bpZoomModalSubtitle.textContent = isEn
+        ? '5-day window (±2 days) · SYS/DIA ranges amplitude and all readings'
+        : 'Ventana de 5 días (±2 días) · Amplitud de rangos SYS/DIA y todas las medidas';
+    }
 
     if (bpZoomFocusDateLabel) {
-      bpZoomFocusDateLabel.textContent = `📅 ${targetDayName}, ${tD} de ${targetMonthName}`;
+      bpZoomFocusDateLabel.textContent = isEn
+        ? `📅 ${targetDayName}, ${targetMonthName} ${tD}`
+        : `📅 ${targetDayName}, ${tD} de ${targetMonthName}`;
     }
     if (bpZoomFocusSubLabel) {
       const nReadings = targetDay.readings.length;
-      bpZoomFocusSubLabel.innerHTML = `<span style="color:#3b82f6; font-weight:800;">Día seleccionado</span> · ${nReadings} ${nReadings === 1 ? 'medición' : 'mediciones'}`;
+      const readingWord = isEn ? (nReadings === 1 ? 'reading' : 'readings') : (nReadings === 1 ? 'medición' : 'mediciones');
+      const selectedWord = isEn ? 'Selected day' : 'Día seleccionado';
+      bpZoomFocusSubLabel.innerHTML = `<span style="color:#3b82f6; font-weight:800;">${selectedWord}</span> · ${nReadings} ${readingWord}`;
     }
 
     // ==========================================
@@ -5037,7 +5073,7 @@ function initDashboard() {
       const isCenter = (d.date === targetDay.date);
       const [dy, dm, dd] = d.date.split('-').map(Number);
       const dDateObj = new Date(dy, dm - 1, dd, 12, 0, 0);
-      const dayNameShort = shortDaysEs[dDateObj.getDay()];
+      const dayNameShort = shortDays[dDateObj.getDay()];
       const dateLabelShort = `${dayNameShort} ${String(dd).padStart(2, '0')}/${String(dm).padStart(2, '0')}`;
 
       const centerIdxInWindow = windowDays.findIndex(x => x.date === targetDay.date);
@@ -5187,57 +5223,66 @@ function initDashboard() {
     const cardsHtml = windowDays.map(d => {
       const [dy, dm, dd] = d.date.split('-').map(Number);
       const dDateObj = new Date(dy, dm - 1, dd, 12, 0, 0);
-      const dayNameFull = daysEs[dDateObj.getDay()];
-      const monthNameFull = monthsEs[dm - 1];
+      const dayNameFull = days[dDateObj.getDay()];
+      const monthNameFull = months[dm - 1];
       const isCenter = (d.date === targetDay.date);
 
       const centerIdxInWindow = windowDays.findIndex(x => x.date === targetDay.date);
       const relDiff = windowDays.indexOf(d) - centerIdxInWindow;
       let relBadge = '';
       if (isCenter) {
-        relBadge = `<span style="background:rgba(59,130,246,0.2); color:#60a5fa; border:1px solid rgba(59,130,246,0.4); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:800;">🎯 Día seleccionado</span>`;
+        relBadge = `<span style="background:rgba(59,130,246,0.2); color:#60a5fa; border:1px solid rgba(59,130,246,0.4); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:800;">🎯 ${isEn ? 'Selected day' : 'Día seleccionado'}</span>`;
       } else if (relDiff < 0) {
-        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${Math.abs(relDiff)} ${Math.abs(relDiff) === 1 ? 'día antes' : 'días antes'}</span>`;
+        const count = Math.abs(relDiff);
+        const dayWord = isEn ? (count === 1 ? 'day before' : 'days before') : (count === 1 ? 'día antes' : 'días antes');
+        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${count} ${dayWord}</span>`;
       } else {
-        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${relDiff} ${relDiff === 1 ? 'día después' : 'días después'}</span>`;
+        const dayWord = isEn ? (relDiff === 1 ? 'day after' : 'days after') : (relDiff === 1 ? 'día después' : 'días después');
+        relBadge = `<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border-color); border-radius:6px; padding:2px 8px; font-size:0.72rem; font-weight:700;">${relDiff} ${dayWord}</span>`;
       }
 
       let amplitudeBoxHtml = '';
       if (d.hasMultiple) {
+        const ampTitle = isEn ? `Daily range amplitude (${d.readings.length} readings):` : `Amplitud del rango diario (${d.readings.length} tomas):`;
+        const avgTitle = isEn ? 'Average:' : 'Media:';
+        const sysRangeTitle = isEn ? 'Systolic Range' : 'Rango Sistólica';
+        const diaRangeTitle = isEn ? 'Diastolic Range' : 'Rango Diastólica';
+        const ampWord = isEn ? 'Amplitude:' : 'Amplitud:';
         amplitudeBoxHtml = `
           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:12px; padding:10px 12px; margin:8px 0;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-size:0.74rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Amplitud del rango diario (${d.readings.length} tomas):</span>
-              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Media: <strong style="color:#f43f5e;">${d.avgSys}</strong> / <strong style="color:#06b6d4;">${d.avgDia}</strong> mmHg</span>
+              <span style="font-size:0.74rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">${ampTitle}</span>
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">${avgTitle} <strong style="color:#f43f5e;">${d.avgSys}</strong> / <strong style="color:#06b6d4;">${d.avgDia}</strong> mmHg</span>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
               <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.22); border-radius:8px; padding:8px 10px;">
-                <div style="font-size:0.68rem; font-weight:800; color:#f43f5e; text-transform:uppercase;">Rango Sistólica</div>
+                <div style="font-size:0.68rem; font-weight:800; color:#f43f5e; text-transform:uppercase;">${sysRangeTitle}</div>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
                   <span style="font-size:1.1rem; font-weight:900; color:#ffffff;">${d.minSys} - ${d.maxSys}</span>
                   <span style="font-size:0.72rem; color:var(--text-muted);">mmHg</span>
                 </div>
                 <div style="margin-top:3px; font-size:0.73rem; font-weight:800; color:#f43f5e;">
-                  Amplitud: <strong>Δ ${d.sysRange} mmHg</strong>
+                  ${ampWord} <strong>Δ ${d.sysRange} mmHg</strong>
                 </div>
               </div>
               <div style="background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.22); border-radius:8px; padding:8px 10px;">
-                <div style="font-size:0.68rem; font-weight:800; color:#06b6d4; text-transform:uppercase;">Rango Diastólica</div>
+                <div style="font-size:0.68rem; font-weight:800; color:#06b6d4; text-transform:uppercase;">${diaRangeTitle}</div>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
                   <span style="font-size:1.1rem; font-weight:900; color:#ffffff;">${d.minDia} - ${d.maxDia}</span>
                   <span style="font-size:0.72rem; color:var(--text-muted);">mmHg</span>
                 </div>
                 <div style="margin-top:3px; font-size:0.73rem; font-weight:800; color:#06b6d4;">
-                  Amplitud: <strong>Δ ${d.diaRange} mmHg</strong>
+                  ${ampWord} <strong>Δ ${d.diaRange} mmHg</strong>
                 </div>
               </div>
             </div>
           </div>
         `;
       } else {
+        const singleTitle = isEn ? 'Single reading that day:' : 'Toma única registrada ese día:';
         amplitudeBoxHtml = `
           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:8px 12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.76rem; color:var(--text-muted); font-weight:700;">Toma única registrada ese día:</span>
+            <span style="font-size:0.76rem; color:var(--text-muted); font-weight:700;">${singleTitle}</span>
             <span style="font-size:0.88rem; font-weight:900; color:#ffffff;">
               <span style="color:#f43f5e;">${d.sys}</span> / <span style="color:#06b6d4;">${d.dia}</span> mmHg · <span style="color:var(--text-muted); font-size:0.75rem;">💓 ${d.pulse || 70} ppm</span>
             </span>
