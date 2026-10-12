@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.21';
+  const APP_VERSION = 'v1.0.22';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2946,21 +2946,121 @@ function initDashboard() {
     const pts = windowLogs.map((l, i) => {
       const x = padL + (i + 0.5) * colW;
       const y = getY(l.weight);
-      return { ...l, x, y };
+      const time = new Date(l.date + 'T12:00:00').getTime();
+      return { ...l, x, y, time };
     });
 
-    // Spline curve
-    let pathD = '';
+    function getCurveYAtX(targetX) {
+      if (pts.length === 0) return padT + plotH / 2;
+      if (pts.length === 1 || targetX <= pts[0].x) return pts[0].y;
+      if (targetX >= pts[pts.length - 1].x) return pts[pts.length - 1].y;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const pA = pts[i];
+        const pB = pts[i + 1];
+        if (targetX >= pA.x && targetX <= pB.x) {
+          const t = (targetX - pA.x) / (pB.x - pA.x || 1);
+          return pA.y + t * (pB.y - pA.y);
+        }
+      }
+      return pts[0].y;
+    }
+
+    function getXForTime(timeMs) {
+      if (pts.length <= 1) return padL + plotW / 2;
+      if (timeMs <= pts[0].time) return pts[0].x;
+      if (timeMs >= pts[pts.length - 1].time) return pts[pts.length - 1].x;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const pA = pts[i];
+        const pB = pts[i + 1];
+        if (timeMs >= pA.time && timeMs <= pB.time) {
+          const ratio = (timeMs - pA.time) / (pB.time - pA.time || 1);
+          return pA.x + ratio * (pB.x - pA.x);
+        }
+      }
+      return pts[pts.length - 1].x;
+    }
+
+    // ============================================================
+    // ESCALA DE COLOR PARA LA GRÁFICA DE DETALLE SEGÚN DOSIS
+    // ============================================================
+    const allDoseChanges = getDoseChangeEvents();
+    const observedDoses = allDoseChanges.map(d => d.dose).filter(d => typeof d === 'number' && !isNaN(d));
+    const minObsDose = observedDoses.length > 0 ? Math.min(...observedDoses) : 1;
+    const maxObsDose = observedDoses.length > 0 ? Math.max(...observedDoses) : 1;
+
+    function getDoseColor(doseVal) {
+      if (!doseVal || isNaN(doseVal)) return '#2563eb';
+      if (minObsDose === maxObsDose) return '#10b981';
+      const ratio = Math.max(0, Math.min(1, (doseVal - minObsDose) / (maxObsDose - minObsDose || 1)));
+      const stops = [
+        { p: 0.0,  r: 16,  g: 185, b: 129 }, // verde (#10b981)
+        { p: 0.25, r: 132, g: 204, b: 22  }, // lima (#84cc16)
+        { p: 0.50, r: 234, g: 179, b: 8   }, // amarillo (#eab308)
+        { p: 0.75, r: 249, g: 115, b: 22  }, // naranja (#f97316)
+        { p: 1.0,  r: 239, g: 68,  b: 68  }  // rojo (#ef4444)
+      ];
+      let low = stops[0], high = stops[stops.length - 1];
+      for (let s = 0; s < stops.length - 1; s++) {
+        if (ratio >= stops[s].p && ratio <= stops[s+1].p) {
+          low = stops[s]; high = stops[s+1]; break;
+        }
+      }
+      const t = (ratio - low.p) / (high.p - low.p || 1);
+      const r = Math.round(low.r + t * (high.r - low.r));
+      const g = Math.round(low.g + t * (high.g - low.g));
+      const b = Math.round(low.b + t * (high.b - low.b));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function getActiveDoseAtTime(timeMs) {
+      let act = null;
+      for (let i = 0; i < allDoseChanges.length; i++) {
+        if (allDoseChanges[i].time <= timeMs + 43200000) {
+          act = allDoseChanges[i];
+        } else {
+          break;
+        }
+      }
+      return act ? act.dose : (allDoseChanges.length > 0 ? allDoseChanges[0].dose : null);
+    }
+
+    // Segmentos spline con cambio de color por nivel de dosis
+    let multiLineSegmentsHtml = '';
     let areaD = '';
     if (pts.length >= 2) {
-      pathD = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+      let fullPathD = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
       for (let i = 0; i < pts.length - 1; i++) {
         const p0 = pts[i];
         const p1 = pts[i + 1];
         const mx = (p0.x + p1.x) / 2;
-        pathD += ` C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+        fullPathD += ` C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+
+        // Comprobar si hubo cambio de dosis entre p0 y p1
+        const midDoseChange = allDoseChanges.find(dc => dc.time > p0.time && dc.time <= p1.time);
+        if (midDoseChange) {
+          const dcX = getXForTime(midDoseChange.time);
+          const dcY = getCurveYAtX(dcX);
+          const doseBefore = getActiveDoseAtTime(p0.time);
+          const colorBefore = getDoseColor(doseBefore);
+          const colorAfter = getDoseColor(midDoseChange.dose);
+
+          const mx1 = (p0.x + dcX) / 2;
+          multiLineSegmentsHtml += `
+            <path d="M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${mx1.toFixed(1)} ${p0.y.toFixed(1)}, ${mx1.toFixed(1)} ${dcY.toFixed(1)}, ${dcX.toFixed(1)} ${dcY.toFixed(1)}" fill="none" stroke="${colorBefore}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+          const mx2 = (dcX + p1.x) / 2;
+          multiLineSegmentsHtml += `
+            <path d="M ${dcX.toFixed(1)} ${dcY.toFixed(1)} C ${mx2.toFixed(1)} ${dcY.toFixed(1)}, ${mx2.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}" fill="none" stroke="${colorAfter}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+        } else {
+          const segDose = getActiveDoseAtTime(p0.time);
+          const segColor = getDoseColor(segDose);
+          multiLineSegmentsHtml += `
+            <path d="M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}" fill="none" stroke="${segColor}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+        }
       }
-      areaD = `${pathD} L ${pts[pts.length - 1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
+      areaD = `${fullPathD} L ${pts[pts.length - 1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
     }
 
     let columnsBgHtml = '';
@@ -3005,12 +3105,16 @@ function initDashboard() {
         `;
       }
 
+      // Color de dosis para el nodo
+      const nodeDose = getActiveDoseAtTime(pt.time);
+      const nodeColor = getDoseColor(nodeDose);
+
       // Nodo
       const rOuter = isCenter ? 7.5 : 5.5;
       const rInner = isCenter ? 4 : 2.5;
       nodesHtml += `
-        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rOuter}" fill="${isCenter ? '#2563eb' : '#3b82f6'}" stroke="#ffffff" stroke-width="${isCenter ? 2.5 : 1.8}" />
-        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rInner}" fill="#ffffff" />
+        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rOuter}" fill="${isCenter ? nodeColor : '#ffffff'}" stroke="${nodeColor}" stroke-width="${isCenter ? 2.8 : 2.2}" />
+        <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rInner}" fill="${isCenter ? '#ffffff' : nodeColor}" />
         <text x="${pt.x.toFixed(1)}" y="${(pt.y - 10).toFixed(1)}" font-size="${isCenter ? '9' : '8.2'}" font-weight="900" fill="${isCenter ? '#60a5fa' : 'var(--text-main)'}" text-anchor="middle">${pt.weight}</text>
         ${diffHtml}
         <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
@@ -3022,11 +3126,52 @@ function initDashboard() {
       `;
     });
 
+    // ============================================================
+    // ETIQUETAS DE CAMBIOS DE DOSIS EN EL GRÁFICO DE DETALLE
+    // ============================================================
+    let doseBadgesHtml = '';
+    let lastBadgeX = -999;
+    let staggerToggle = false;
+
+    const tFirstZoom = pts[0].time - 43200000;
+    const tLastZoom = pts[pts.length - 1].time + 43200000;
+    const visibleDoseChanges = allDoseChanges.filter(dc => dc.time >= tFirstZoom && dc.time <= tLastZoom);
+
+    visibleDoseChanges.forEach(dc => {
+      const dcX = getXForTime(dc.time);
+      const curveY = getCurveYAtX(dcX);
+      const badgeColor = (dc.med && dc.med.color) ? dc.med.color : '#10b981';
+
+      let badgeY = Math.max(8, curveY - 28);
+      if (Math.abs(dcX - lastBadgeX) < 32) {
+        badgeY = staggerToggle ? Math.max(6, badgeY - 14) : Math.max(6, badgeY + 4);
+        staggerToggle = !staggerToggle;
+      } else {
+        staggerToggle = false;
+      }
+      lastBadgeX = dcX;
+
+      const badgeW = Math.max(30, dc.dText.length * 6.2 + 10);
+      const badgeX = Math.max(padL - 10, Math.min(width - padR - badgeW, dcX - badgeW / 2));
+
+      doseBadgesHtml += `
+        <!-- Guía vertical discontinua -->
+        <line x1="${dcX.toFixed(1)}" y1="${(badgeY + 14).toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${curveY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
+        <!-- Punto de anclaje en la curva de peso -->
+        <circle cx="${dcX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3" fill="${badgeColor}" stroke="#ffffff" stroke-width="1.2" />
+        <!-- Píldora de dosis con flechita de subida/bajada -->
+        <g style="cursor:default;">
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="15" rx="4.5" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
+          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10.8).toFixed(1)}" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
+        </g>
+      `;
+    });
+
     weightZoomSvgContainer.innerHTML = `
       <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; overflow:visible;">
         <defs>
           <linearGradient id="wZoomAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.25" />
+            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />
             <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01" />
           </linearGradient>
         </defs>
@@ -3035,8 +3180,9 @@ function initDashboard() {
         ${goalHtml}
         ${columnsBgHtml}
         ${areaD ? `<path d="${areaD}" fill="url(#wZoomAreaGrad)" />` : ''}
-        ${pathD ? `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+        ${multiLineSegmentsHtml}
         ${nodesHtml}
+        ${doseBadgesHtml}
         ${hitColsHtml}
       </svg>
     `;
