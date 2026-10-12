@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.25';
+  const APP_VERSION = 'v1.0.26';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2845,6 +2845,9 @@ function initDashboard() {
   const weightZoomSvgContainer = document.getElementById('weightZoomSvgContainer');
   const weightZoomCardsContainer = document.getElementById('weightZoomCardsContainer');
   const wZoomDeltaTotalSpan = document.getElementById('wZoomDeltaTotalSpan');
+  const wZoomGraphSectionTitle = document.getElementById('wZoomGraphSectionTitle');
+  const wZoomLegendWeightLabel = document.getElementById('wZoomLegendWeightLabel');
+  const wZoomCardsSectionTitle = document.getElementById('wZoomCardsSectionTitle');
   const wOpenZoomBtn = document.getElementById('wOpenZoomBtn');
 
   let currentWZoomCenterIdx = -1;
@@ -2896,13 +2899,21 @@ function initDashboard() {
     const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
 
     if (wZoomModalTitle) {
-      wZoomModalTitle.textContent = isEn ? 'Detalle y Amplitud de Peso' : 'Detalle y Amplitud de Peso';
-      if (isEn) wZoomModalTitle.textContent = 'Weight Detail & Amplitude';
+      wZoomModalTitle.textContent = isEn ? 'Weight Detail & Amplitude' : 'Detalle y Amplitud de Peso';
     }
     if (wZoomModalSubtitle) {
       wZoomModalSubtitle.textContent = isEn
         ? '±4 weigh-ins window (up to 9 logs) · Exact variation and amplitudes'
         : 'Ventana de ±4 pesajes (hasta 9 pesajes) · Variación exacta y amplitudes';
+    }
+    if (wZoomGraphSectionTitle) {
+      wZoomGraphSectionTitle.textContent = isEn ? 'Weight Evolution & Variation' : 'Evolución y Variación de Peso';
+    }
+    if (wZoomLegendWeightLabel) {
+      wZoomLegendWeightLabel.textContent = isEn ? '● Weight (lb)' : '● Peso (kg)';
+    }
+    if (wZoomCardsSectionTitle) {
+      wZoomCardsSectionTitle.textContent = isEn ? '📋 Details of each weigh-in (±4 records)' : '📋 Detalle de cada pesaje (±4 registros)';
     }
 
     // Botones de navegación
