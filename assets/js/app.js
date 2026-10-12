@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.23';
+  const APP_VERSION = 'v1.0.24';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -3149,6 +3149,7 @@ function initDashboard() {
     // ============================================================
     // MARCADORES DE INYECCIONES Y JERINGUILLAS EN EL DETALLE
     // ============================================================
+    const allInjections = (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
     const tFirstZoom = pts[0].time - 43200000;
     const tLastZoom = pts[pts.length - 1].time + 43200000;
     const visibleInjections = allInjections.filter(inj => inj.time >= tFirstZoom && inj.time <= tLastZoom);
