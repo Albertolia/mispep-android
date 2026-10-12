@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.19';
+  const APP_VERSION = 'v1.0.20';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2231,6 +2231,180 @@ function initDashboard() {
   const wGraphNextRange = document.getElementById('wGraphNextRange');
   const wGraphDetailLink = document.getElementById('wGraphDetailLink');
 
+  // Selector de Medicamento estilo Vial para Gráfica de Peso
+  const wMedVialBtn = document.getElementById('wMedVialBtn');
+  const wMedVialLabel = document.getElementById('wMedVialLabel');
+  const wMedSelectorSheetBackdrop = document.getElementById('wMedSelectorSheetBackdrop');
+  const closeWMedSelectorSheetBtn = document.getElementById('closeWMedSelectorSheetBtn');
+  const wMedSelectorOptionsList = document.getElementById('wMedSelectorOptionsList');
+
+  let currentWMedFilter = localStorage.getItem('mispep_w_med_filter') || 'all';
+
+  function getDoseChangeEvents(medFilter) {
+    const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
+      ? window.MisPepProtocols.getInjectionHistory()
+      : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
+    if (!history || history.length === 0) return [];
+
+    const doseChanges = [];
+    const lastDoseByMed = {};
+    const lastTimeByMed = {};
+
+    history.forEach(ev => {
+      if (!ev.dose || !ev.date || isNaN(ev.dose)) return;
+      const medKey = (ev.med && ev.med.key) ? ev.med.key : 'default';
+      if (medFilter && medFilter !== 'all' && medKey !== medFilter) return;
+
+      const prevDose = lastDoseByMed[medKey];
+      const prevTime = lastTimeByMed[medKey];
+      const daysSince = prevTime ? (ev.time - prevTime) / 86400000 : 0;
+
+      const isFirst = (prevDose === undefined);
+      const isDiff = (prevDose !== undefined && Math.abs(ev.dose - prevDose) > 0.01);
+      const isRestart = (daysSince > 30);
+
+      // Solo se pone etiqueta si es la primera dosis, si hay cambio de dosis, o reinicio tras pausa
+      if (isFirst || isDiff || isRestart) {
+        let arrow = '';
+        if (isDiff) {
+          if (ev.dose > prevDose) arrow = ' ↑';
+          else if (ev.dose < prevDose) arrow = ' ↓';
+        }
+
+        let baseText = '';
+        if (ev.dose < 1 && ev.dose > 0) {
+          baseText = '.' + String(ev.dose).replace('0.', '') + 'mg';
+        } else {
+          baseText = (Number.isInteger(ev.dose) ? ev.dose : ev.dose.toFixed(1)) + 'mg';
+        }
+
+        doseChanges.push({
+          date: ev.date,
+          time: ev.time,
+          dose: ev.dose,
+          prevDose: prevDose,
+          dText: baseText + arrow,
+          arrow: arrow.trim(),
+          med: ev.med || { key: medKey, label: 'Péptido', color: '#10b981' },
+          medKey: medKey,
+          isFirst: isFirst
+        });
+        lastDoseByMed[medKey] = ev.dose;
+      }
+      lastTimeByMed[medKey] = ev.time;
+    });
+    return doseChanges;
+  }
+
+  function updateWMedVialButtonLabel() {
+    if (!wMedVialLabel) return;
+    if (currentWMedFilter === 'all') {
+      wMedVialLabel.textContent = 'Todos';
+    } else {
+      const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
+        ? window.MisPepProtocols.getInjectionHistory()
+        : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
+      const found = history.find(ev => ev.med && ev.med.key === currentWMedFilter);
+      if (found && found.med && found.med.label) {
+        wMedVialLabel.textContent = found.med.label;
+      } else {
+        const p = getHealthProfile();
+        wMedVialLabel.textContent = p.activeMed || 'Medicamento';
+      }
+    }
+  }
+
+  function openWMedSelectorSheet() {
+    if (!wMedSelectorSheetBackdrop || !wMedSelectorOptionsList) return;
+    
+    const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
+      ? window.MisPepProtocols.getInjectionHistory()
+      : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
+    
+    const medsMap = new Map();
+    history.forEach(ev => {
+      if (ev.med && ev.med.key && ev.med.label) {
+        medsMap.set(ev.med.key, ev.med);
+      }
+    });
+    
+    const p = getHealthProfile();
+    if (p.activeMed) {
+      const desc = typeof medDescriptor === 'function' ? medDescriptor(p.activeMed) : { key: 'active', label: p.activeMed, color: '#10b981' };
+      if (!medsMap.has(desc.key)) medsMap.set(desc.key, desc);
+    }
+
+    let optionsHtml = `
+      <div class="w-med-option-item ${currentWMedFilter === 'all' ? 'active' : ''}" data-med-key="all">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #10b981, #8b5cf6, #f59e0b); display:flex; align-items:center; justify-content:center; font-size:1.15rem;">
+            🧪
+          </div>
+          <div>
+            <div style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Todos los medicamentos</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Ver todas las etiquetas con su color asignado</div>
+          </div>
+        </div>
+        ${currentWMedFilter === 'all' ? '<span style="color:#10b981; font-weight:900; font-size:1.2rem;">✓</span>' : ''}
+      </div>
+    `;
+
+    medsMap.forEach(med => {
+      const isSel = currentWMedFilter === med.key;
+      optionsHtml += `
+        <div class="w-med-option-item ${isSel ? 'active' : ''}" data-med-key="${med.key}">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:36px; height:36px; border-radius:10px; background:${med.color}22; border:2px solid ${med.color}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:${med.color};">
+              ●
+            </div>
+            <div>
+              <div style="font-weight:900; font-size:0.95rem; color:var(--text-main);">${med.label}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Etiquetas con color ${med.label} (${med.color})</div>
+            </div>
+          </div>
+          ${isSel ? `<span style="color:${med.color}; font-weight:900; font-size:1.2rem;">✓</span>` : ''}
+        </div>
+      `;
+    });
+
+    wMedSelectorOptionsList.innerHTML = optionsHtml;
+
+    wMedSelectorOptionsList.querySelectorAll('.w-med-option-item').forEach(item => {
+      item.addEventListener('click', () => {
+        triggerHaptic(14);
+        currentWMedFilter = item.dataset.medKey;
+        localStorage.setItem('mispep_w_med_filter', currentWMedFilter);
+        updateWMedVialButtonLabel();
+        closeWMedSelectorSheet();
+        renderWeightGraph();
+      });
+    });
+
+    wMedSelectorSheetBackdrop.classList.add('show');
+  }
+
+  function closeWMedSelectorSheet() {
+    if (wMedSelectorSheetBackdrop) {
+      wMedSelectorSheetBackdrop.classList.remove('show');
+    }
+  }
+
+  if (wMedVialBtn) {
+    wMedVialBtn.addEventListener('click', () => {
+      triggerHaptic(12);
+      openWMedSelectorSheet();
+    });
+  }
+  if (closeWMedSelectorSheetBtn) {
+    closeWMedSelectorSheetBtn.addEventListener('click', closeWMedSelectorSheet);
+  }
+  if (wMedSelectorSheetBackdrop) {
+    wMedSelectorSheetBackdrop.addEventListener('click', (e) => {
+      if (e.target === wMedSelectorSheetBackdrop) closeWMedSelectorSheet();
+    });
+  }
+  updateWMedVialButtonLabel();
+
   let currentWRange = '1m';
   let wRangeOffset = 0; // Desplazamiento continuo en DÍAS
 
@@ -2429,12 +2603,12 @@ function initDashboard() {
       }
     }
 
-    // Dimensiones SVG
+    // Dimensiones SVG (altura ampliada para alojar las etiquetas de dosis con holgura)
     const width = 350;
-    const height = 165;
+    const height = 180;
     const padL = 18;
     const padR = 38;
-    const padT = 24;
+    const padT = 32;
     const padB = 24;
     const plotW = width - padL - padR;
     const plotH = height - padT - padB;
@@ -2494,6 +2668,15 @@ function initDashboard() {
       return (padL + inset) + (idx / (visibleLogs.length - 1)) * (plotW - 2 * inset);
     }
 
+    function getXForTime(timeMs) {
+      if (visibleLogs.length === 1) return padL + plotW / 2;
+      if (timeSpan > 0) {
+        const ratio = (timeMs - tFirst) / timeSpan;
+        return (padL + inset) + ratio * (plotW - 2 * inset);
+      }
+      return padL + plotW / 2;
+    }
+
     const points = visibleLogs.map((l, i) => {
       const origIdx = logs.findIndex(item => item.date === l.date && item.weight === l.weight);
       return {
@@ -2501,22 +2684,109 @@ function initDashboard() {
         y: getY(l.weight),
         weight: l.weight,
         date: l.date,
+        time: new Date(l.date + 'T12:00:00').getTime(),
         origIdx: origIdx >= 0 ? origIdx : i
       };
     });
     window._currentWeightPoints = points;
 
-    let pathD = '';
+    function getCurveYAtX(targetX) {
+      if (points.length === 0) return padT + plotH / 2;
+      if (points.length === 1 || targetX <= points[0].x) return points[0].y;
+      if (targetX >= points[points.length - 1].x) return points[points.length - 1].y;
+      for (let i = 0; i < points.length - 1; i++) {
+        const pA = points[i];
+        const pB = points[i + 1];
+        if (targetX >= pA.x && targetX <= pB.x) {
+          const t = (targetX - pA.x) / (pB.x - pA.x || 1);
+          return pA.y + t * (pB.y - pA.y);
+        }
+      }
+      return points[0].y;
+    }
+
+    // ============================================================
+    // ESCALA DE COLOR PARA LA GRÁFICA SEGÚN DOSIS (VERDE A ROJO)
+    // ============================================================
+    const allDoseChanges = getDoseChangeEvents(currentWMedFilter);
+    const observedDoses = allDoseChanges.map(d => d.dose).filter(d => typeof d === 'number' && !isNaN(d));
+    const minObsDose = observedDoses.length > 0 ? Math.min(...observedDoses) : 1;
+    const maxObsDose = observedDoses.length > 0 ? Math.max(...observedDoses) : 1;
+
+    function getDoseColor(doseVal) {
+      if (!doseVal || isNaN(doseVal)) return '#2563eb';
+      if (minObsDose === maxObsDose) return '#10b981'; // Si no hay variación, verde
+      const ratio = Math.max(0, Math.min(1, (doseVal - minObsDose) / (maxObsDose - minObsDose || 1)));
+      // Escala de 5 paradas: 0.0 verde (#10b981) -> 0.25 lima (#84cc16) -> 0.50 amarillo (#eab308) -> 0.75 naranja (#f97316) -> 1.0 rojo (#ef4444)
+      const stops = [
+        { p: 0.0,  r: 16,  g: 185, b: 129 },
+        { p: 0.25, r: 132, g: 204, b: 22  },
+        { p: 0.50, r: 234, g: 179, b: 8   },
+        { p: 0.75, r: 249, g: 115, b: 22  },
+        { p: 1.0,  r: 239, g: 68,  b: 68  }
+      ];
+      let low = stops[0], high = stops[stops.length - 1];
+      for (let s = 0; s < stops.length - 1; s++) {
+        if (ratio >= stops[s].p && ratio <= stops[s+1].p) {
+          low = stops[s]; high = stops[s+1]; break;
+        }
+      }
+      const t = (ratio - low.p) / (high.p - low.p || 1);
+      const r = Math.round(low.r + t * (high.r - low.r));
+      const g = Math.round(low.g + t * (high.g - low.g));
+      const b = Math.round(low.b + t * (high.b - low.b));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function getActiveDoseAtTime(timeMs) {
+      let act = null;
+      for (let i = 0; i < allDoseChanges.length; i++) {
+        if (allDoseChanges[i].time <= timeMs + 43200000) {
+          act = allDoseChanges[i];
+        } else {
+          break;
+        }
+      }
+      return act ? act.dose : (allDoseChanges.length > 0 ? allDoseChanges[0].dose : null);
+    }
+
+    // Trazado de segmentos con cambio de color según dosis
+    let multiLineSegmentsHtml = '';
     let areaD = '';
     if (points.length >= 2) {
-      pathD = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+      let fullPathD = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
       for (let i = 0; i < points.length - 1; i++) {
         const p0 = points[i];
         const p1 = points[i + 1];
         const mx = (p0.x + p1.x) / 2;
-        pathD += ` C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+        fullPathD += ` C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+
+        // Dosis y color del segmento
+        const midDoseChange = allDoseChanges.find(dc => dc.time > p0.time && dc.time <= p1.time);
+        if (midDoseChange) {
+          const dcX = getXForTime(midDoseChange.time);
+          const dcY = getCurveYAtX(dcX);
+          const doseBefore = getActiveDoseAtTime(p0.time);
+          const colorBefore = getDoseColor(doseBefore);
+          const colorAfter = getDoseColor(midDoseChange.dose);
+
+          const mx1 = (p0.x + dcX) / 2;
+          multiLineSegmentsHtml += `
+            <path d="M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${mx1.toFixed(1)} ${p0.y.toFixed(1)}, ${mx1.toFixed(1)} ${dcY.toFixed(1)}, ${dcX.toFixed(1)} ${dcY.toFixed(1)}" fill="none" stroke="${colorBefore}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+          const mx2 = (dcX + p1.x) / 2;
+          multiLineSegmentsHtml += `
+            <path d="M ${dcX.toFixed(1)} ${dcY.toFixed(1)} C ${mx2.toFixed(1)} ${dcY.toFixed(1)}, ${mx2.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}" fill="none" stroke="${colorAfter}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+        } else {
+          const segDose = getActiveDoseAtTime(p0.time);
+          const segColor = getDoseColor(segDose);
+          multiLineSegmentsHtml += `
+            <path d="M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${mx.toFixed(1)} ${p0.y.toFixed(1)}, ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}" fill="none" stroke="${segColor}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          `;
+        }
       }
-      areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${points[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
+      areaD = `${fullPathD} L ${points[points.length - 1].x.toFixed(1)} ${(padT + plotH).toFixed(1)} L ${points[0].x.toFixed(1)} ${(padT + plotH).toFixed(1)} Z`;
     }
 
     let nodesHtml = '';
@@ -2544,10 +2814,58 @@ function initDashboard() {
         `;
       }
 
+      const nodeDose = getActiveDoseAtTime(pt.time);
+      const nodeColor = getDoseColor(nodeDose);
+
       nodesHtml += `
         <rect class="w-node-hit" data-orig-idx="${pt.origIdx}" x="${(pt.x - colHitW / 2).toFixed(1)}" y="0" width="${colHitW.toFixed(1)}" height="${height}" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer;" />
-        <circle class="w-node-circle" data-orig-idx="${pt.origIdx}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6" fill="#2563eb" stroke="#ffffff" stroke-width="2.2" pointer-events="all" style="cursor:pointer;" />
+        <circle class="w-node-circle" data-orig-idx="${pt.origIdx}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.5" fill="#ffffff" stroke="${nodeColor}" stroke-width="2.4" pointer-events="all" style="cursor:pointer;" />
         ${labelHtml}
+      `;
+    });
+
+    // ============================================================
+    // ETIQUETAS DE CAMBIO DE DOSIS (SOLO DEL COLOR DEL MEDICAMENTO)
+    // ============================================================
+    let doseBadgesHtml = '';
+    let lastBadgeX = -999;
+    let staggerToggle = false;
+
+    const visibleDoseChanges = allDoseChanges.filter(dc => {
+      const dcX = getXForTime(dc.time);
+      return dcX >= (padL - 4) && dcX <= (width - padR + 6);
+    });
+
+    visibleDoseChanges.forEach(dc => {
+      const dcX = getXForTime(dc.time);
+      const curveY = getCurveYAtX(dcX);
+
+      // Color de la etiqueta: estrictamente el color asignado a ese fármaco
+      // (Reta verde #10b981, Tirz morado #8b5cf6, etc.)
+      const badgeColor = (dc.med && dc.med.color) ? dc.med.color : '#10b981';
+
+      let badgeY = Math.max(8, curveY - 28);
+      if (Math.abs(dcX - lastBadgeX) < 32) {
+        badgeY = staggerToggle ? Math.max(6, badgeY - 14) : Math.max(6, badgeY + 4);
+        staggerToggle = !staggerToggle;
+      } else {
+        staggerToggle = false;
+      }
+      lastBadgeX = dcX;
+
+      const badgeW = Math.max(30, dc.dText.length * 6.2 + 10);
+      const badgeX = Math.max(padL, Math.min(width - padR - badgeW, dcX - badgeW / 2));
+
+      doseBadgesHtml += `
+        <!-- Línea guía vertical discontinua -->
+        <line x1="${dcX.toFixed(1)}" y1="${(badgeY + 14).toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${curveY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
+        <!-- Punto de anclaje en la curva de peso -->
+        <circle cx="${dcX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3" fill="${badgeColor}" stroke="#ffffff" stroke-width="1.2" />
+        <!-- Píldora de dosis con flechita de subida/bajada -->
+        <g style="cursor:default;">
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="15" rx="4.5" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
+          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10.8).toFixed(1)}" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
+        </g>
       `;
     });
 
@@ -2555,7 +2873,7 @@ function initDashboard() {
       <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%; overflow:visible;">
         <defs>
           <linearGradient id="wAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.28" />
+            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />
             <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01" />
           </linearGradient>
         </defs>
@@ -2563,8 +2881,9 @@ function initDashboard() {
         ${gridLinesHtml}
         ${goalHtml}
         ${areaD ? `<path d="${areaD}" fill="url(#wAreaGrad)" />` : ''}
-        ${pathD ? `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+        ${multiLineSegmentsHtml}
         ${nodesHtml}
+        ${doseBadgesHtml}
       </svg>
     `;
 
