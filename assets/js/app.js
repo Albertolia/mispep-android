@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.20';
+  const APP_VERSION = 'v1.0.21';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2231,16 +2231,7 @@ function initDashboard() {
   const wGraphNextRange = document.getElementById('wGraphNextRange');
   const wGraphDetailLink = document.getElementById('wGraphDetailLink');
 
-  // Selector de Medicamento estilo Vial para Gráfica de Peso
-  const wMedVialBtn = document.getElementById('wMedVialBtn');
-  const wMedVialLabel = document.getElementById('wMedVialLabel');
-  const wMedSelectorSheetBackdrop = document.getElementById('wMedSelectorSheetBackdrop');
-  const closeWMedSelectorSheetBtn = document.getElementById('closeWMedSelectorSheetBtn');
-  const wMedSelectorOptionsList = document.getElementById('wMedSelectorOptionsList');
-
-  let currentWMedFilter = localStorage.getItem('mispep_w_med_filter') || 'all';
-
-  function getDoseChangeEvents(medFilter) {
+  function getDoseChangeEvents() {
     const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
       ? window.MisPepProtocols.getInjectionHistory()
       : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
@@ -2253,7 +2244,6 @@ function initDashboard() {
     history.forEach(ev => {
       if (!ev.dose || !ev.date || isNaN(ev.dose)) return;
       const medKey = (ev.med && ev.med.key) ? ev.med.key : 'default';
-      if (medFilter && medFilter !== 'all' && medKey !== medFilter) return;
 
       const prevDose = lastDoseByMed[medKey];
       const prevTime = lastTimeByMed[medKey];
@@ -2295,115 +2285,6 @@ function initDashboard() {
     });
     return doseChanges;
   }
-
-  function updateWMedVialButtonLabel() {
-    if (!wMedVialLabel) return;
-    if (currentWMedFilter === 'all') {
-      wMedVialLabel.textContent = 'Todos';
-    } else {
-      const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
-        ? window.MisPepProtocols.getInjectionHistory()
-        : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
-      const found = history.find(ev => ev.med && ev.med.key === currentWMedFilter);
-      if (found && found.med && found.med.label) {
-        wMedVialLabel.textContent = found.med.label;
-      } else {
-        const p = getHealthProfile();
-        wMedVialLabel.textContent = p.activeMed || 'Medicamento';
-      }
-    }
-  }
-
-  function openWMedSelectorSheet() {
-    if (!wMedSelectorSheetBackdrop || !wMedSelectorOptionsList) return;
-    
-    const history = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
-      ? window.MisPepProtocols.getInjectionHistory()
-      : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
-    
-    const medsMap = new Map();
-    history.forEach(ev => {
-      if (ev.med && ev.med.key && ev.med.label) {
-        medsMap.set(ev.med.key, ev.med);
-      }
-    });
-    
-    const p = getHealthProfile();
-    if (p.activeMed) {
-      const desc = typeof medDescriptor === 'function' ? medDescriptor(p.activeMed) : { key: 'active', label: p.activeMed, color: '#10b981' };
-      if (!medsMap.has(desc.key)) medsMap.set(desc.key, desc);
-    }
-
-    let optionsHtml = `
-      <div class="w-med-option-item ${currentWMedFilter === 'all' ? 'active' : ''}" data-med-key="all">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #10b981, #8b5cf6, #f59e0b); display:flex; align-items:center; justify-content:center; font-size:1.15rem;">
-            🧪
-          </div>
-          <div>
-            <div style="font-weight:900; font-size:0.95rem; color:var(--text-main);">Todos los medicamentos</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Ver todas las etiquetas con su color asignado</div>
-          </div>
-        </div>
-        ${currentWMedFilter === 'all' ? '<span style="color:#10b981; font-weight:900; font-size:1.2rem;">✓</span>' : ''}
-      </div>
-    `;
-
-    medsMap.forEach(med => {
-      const isSel = currentWMedFilter === med.key;
-      optionsHtml += `
-        <div class="w-med-option-item ${isSel ? 'active' : ''}" data-med-key="${med.key}">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div style="width:36px; height:36px; border-radius:10px; background:${med.color}22; border:2px solid ${med.color}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:${med.color};">
-              ●
-            </div>
-            <div>
-              <div style="font-weight:900; font-size:0.95rem; color:var(--text-main);">${med.label}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Etiquetas con color ${med.label} (${med.color})</div>
-            </div>
-          </div>
-          ${isSel ? `<span style="color:${med.color}; font-weight:900; font-size:1.2rem;">✓</span>` : ''}
-        </div>
-      `;
-    });
-
-    wMedSelectorOptionsList.innerHTML = optionsHtml;
-
-    wMedSelectorOptionsList.querySelectorAll('.w-med-option-item').forEach(item => {
-      item.addEventListener('click', () => {
-        triggerHaptic(14);
-        currentWMedFilter = item.dataset.medKey;
-        localStorage.setItem('mispep_w_med_filter', currentWMedFilter);
-        updateWMedVialButtonLabel();
-        closeWMedSelectorSheet();
-        renderWeightGraph();
-      });
-    });
-
-    wMedSelectorSheetBackdrop.classList.add('show');
-  }
-
-  function closeWMedSelectorSheet() {
-    if (wMedSelectorSheetBackdrop) {
-      wMedSelectorSheetBackdrop.classList.remove('show');
-    }
-  }
-
-  if (wMedVialBtn) {
-    wMedVialBtn.addEventListener('click', () => {
-      triggerHaptic(12);
-      openWMedSelectorSheet();
-    });
-  }
-  if (closeWMedSelectorSheetBtn) {
-    closeWMedSelectorSheetBtn.addEventListener('click', closeWMedSelectorSheet);
-  }
-  if (wMedSelectorSheetBackdrop) {
-    wMedSelectorSheetBackdrop.addEventListener('click', (e) => {
-      if (e.target === wMedSelectorSheetBackdrop) closeWMedSelectorSheet();
-    });
-  }
-  updateWMedVialButtonLabel();
 
   let currentWRange = '1m';
   let wRangeOffset = 0; // Desplazamiento continuo en DÍAS
@@ -2708,7 +2589,7 @@ function initDashboard() {
     // ============================================================
     // ESCALA DE COLOR PARA LA GRÁFICA SEGÚN DOSIS (VERDE A ROJO)
     // ============================================================
-    const allDoseChanges = getDoseChangeEvents(currentWMedFilter);
+    const allDoseChanges = getDoseChangeEvents();
     const observedDoses = allDoseChanges.map(d => d.dose).filter(d => typeof d === 'number' && !isNaN(d));
     const minObsDose = observedDoses.length > 0 ? Math.min(...observedDoses) : 1;
     const maxObsDose = observedDoses.length > 0 ? Math.max(...observedDoses) : 1;
