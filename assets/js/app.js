@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.24';
+  const APP_VERSION = 'v1.0.25';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -1588,30 +1588,42 @@ function initDashboard() {
 
     const heightM = p.heightCm ? (parseFloat(p.heightCm) / 100) : null;
 
+    const LBS_PER_KG = 2.20462262;
+    const toDisplayW = (kg) => isEn ? (kg * LBS_PER_KG) : kg;
+    const wUnit = isEn ? 'lb' : 'kg';
+
+    const curWDisplay = (!isNaN(curW) && curW > 0) ? toDisplayW(curW) : NaN;
+    const deltaTotal = curW - startW;
+    const deltaTotalDisplay = toDisplayW(deltaTotal);
+
     if (dashCurrentWeight) {
-      dashCurrentWeight.textContent = (!isNaN(curW) && curW > 0) ? fmtNum(curW, 1) : '--';
+      dashCurrentWeight.textContent = (!isNaN(curWDisplay) && curWDisplay > 0) ? fmtNum(curWDisplay, 1) : '--';
     }
 
-    const deltaTotal = curW - startW;
+    const dashWeightUnitTag = document.getElementById('dashWeightUnitTag') || document.querySelector('.health-card-mint .health-card-tag');
+    if (dashWeightUnitTag) {
+      dashWeightUnitTag.textContent = wUnit;
+    }
+
     if (dashTotalChange) {
       if (Math.abs(deltaTotal) < 0.05) {
         dashTotalChange.textContent = '➔ 0.0';
         if (dashTotalChangeTag) {
-          dashTotalChangeTag.textContent = 'ganado';
+          dashTotalChangeTag.textContent = isEn ? 'gained' : 'ganado';
           dashTotalChangeTag.style.background = 'rgba(59,130,246,0.15)';
           dashTotalChangeTag.style.color = '#3b82f6';
         }
       } else if (deltaTotal < 0) {
-        dashTotalChange.textContent = `▼ ${fmtNum(Math.abs(deltaTotal), 1)}`;
+        dashTotalChange.textContent = `▼ ${fmtNum(Math.abs(deltaTotalDisplay), 1)}`;
         if (dashTotalChangeTag) {
-          dashTotalChangeTag.textContent = 'perdido';
+          dashTotalChangeTag.textContent = isEn ? 'lost' : 'perdido';
           dashTotalChangeTag.style.background = 'rgba(16,185,129,0.2)';
           dashTotalChangeTag.style.color = '#10b981';
         }
       } else {
-        dashTotalChange.textContent = `▲ ${fmtNum(deltaTotal, 1)}`;
+        dashTotalChange.textContent = `▲ ${fmtNum(deltaTotalDisplay, 1)}`;
         if (dashTotalChangeTag) {
-          dashTotalChangeTag.textContent = 'ganado';
+          dashTotalChangeTag.textContent = isEn ? 'gained' : 'ganado';
           dashTotalChangeTag.style.background = 'rgba(239,68,68,0.2)';
           dashTotalChangeTag.style.color = '#ef4444';
         }
@@ -1621,23 +1633,24 @@ function initDashboard() {
     // Porcentaje perdido/ganado respecto al peso inicial (debajo del cambio total)
     if (dashTotalChangePct) {
       const pctTotal = startW > 0 ? (deltaTotal / startW) * 100 : 0;
+      const initialText = isEn ? 'of starting weight' : 'del peso inicial';
       if (startW <= 0 || Math.abs(deltaTotal) < 0.05) {
-        dashTotalChangePct.textContent = '0.0% del peso inicial';
+        dashTotalChangePct.textContent = `0.0% ${initialText}`;
         dashTotalChangePct.style.color = '';
       } else if (pctTotal < 0) {
-        dashTotalChangePct.textContent = '-' + fmtNum(Math.abs(pctTotal), 1) + '% del peso inicial';
+        dashTotalChangePct.textContent = '-' + fmtNum(Math.abs(pctTotal), 1) + `% ${initialText}`;
         dashTotalChangePct.style.color = '#10b981';
       } else {
-        dashTotalChangePct.textContent = '+' + fmtNum(pctTotal, 1) + '% del peso inicial';
+        dashTotalChangePct.textContent = '+' + fmtNum(pctTotal, 1) + `% ${initialText}`;
         dashTotalChangePct.style.color = '#ef4444';
       }
     }
 
-    // Cálculo IMC = peso / altura^2
+    // Cálculo IMC = peso / altura^2 (el IMC médico estándar siempre se calcula en kg/m²)
     const bmi = curW / (heightM * heightM);
     if (dashCurrentBmi) dashCurrentBmi.textContent = fmtNum(bmi, 1);
 
-    let catText = 'Peso normal';
+    let catText = isEn ? 'Normal weight' : 'Peso normal';
     let catColor = '#10b981';
     let targetNote = '';
 
@@ -1649,30 +1662,33 @@ function initDashboard() {
     const targetNormalKg = 24.9 * (heightM * heightM);
     const kgToNormal = curW - targetNormalKg;
 
+    const toNormalDisplay = toDisplayW(kgToNormal);
+    const toOverweightDisplay = toDisplayW(kgToOverweight);
+
     if (bmi < 18.5) {
-      catText = 'Bajo peso';
+      catText = isEn ? 'Underweight' : 'Bajo peso';
       catColor = '#3b82f6';
-      targetNote = 'Por debajo del peso recomendado';
+      targetNote = isEn ? 'Below recommended weight' : 'Por debajo del peso recomendado';
     } else if (bmi < 25) {
-      catText = 'Peso normal';
+      catText = isEn ? 'Normal weight' : 'Peso normal';
       catColor = '#10b981';
-      targetNote = '¡En rango de peso saludable!';
+      targetNote = isEn ? 'In healthy weight range!' : '¡En rango de peso saludable!';
     } else if (bmi < 30) {
-      catText = 'Sobrepeso';
+      catText = isEn ? 'Overweight' : 'Sobrepeso';
       catColor = '#f59e0b';
-      targetNote = `Pierde ${fmtNum(kgToNormal, 1)} kg para peso normal`;
+      targetNote = isEn ? `Lose ${fmtNum(toNormalDisplay, 1)} ${wUnit} for normal weight` : `Pierde ${fmtNum(kgToNormal, 1)} kg para peso normal`;
     } else if (bmi < 35) {
-      catText = 'Obesidad clase I';
+      catText = isEn ? 'Obesity class I' : 'Obesidad clase I';
       catColor = '#f59e0b';
-      targetNote = `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
+      targetNote = isEn ? `Lose ${fmtNum(toOverweightDisplay, 1)} ${wUnit} to reach Overweight` : `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
     } else if (bmi < 40) {
-      catText = 'Obesidad clase II';
+      catText = isEn ? 'Obesity class II' : 'Obesidad clase II';
       catColor = '#ef4444';
-      targetNote = `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
+      targetNote = isEn ? `Lose ${fmtNum(toOverweightDisplay, 1)} ${wUnit} to reach Overweight` : `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
     } else {
-      catText = 'Obesidad clase III';
+      catText = isEn ? 'Obesity class III' : 'Obesidad clase III';
       catColor = '#ef4444';
-      targetNote = `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
+      targetNote = isEn ? `Lose ${fmtNum(toOverweightDisplay, 1)} ${wUnit} to reach Overweight` : `Pierde ${fmtNum(kgToOverweight, 1)} kg para llegar a Sobrepeso`;
     }
 
     if (dashBmiCategory) {
@@ -1684,8 +1700,8 @@ function initDashboard() {
 
     // Métricas semanales (calculadas con rigor clínico sobre fechas y ventanas de 7 días)
     const weightMetrics = calculateWeeklyWeightMetrics(logs);
-    if (dashWeeklyAvg) dashWeeklyAvg.textContent = `${fmtNum(weightMetrics.weeklyAvg, 1)} kg`;
-    if (dashBestWeek) dashBestWeek.textContent = `${fmtNum(weightMetrics.bestWeek, 1)} kg`;
+    if (dashWeeklyAvg) dashWeeklyAvg.textContent = `${fmtNum(toDisplayW(weightMetrics.weeklyAvg), 1)} ${wUnit}${isEn ? '/wk' : ''}`;
+    if (dashBestWeek) dashBestWeek.textContent = `${fmtNum(toDisplayW(weightMetrics.bestWeek), 1)} ${wUnit}`;
 
     // Renderizar componentes clínicos estilo Bench v2.3
     renderBenchDashboard();
@@ -2495,30 +2511,38 @@ function initDashboard() {
     const plotH = height - padT - padB;
 
     // Escala Y
-    const weights = visibleLogs.length > 0 ? visibleLogs.map(l => l.weight) : logs.map(l => l.weight);
-    const maxVal = Math.max(...weights, 92);
-    const minVal = Math.min(...weights, targetGoal - 1);
-    const yMax = Math.ceil(maxVal / 2) * 2;
-    const yMin = Math.floor(minVal / 2) * 2;
-    const yRange = Math.max(4, yMax - yMin);
+    const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
+    const LBS_PER_KG = 2.20462262;
+    const toDisplayW = (kg) => isEn ? (kg * LBS_PER_KG) : kg;
+    const wUnit = isEn ? 'lb' : 'kg';
+
+    const displayTargetGoal = toDisplayW(targetGoal);
+    const rawWeights = visibleLogs.length > 0 ? visibleLogs.map(l => l.weight) : logs.map(l => l.weight);
+    const weights = rawWeights.map(w => toDisplayW(w));
+    const maxVal = Math.max(...weights, isEn ? 200 : 92);
+    const minVal = Math.min(...weights, displayTargetGoal - 1);
+    const yStep = isEn ? 5 : 2;
+    const yMax = Math.ceil(maxVal / yStep) * yStep;
+    const yMin = Math.floor(minVal / yStep) * yStep;
+    const yRange = Math.max(isEn ? 10 : 4, yMax - yMin);
 
     function getY(val) {
       return padT + plotH - ((val - yMin) / yRange) * plotH;
     }
 
     let gridLinesHtml = '';
-    for (let w = yMin; w <= yMax; w += 2) {
+    for (let w = yMin; w <= yMax; w += yStep) {
       const yPos = getY(w);
       gridLinesHtml += `
         <line x1="${padL}" y1="${yPos.toFixed(1)}" x2="${width - padR}" y2="${yPos.toFixed(1)}" stroke="var(--border-color)" stroke-width="0.8" opacity="0.55" />
-        <text x="${width - 4}" y="${(yPos + 3).toFixed(1)}" font-size="8.5" font-weight="700" fill="var(--text-muted)" text-anchor="end">${w}kg</text>
+        <text x="${width - 4}" y="${(yPos + 3).toFixed(1)}" font-size="8.5" font-weight="700" fill="var(--text-muted)" text-anchor="end">${w}${wUnit}</text>
       `;
     }
 
-    const goalY = getY(targetGoal);
+    const goalY = getY(displayTargetGoal);
     const goalHtml = `
       <line x1="${padL}" y1="${goalY.toFixed(1)}" x2="${width - padR}" y2="${goalY.toFixed(1)}" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="4,4" />
-      <text x="${padL + 2}" y="${(goalY + 10).toFixed(1)}" font-size="7.5" font-weight="800" fill="#3b82f6">Objetivo (${targetGoal}kg)</text>
+      <text x="${padL + 2}" y="${(goalY + 10).toFixed(1)}" font-size="7.5" font-weight="800" fill="#3b82f6">${isEn ? 'Goal' : 'Objetivo'} (${displayTargetGoal.toFixed(1)}${wUnit})</text>
     `;
 
     if (visibleLogs.length === 0) {
@@ -2560,10 +2584,12 @@ function initDashboard() {
 
     const points = visibleLogs.map((l, i) => {
       const origIdx = logs.findIndex(item => item.date === l.date && item.weight === l.weight);
+      const displayW = toDisplayW(l.weight);
       return {
         x: getX(l, i),
-        y: getY(l.weight),
+        y: getY(displayW),
         weight: l.weight,
+        displayWeight: displayW.toFixed(1),
         date: l.date,
         time: new Date(l.date + 'T12:00:00').getTime(),
         origIdx: origIdx >= 0 ? origIdx : i
@@ -2690,7 +2716,7 @@ function initDashboard() {
       if (shouldShowLabel) {
         lastRenderedLabelX = pt.x;
         labelHtml = `
-          <text x="${pt.x.toFixed(1)}" y="${(pt.y - 8).toFixed(1)}" font-size="8.5" font-weight="900" fill="var(--text-main)" text-anchor="middle">${pt.weight}kg</text>
+          <text x="${pt.x.toFixed(1)}" y="${(pt.y - 8).toFixed(1)}" font-size="8.5" font-weight="900" fill="var(--text-main)" text-anchor="middle">${pt.displayWeight}${wUnit}</text>
           <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="8" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
         `;
       }
@@ -2898,28 +2924,32 @@ function initDashboard() {
       ? `${fullDays[dTargetObj.getDay()]}, ${months[dTargetObj.getMonth()]} ${dTargetObj.getDate()}`
       : `${fullDays[dTargetObj.getDay()]}, ${dTargetObj.getDate()} de ${months[dTargetObj.getMonth()]}`;
 
+    const LBS_PER_KG = 2.20462262;
+    const toDisplayW = (kg) => isEn ? (kg * LBS_PER_KG) : kg;
+    const wUnit = isEn ? 'lb' : 'kg';
+
     if (wZoomFocusDateLabel) {
       wZoomFocusDateLabel.textContent = `📅 ${targetDateFormatted}`;
     }
     if (wZoomFocusSubLabel) {
       wZoomFocusSubLabel.textContent = isEn
-        ? `Weigh-in #${centerIdx + 1} of ${logs.length} · ${targetLog.weight} kg`
+        ? `Weigh-in #${centerIdx + 1} of ${logs.length} · ${toDisplayW(targetLog.weight).toFixed(1)} lb`
         : `Pesaje #${centerIdx + 1} de ${logs.length} · ${targetLog.weight} kg`;
     }
 
     // Amplitud y estadísticas de la ventana
-    const weights = windowLogs.map(l => l.weight);
+    const weights = windowLogs.map(l => toDisplayW(l.weight));
     const minW = Math.min(...weights);
     const maxW = Math.max(...weights);
     const deltaRange = (maxW - minW).toFixed(2);
-    const firstW = windowLogs[0].weight;
-    const lastW = windowLogs[windowLogs.length - 1].weight;
+    const firstW = toDisplayW(windowLogs[0].weight);
+    const lastW = toDisplayW(windowLogs[windowLogs.length - 1].weight);
     const deltaTotal = (lastW - firstW).toFixed(2);
     const deltaSign = (lastW - firstW) > 0 ? '+' : '';
 
     if (wZoomDeltaTotalSpan) {
       const ampWord = isEn ? 'Amplitude' : 'Amplitud';
-      wZoomDeltaTotalSpan.textContent = `Δ Total: ${deltaSign}${deltaTotal} kg (${ampWord}: ${deltaRange} kg)`;
+      wZoomDeltaTotalSpan.textContent = `Δ Total: ${deltaSign}${deltaTotal} ${wUnit} (${ampWord}: ${deltaRange} ${wUnit})`;
       wZoomDeltaTotalSpan.style.color = (lastW <= firstW) ? '#10b981' : '#f59e0b';
     }
 
@@ -2934,9 +2964,10 @@ function initDashboard() {
     const plotH = height - padT - padB;
 
     const targetGoal = parseFloat(p.targetWeight) || 87.0;
-    const yMin = Math.floor(Math.min(minW, targetGoal) - 0.6);
-    const yMax = Math.ceil(Math.max(maxW, targetGoal) + 0.6);
-    const yRange = Math.max(2, yMax - yMin);
+    const displayTargetGoal = toDisplayW(targetGoal);
+    const yMin = Math.floor(Math.min(minW, displayTargetGoal) - (isEn ? 1.5 : 0.6));
+    const yMax = Math.ceil(Math.max(maxW, displayTargetGoal) + (isEn ? 1.5 : 0.6));
+    const yRange = Math.max(isEn ? 4 : 2, yMax - yMin);
 
     function getY(w) {
       return padT + plotH - (((w - yMin) / yRange) * plotH);
@@ -2944,30 +2975,31 @@ function initDashboard() {
 
     // Líneas de cuadrícula horizontales
     let gridLinesHtml = '';
-    const stepY = (yRange > 8) ? 2 : 1;
+    const stepY = isEn ? (yRange > 15 ? 5 : 2) : ((yRange > 8) ? 2 : 1);
     for (let wVal = yMin; wVal <= yMax; wVal += stepY) {
       const yP = getY(wVal);
       gridLinesHtml += `
         <line x1="${padL - 4}" y1="${yP.toFixed(1)}" x2="${width - padR}" y2="${yP.toFixed(1)}" stroke="var(--border-color)" stroke-width="0.8" opacity="0.5" />
-        <text x="${padL - 6}" y="${(yP + 3).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="end">${wVal}k</text>
+        <text x="${padL - 6}" y="${(yP + 3).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="end">${wVal}${isEn ? 'lb' : 'k'}</text>
       `;
     }
 
     // Línea de objetivo
-    const goalY = getY(targetGoal);
+    const goalY = getY(displayTargetGoal);
     const goalHtml = `
       <line x1="${padL}" y1="${goalY.toFixed(1)}" x2="${width - padR}" y2="${goalY.toFixed(1)}" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.65" />
-      <text x="${width - padR}" y="${(goalY - 3).toFixed(1)}" font-size="7.2" font-weight="800" fill="#3b82f6" text-anchor="end">Objetivo (${targetGoal}kg)</text>
+      <text x="${width - padR}" y="${(goalY - 3).toFixed(1)}" font-size="7.2" font-weight="800" fill="#3b82f6" text-anchor="end">${isEn ? 'Goal' : 'Objetivo'} (${displayTargetGoal.toFixed(1)}${wUnit})</text>
     `;
 
     // Columnas y coordenadas de los puntos
     const n = windowLogs.length;
     const colW = plotW / n;
     const pts = windowLogs.map((l, i) => {
+      const dw = toDisplayW(l.weight);
       const x = padL + (i + 0.5) * colW;
-      const y = getY(l.weight);
+      const y = getY(dw);
       const time = new Date(l.date + 'T12:00:00').getTime();
-      return { ...l, x, y, time };
+      return { ...l, x, y, time, displayW: dw.toFixed(1) };
     });
 
     function getCurveYAtX(targetX) {
@@ -3117,7 +3149,7 @@ function initDashboard() {
       let diffHtml = '';
       if (i > 0) {
         const prevPt = pts[i - 1];
-        const dKg = pt.weight - prevPt.weight;
+        const dKg = (pt.weight - prevPt.weight) * (isEn ? LBS_PER_KG : 1);
         const dKgStr = (dKg > 0 ? '+' : '') + dKg.toFixed(2);
         const dColor = dKg < 0 ? '#10b981' : (dKg > 0 ? '#f59e0b' : 'var(--text-muted)');
         diffHtml = `
@@ -3135,7 +3167,7 @@ function initDashboard() {
       nodesHtml += `
         <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rOuter}" fill="${isCenter ? nodeColor : '#ffffff'}" stroke="${nodeColor}" stroke-width="${isCenter ? 2.8 : 2.2}" />
         <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${rInner}" fill="${isCenter ? '#ffffff' : nodeColor}" />
-        <text x="${pt.x.toFixed(1)}" y="${(pt.y - 10).toFixed(1)}" font-size="${isCenter ? '9' : '8.2'}" font-weight="900" fill="${isCenter ? '#60a5fa' : 'var(--text-main)'}" text-anchor="middle">${pt.weight}</text>
+        <text x="${pt.x.toFixed(1)}" y="${(pt.y - 10).toFixed(1)}" font-size="${isCenter ? '9' : '8.2'}" font-weight="900" fill="${isCenter ? '#60a5fa' : 'var(--text-main)'}" text-anchor="middle">${pt.displayW}</text>
         ${diffHtml}
         <text x="${pt.x.toFixed(1)}" y="${(height - 6).toFixed(1)}" font-size="7.5" font-weight="700" fill="var(--text-muted)" text-anchor="middle">${dateLabel}</text>
       `;
@@ -3264,14 +3296,14 @@ function initDashboard() {
       const diffLabel = isEn ? 'Difference vs previous weight:' : 'Diferencia vs peso anterior:';
       if (l.origIdx > 0) {
         const prevGlobalLog = logs[l.origIdx - 1];
-        const diffKg = l.weight - prevGlobalLog.weight;
+        const diffKg = (l.weight - prevGlobalLog.weight) * (isEn ? LBS_PER_KG : 1);
         const diffSign = diffKg > 0 ? '+' : '';
         const isLoss = diffKg < 0;
         const dColor = isLoss ? '#10b981' : (diffKg > 0 ? '#ef4444' : 'var(--text-muted)');
         const icon = isLoss ? '📉' : (diffKg > 0 ? '📈' : '➖');
         diffPrevHtml = `
           <div style="font-size:0.82rem; font-weight:800; color:${dColor}; margin-top:3px;">
-            ${icon} ${diffLabel} <strong>${diffSign}${diffKg.toFixed(2)} kg</strong>
+            ${icon} ${diffLabel} <strong>${diffSign}${diffKg.toFixed(2)} ${wUnit}</strong>
           </div>
         `;
       } else {
@@ -3311,8 +3343,8 @@ function initDashboard() {
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div style="display:flex; align-items:baseline; gap:4px;">
-                <span style="font-size:1.8rem; font-weight:900; color:#ffffff; letter-spacing:0.5px;">${l.weight}</span>
-                <span style="font-size:0.9rem; font-weight:800; color:#3b82f6;">kg</span>
+                <span style="font-size:1.8rem; font-weight:900; color:#ffffff; letter-spacing:0.5px;">${toDisplayW(l.weight).toFixed(1)}</span>
+                <span style="font-size:0.9rem; font-weight:800; color:#3b82f6;">${wUnit}</span>
               </div>
               ${diffPrevHtml}
               ${origenStr ? `<div style="margin-top:4px;">${origenStr}</div>` : ''}
@@ -3629,11 +3661,16 @@ function initDashboard() {
     const n = parseFloat(v);
     return isNaN(n) ? 0 : n;
   };
-  const kgFmt = (n) => `${n.toFixed(1).replace('.', ',')} kg`;
+  const getWeightFmt = (n) => {
+    const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
+    return isEn ? `${(n * 2.20462262).toFixed(1)} lb` : `${n.toFixed(1).replace('.', ',')} kg`;
+  };
+  const kgFmt = (n) => getWeightFmt(n);
   const pcFmt = (n) => `${Math.round(n)} %`;
 
   function renderWeightGoal() {
     if (!wGoalSummary) return;
+    const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
     const p = getHealthProfile();
 
     const start = num(p.startWeight);
@@ -3648,8 +3685,10 @@ function initDashboard() {
       if (wGoalDone) wGoalDone.textContent = '—';
       if (wGoalLeft) wGoalLeft.textContent = '—';
       if (wGoalBarFill) wGoalBarFill.style.width = '0%';
-      if (wGoalBadge) wGoalBadge.textContent = 'Sin datos';
-      wGoalSummary.innerHTML = 'Registra tu peso actual y tu meta para ver la evolución.';
+      if (wGoalBadge) wGoalBadge.textContent = isEn ? 'No data' : 'Sin datos';
+      wGoalSummary.innerHTML = isEn
+        ? 'Log your current weight and your goal to see progress.'
+        : 'Registra tu peso actual y tu meta para ver la evolución.';
       return;
     }
 
@@ -3668,11 +3707,13 @@ function initDashboard() {
       if (wGoalLeft) wGoalLeft.textContent = '—';
       if (wGoalBarFill) wGoalBarFill.style.width = '0%';
       if (wGoalBadge) {
-        wGoalBadge.textContent = 'Meta no válida';
+        wGoalBadge.textContent = isEn ? 'Invalid goal' : 'Meta no válida';
         wGoalBadge.style.background = 'rgba(244,63,94,0.15)';
         wGoalBadge.style.color = '#fb7185';
       }
-      wGoalSummary.innerHTML = `Tu meta (${kgFmt(target)}) no es inferior a tu peso de inicio (${kgFmt(start)}). Baja la meta para que la app calcule el progreso.`;
+      wGoalSummary.innerHTML = isEn
+        ? `Your goal (${kgFmt(target)}) is not lower than your starting weight (${kgFmt(start)}). Lower your goal to compute progress.`
+        : `Tu meta (${kgFmt(target)}) no es inferior a tu peso de inicio (${kgFmt(start)}). Baja la meta para que la app calcule el progreso.`;
       return;
     }
 
@@ -3690,30 +3731,38 @@ function initDashboard() {
     }
 
     if (wGoalLeft) {
-      wGoalLeft.textContent = achieved ? '¡Meta!' : kgFmt(Math.max(0, left));
+      wGoalLeft.textContent = achieved ? (isEn ? 'Goal reached!' : '¡Meta!') : kgFmt(Math.max(0, left));
       wGoalLeft.style.color = achieved ? '#34d399' : '#fbbf24';
     }
 
     if (wGoalBadge) {
-      wGoalBadge.textContent = achieved ? 'Meta alcanzada ✅' : `${Math.round(pct)} % conseguido`;
+      wGoalBadge.textContent = achieved ? (isEn ? 'Goal reached ✅' : 'Meta alcanzada ✅') : `${Math.round(pct)} % ${isEn ? 'achieved' : 'conseguido'}`;
       wGoalBadge.style.background = achieved ? 'rgba(16,185,129,0.18)' : 'rgba(56,189,248,0.15)';
       wGoalBadge.style.color = achieved ? '#34d399' : '#38bdf8';
     }
 
     if (achieved) {
-      wGoalSummary.innerHTML =
-        `🎉 Has alcanzado tu meta de <strong>${kgFmt(target)}</strong>. ` +
-        `Total bajado desde el inicio: <strong>${kgFmt(Math.max(0, lost))}</strong>` +
-        (lost > totalToLose ? ` (${pcFmt(pct)} del objetivo)` : '') + `.`;
+      wGoalSummary.innerHTML = isEn
+        ? `🎉 You reached your goal of <strong>${kgFmt(target)}</strong>. ` +
+          `Total lost from start: <strong>${kgFmt(Math.max(0, lost))}</strong>` +
+          (lost > totalToLose ? ` (${pcFmt(pct)} of goal)` : '') + `.`
+        : `🎉 Has alcanzado tu meta de <strong>${kgFmt(target)}</strong>. ` +
+          `Total bajado desde el inicio: <strong>${kgFmt(Math.max(0, lost))}</strong>` +
+          (lost > totalToLose ? ` (${pcFmt(pct)} del objetivo)` : '') + `.`;
       return;
     }
 
-    wGoalSummary.innerHTML =
-      `Has bajado <strong style="color:#22d3ee;">${kgFmt(Math.max(0, lost))}</strong> de los ` +
-      `<strong>${kgFmt(totalToLose)}</strong> de tu objetivo · ` +
-      `<strong style="color:#38bdf8;">${pcFmt(pct)}</strong> conseguido.<br>` +
-      `Te quedan <strong style="color:#fbbf24;">${kgFmt(Math.max(0, left))}</strong> para llegar a ` +
-      `<strong>${kgFmt(target)}</strong> (<strong>${pcFmt(pctLeft)}</strong> por bajar).`;
+    wGoalSummary.innerHTML = isEn
+      ? `You lost <strong style="color:#22d3ee;">${kgFmt(Math.max(0, lost))}</strong> of your ` +
+        `<strong>${kgFmt(totalToLose)}</strong> goal · ` +
+        `<strong style="color:#38bdf8;">${pcFmt(pct)}</strong> achieved.<br>` +
+        `Remaining: <strong style="color:#fbbf24;">${kgFmt(Math.max(0, left))}</strong> to reach ` +
+        `<strong>${kgFmt(target)}</strong> (<strong>${pcFmt(pctLeft)}</strong> to go).`
+      : `Has bajado <strong style="color:#22d3ee;">${kgFmt(Math.max(0, lost))}</strong> de los ` +
+        `<strong>${kgFmt(totalToLose)}</strong> de tu objetivo · ` +
+        `<strong style="color:#38bdf8;">${pcFmt(pct)}</strong> conseguido.<br>` +
+        `Te quedan <strong style="color:#fbbf24;">${kgFmt(Math.max(0, left))}</strong> para llegar a ` +
+        `<strong>${kgFmt(target)}</strong> (<strong>${pcFmt(pctLeft)}</strong> por bajar).`;
   }
 
   window.renderWeightGoal = renderWeightGoal;
@@ -3768,6 +3817,11 @@ function initDashboard() {
   // Renderizar lista de registros de peso en el modal
   function renderWeightModalRecords() {
     if (!weightRecordsList) return;
+    const isEn = (window.MISPEP_I18N && window.MISPEP_I18N.getLang ? window.MISPEP_I18N.getLang() === 'en' : (localStorage.getItem('mispep_lang') === 'en'));
+    const LBS_PER_KG = 2.20462262;
+    const toDisplayW = (kg) => isEn ? (kg * LBS_PER_KG) : kg;
+    const wUnit = isEn ? 'lb' : 'kg';
+
     const p = getHealthProfile();
     let logs = p.weightLogs || [];
 
@@ -3784,19 +3838,20 @@ function initDashboard() {
     let html = '';
     sorted.forEach((rec, idx) => {
       const d = new Date(rec.date + 'T12:00:00');
-      const dateStr = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-      
+      const dateStr = d.toLocaleDateString(isEn ? 'en-US' : 'es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      const dispW = toDisplayW(rec.weight).toFixed(1);
+
       // Calcular diferencia respecto al pesaje anterior si existe
       let diffHtml = '';
       if (idx < sorted.length - 1) {
         const prev = sorted[idx + 1].weight;
-        const diff = rec.weight - prev;
+        const diff = (rec.weight - prev) * (isEn ? LBS_PER_KG : 1);
         if (diff < 0) {
-          diffHtml = `<span style="color:#10b981; font-weight:800; font-size:0.75rem;">▼ ${Math.abs(diff).toFixed(1)} kg</span>`;
+          diffHtml = `<span style="color:#10b981; font-weight:800; font-size:0.75rem;">▼ ${Math.abs(diff).toFixed(1)} ${wUnit}</span>`;
         } else if (diff > 0) {
-          diffHtml = `<span style="color:#ef4444; font-weight:800; font-size:0.75rem;">▲ ${diff.toFixed(1)} kg</span>`;
+          diffHtml = `<span style="color:#ef4444; font-weight:800; font-size:0.75rem;">▲ ${diff.toFixed(1)} ${wUnit}</span>`;
         } else {
-          diffHtml = `<span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">➔ 0.0 kg</span>`;
+          diffHtml = `<span style="color:var(--text-muted); font-weight:700; font-size:0.75rem;">➔ 0.0 ${wUnit}</span>`;
         }
       }
 
@@ -3804,16 +3859,16 @@ function initDashboard() {
         <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="display:flex; align-items:baseline; gap:8px;">
-              <span style="font-size:1.25rem; font-weight:900; color:var(--text-main);">${rec.weight.toFixed(1)} kg</span>
+              <span style="font-size:1.25rem; font-weight:900; color:var(--text-main);">${dispW} ${wUnit}</span>
               ${diffHtml}
             </div>
             <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-top:2px;">📅 ${dateStr}</div>
           </div>
           <div style="display:flex; gap:6px;">
             <button type="button" class="btn-3d btn-3d-surface edit-wlog-btn" data-idx="${rec.originalIndex}" style="padding:6px 10px; font-size:0.75rem; border-radius:10px;">
-              ✏️ Editar
+              ✏️ ${isEn ? 'Edit' : 'Editar'}
             </button>
-            <button type="button" class="icon-btn-3d del-wlog-btn" data-idx="${rec.originalIndex}" style="width:28px; height:28px; font-size:0.75rem; color:#ef4444;" title="Borrar">
+            <button type="button" class="icon-btn-3d del-wlog-btn" data-idx="${rec.originalIndex}" style="width:28px; height:28px; font-size:0.75rem; color:#ef4444;" title="${isEn ? 'Delete' : 'Borrar'}">
               🗑️
             </button>
           </div>
@@ -10727,4 +10782,21 @@ window.initDuracionEstimador = function initDuracionEstimador() {
 };
 
 window.initDuracionEstimador();
+
+// Sincronización instantánea de cambio de idioma: kg <-> lb y textos
+window.addEventListener('languageChanged', () => {
+  if (typeof loadHealthDashboard === 'function') loadHealthDashboard();
+  if (typeof renderWeightGraph === 'function') renderWeightGraph();
+  if (typeof renderWeightGoal === 'function') renderWeightGoal();
+  if (typeof currentWZoomCenterIdx !== 'undefined' && currentWZoomCenterIdx >= 0) {
+    const zoomSheet = document.getElementById('weightZoomSheetBackdrop');
+    if (zoomSheet && zoomSheet.classList.contains('open') && typeof renderWeightZoomView === 'function') {
+      renderWeightZoomView(currentWZoomCenterIdx);
+    }
+  }
+  const weightBackdrop = document.getElementById('weightHistoryBackdrop');
+  if (weightBackdrop && weightBackdrop.classList.contains('open') && typeof renderWeightModalRecords === 'function') {
+    renderWeightModalRecords();
+  }
+});
 
