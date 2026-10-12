@@ -274,9 +274,21 @@
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:1.05rem; font-weight:900; color:var(--text-main);">Evolución del Peso</span>
-              <span style="font-size:0.75rem; color:var(--text-muted);">▾</span>
             </div>
-            <span style="font-size:0.75rem; color:#3b82f6; font-weight:800; cursor:pointer;" id="wGraphDetailLink">Seguimiento global ›</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <!-- Selector de Medicamento estilo Vial (como la captura de referencia) -->
+              <button type="button" class="w-med-vial-btn" id="wMedVialBtn" title="Filtrar dosis por medicamento">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                  <path d="M9 3h6v2H9z" />
+                  <path d="M10 5v2m4-2v2" />
+                  <rect x="7" y="7" width="10" height="14" rx="2.5" />
+                  <path d="M12 11v6m-3-3h6" />
+                </svg>
+                <span id="wMedVialLabel" style="font-size:0.75rem; font-weight:800; color:var(--text-main); max-width:85px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Todos</span>
+                <span style="font-size:0.65rem; color:var(--text-muted); line-height:1;">▾</span>
+              </button>
+              <span style="font-size:0.75rem; color:#3b82f6; font-weight:800; cursor:pointer;" id="wGraphDetailLink">Seguimiento global ›</span>
+            </div>
           </div>
 
           <!-- Selector de Intervalo Temporal: 1 mes / 3 meses / 6 meses / Todo -->
@@ -2069,7 +2081,7 @@
 
     <!-- Versión de la Aplicación -->
     <div style="text-align:center; padding:8px 0 18px; font-size:0.68rem; font-weight:700; color:var(--text-muted); opacity:0.6; letter-spacing:0.5px;">
-      MisPep <span class="app-version-badge">v1.0.19</span>
+      MisPep <span class="app-version-badge">v1.0.20</span>
     </div>
 
   </main>
@@ -2241,7 +2253,7 @@
 
         <!-- Versión de la Aplicación en Menú Lateral -->
         <div style="text-align:center; padding:18px 10px 16px; font-size:0.72rem; color:var(--text-muted); opacity:0.65; letter-spacing:0.5px;">
-          MisPep <span class="app-version-badge">v1.0.19</span>
+          MisPep <span class="app-version-badge">v1.0.20</span>
         </div>
       </div>
     </div>
@@ -3060,6 +3072,32 @@
       <button type="button" class="btn-3d btn-3d-cyan btn-block" id="bpMedTimeApplyBtn" style="padding:12px; font-size:0.95rem; font-weight:900;">
         ✓ Aplicar Hora a la Medicación
       </button>
+    </div>
+  </div>
+
+  <!-- MODAL / BOTTOM SHEET: SELECTOR DE MEDICAMENTO / PÉPTIDO PARA GRÁFICA DE PESO -->
+  <div class="bottom-sheet-backdrop" id="wMedSelectorSheetBackdrop">
+    <div class="bottom-sheet-panel" style="max-height:85vh; overflow-y:auto; padding:14px 16px 28px;">
+      <div class="bottom-sheet-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 3h6v2H9z" />
+            <path d="M10 5v2m4-2v2" />
+            <rect x="7" y="7" width="10" height="14" rx="2.5" />
+            <path d="M12 11v6m-3-3h6" />
+          </svg>
+          <div>
+            <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-main); margin:0;">Filtrar Medicamento</h2>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin:2px 0 0 0;">Etiquetas de dosis en la gráfica de peso</p>
+          </div>
+        </div>
+        <button type="button" class="icon-btn-3d" id="closeWMedSelectorSheetBtn" style="width:32px; height:32px;">✕</button>
+      </div>
+
+      <!-- Lista dinámica de opciones de medicamentos -->
+      <div id="wMedSelectorOptionsList" style="display:flex; flex-direction:column; gap:8px;">
+      </div>
     </div>
   </div>
 
