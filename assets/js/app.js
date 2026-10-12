@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.22';
+  const APP_VERSION = 'v1.0.23';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -2706,7 +2706,30 @@ function initDashboard() {
     });
 
     // ============================================================
-    // ETIQUETAS DE CAMBIO DE DOSIS (SOLO DEL COLOR DEL MEDICAMENTO)
+    // MARCADORES DE INYECCIONES Y JERINGUILLAS
+    // ============================================================
+    const allInjections = (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
+    const visibleInjections = allInjections.filter(inj => {
+      const injX = getXForTime(inj.time);
+      return injX >= (padL - 4) && injX <= (width - padR + 6);
+    });
+
+    let injectionMarkersHtml = '';
+    visibleInjections.forEach(inj => {
+      const injX = getXForTime(inj.time);
+      const curveY = getCurveYAtX(injX);
+      const mColor = (inj.med && inj.med.color) ? inj.med.color : '#10b981';
+
+      injectionMarkersHtml += `
+        <!-- Pequeña jeringuilla por encima de la línea de peso objetivo -->
+        <text x="${injX.toFixed(1)}" y="${(goalY - 3).toFixed(1)}" font-size="8.5" text-anchor="middle" style="user-select:none; pointer-events:none;">💉</text>
+        <!-- Circulito de inyección en la curva (incluso si no cambia la dosis) -->
+        <circle cx="${injX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3.2" fill="${mColor}" stroke="#ffffff" stroke-width="1.2" />
+      `;
+    });
+
+    // ============================================================
+    // ETIQUETAS DE CAMBIO DE DOSIS (DEBAJO DE LA LÍNEA)
     // ============================================================
     let doseBadgesHtml = '';
     let lastBadgeX = -999;
@@ -2720,14 +2743,12 @@ function initDashboard() {
     visibleDoseChanges.forEach(dc => {
       const dcX = getXForTime(dc.time);
       const curveY = getCurveYAtX(dcX);
-
-      // Color de la etiqueta: estrictamente el color asignado a ese fármaco
-      // (Reta verde #10b981, Tirz morado #8b5cf6, etc.)
       const badgeColor = (dc.med && dc.med.color) ? dc.med.color : '#10b981';
 
-      let badgeY = Math.max(8, curveY - 28);
+      // Posicionada DEBAJO de la curva para no tapar los pesos
+      let badgeY = Math.min(height - padB - 14, curveY + 14);
       if (Math.abs(dcX - lastBadgeX) < 32) {
-        badgeY = staggerToggle ? Math.max(6, badgeY - 14) : Math.max(6, badgeY + 4);
+        badgeY = staggerToggle ? Math.min(height - padB - 2, badgeY + 14) : Math.min(height - padB - 2, badgeY - 4);
         staggerToggle = !staggerToggle;
       } else {
         staggerToggle = false;
@@ -2738,14 +2759,12 @@ function initDashboard() {
       const badgeX = Math.max(padL, Math.min(width - padR - badgeW, dcX - badgeW / 2));
 
       doseBadgesHtml += `
-        <!-- Línea guía vertical discontinua -->
-        <line x1="${dcX.toFixed(1)}" y1="${(badgeY + 14).toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${curveY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
-        <!-- Punto de anclaje en la curva de peso -->
-        <circle cx="${dcX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3" fill="${badgeColor}" stroke="#ffffff" stroke-width="1.2" />
-        <!-- Píldora de dosis con flechita de subida/bajada -->
+        <!-- Guía vertical discontinua hacia abajo -->
+        <line x1="${dcX.toFixed(1)}" y1="${curveY.toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${badgeY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
+        <!-- Píldora de dosis debajo de la curva -->
         <g style="cursor:default;">
-          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="15" rx="4.5" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
-          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10.8).toFixed(1)}" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="14" rx="4" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
+          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
         </g>
       `;
     });
@@ -2764,6 +2783,7 @@ function initDashboard() {
         ${areaD ? `<path d="${areaD}" fill="url(#wAreaGrad)" />` : ''}
         ${multiLineSegmentsHtml}
         ${nodesHtml}
+        ${injectionMarkersHtml}
         ${doseBadgesHtml}
       </svg>
     `;
@@ -3127,14 +3147,33 @@ function initDashboard() {
     });
 
     // ============================================================
-    // ETIQUETAS DE CAMBIOS DE DOSIS EN EL GRÁFICO DE DETALLE
+    // MARCADORES DE INYECCIONES Y JERINGUILLAS EN EL DETALLE
+    // ============================================================
+    const tFirstZoom = pts[0].time - 43200000;
+    const tLastZoom = pts[pts.length - 1].time + 43200000;
+    const visibleInjections = allInjections.filter(inj => inj.time >= tFirstZoom && inj.time <= tLastZoom);
+
+    let injectionMarkersHtml = '';
+    visibleInjections.forEach(inj => {
+      const injX = getXForTime(inj.time);
+      const curveY = getCurveYAtX(injX);
+      const mColor = (inj.med && inj.med.color) ? inj.med.color : '#10b981';
+
+      injectionMarkersHtml += `
+        <!-- Pequeña jeringuilla por encima de la línea de objetivo -->
+        <text x="${injX.toFixed(1)}" y="${(goalY - 3).toFixed(1)}" font-size="9" text-anchor="middle" style="user-select:none; pointer-events:none;">💉</text>
+        <!-- Circulito de inyección en la curva (incluso si no cambia la dosis) -->
+        <circle cx="${injX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3.2" fill="${mColor}" stroke="#ffffff" stroke-width="1.2" />
+      `;
+    });
+
+    // ============================================================
+    // ETIQUETAS DE CAMBIOS DE DOSIS (DEBAJO DE LA LÍNEA)
     // ============================================================
     let doseBadgesHtml = '';
     let lastBadgeX = -999;
     let staggerToggle = false;
 
-    const tFirstZoom = pts[0].time - 43200000;
-    const tLastZoom = pts[pts.length - 1].time + 43200000;
     const visibleDoseChanges = allDoseChanges.filter(dc => dc.time >= tFirstZoom && dc.time <= tLastZoom);
 
     visibleDoseChanges.forEach(dc => {
@@ -3142,9 +3181,10 @@ function initDashboard() {
       const curveY = getCurveYAtX(dcX);
       const badgeColor = (dc.med && dc.med.color) ? dc.med.color : '#10b981';
 
-      let badgeY = Math.max(8, curveY - 28);
+      // Posicionada DEBAJO de la curva para no tapar los pesos
+      let badgeY = Math.min(height - padB - 14, curveY + 14);
       if (Math.abs(dcX - lastBadgeX) < 32) {
-        badgeY = staggerToggle ? Math.max(6, badgeY - 14) : Math.max(6, badgeY + 4);
+        badgeY = staggerToggle ? Math.min(height - padB - 2, badgeY + 14) : Math.min(height - padB - 2, badgeY - 4);
         staggerToggle = !staggerToggle;
       } else {
         staggerToggle = false;
@@ -3155,14 +3195,12 @@ function initDashboard() {
       const badgeX = Math.max(padL - 10, Math.min(width - padR - badgeW, dcX - badgeW / 2));
 
       doseBadgesHtml += `
-        <!-- Guía vertical discontinua -->
-        <line x1="${dcX.toFixed(1)}" y1="${(badgeY + 14).toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${curveY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
-        <!-- Punto de anclaje en la curva de peso -->
-        <circle cx="${dcX.toFixed(1)}" cy="${curveY.toFixed(1)}" r="3" fill="${badgeColor}" stroke="#ffffff" stroke-width="1.2" />
-        <!-- Píldora de dosis con flechita de subida/bajada -->
+        <!-- Guía vertical discontinua hacia abajo -->
+        <line x1="${dcX.toFixed(1)}" y1="${curveY.toFixed(1)}" x2="${dcX.toFixed(1)}" y2="${badgeY.toFixed(1)}" stroke="${badgeColor}" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.85" />
+        <!-- Píldora de dosis debajo de la curva -->
         <g style="cursor:default;">
-          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="15" rx="4.5" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
-          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10.8).toFixed(1)}" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
+          <rect x="${badgeX.toFixed(1)}" y="${badgeY.toFixed(1)}" width="${badgeW.toFixed(1)}" height="14" rx="4" fill="${badgeColor}" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.38))" />
+          <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="${(badgeY + 10).toFixed(1)}" font-size="7.5" font-weight="900" fill="#ffffff" text-anchor="middle">${dc.dText}</text>
         </g>
       `;
     });
@@ -3182,6 +3220,7 @@ function initDashboard() {
         ${areaD ? `<path d="${areaD}" fill="url(#wZoomAreaGrad)" />` : ''}
         ${multiLineSegmentsHtml}
         ${nodesHtml}
+        ${injectionMarkersHtml}
         ${doseBadgesHtml}
         ${hitColsHtml}
       </svg>
