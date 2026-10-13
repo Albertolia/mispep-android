@@ -87,6 +87,21 @@ public final class MisPepHealthConnect {
         }
     }
 
+    /** Abre directamente la pantalla de gestión de permisos de MisPep en Health Connect. */
+    public static void abrirAjustes(MainActivity a) {
+        try {
+            Intent intent = new Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS");
+            intent.putExtra(Intent.EXTRA_PACKAGE_NAME, "com.mispep.es");
+            a.startActivity(intent);
+        } catch (Throwable t) {
+            try {
+                Intent fallback = new Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS");
+                a.startActivity(fallback);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     /** Lee los pesajes de los últimos N días y los devuelve a JavaScript. */
     public static void leerPesos(MainActivity act, int dias) {
         try {

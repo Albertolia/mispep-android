@@ -706,6 +706,29 @@ public class MainActivity extends Activity {
                 MisPepHealthConnect.leerPresion((MainActivity) mContext, dias);
             }
         }
+
+        @JavascriptInterface
+        public void abrirAjustesHC() {
+            android.util.Log.i("MisPepHC", "JS -> abrirAjustesHC");
+            if (Build.VERSION.SDK_INT < 34) return;
+            if (mContext instanceof MainActivity) {
+                final MainActivity act = (MainActivity) mContext;
+                act.runOnUiThread(new AbrirAjustesHCRunnable(act));
+            }
+        }
+    }
+
+    /** Abre la pantalla de permisos de Health Connect. */
+    public static class AbrirAjustesHCRunnable implements Runnable {
+        private final MainActivity act;
+
+        public AbrirAjustesHCRunnable(MainActivity a) {
+            this.act = a;
+        }
+
+        public void run() {
+            MisPepHealthConnect.abrirAjustes(act);
+        }
     }
 
     /** Lanza el dialogo de permisos de Health Connect (debe correr en el hilo de interfaz). */

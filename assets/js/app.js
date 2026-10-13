@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.27';
+  const APP_VERSION = 'v1.0.28';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -4002,6 +4002,7 @@ function initDashboard() {
   // ===== HEALTH CONNECT: traer datos de salud (peso y presión arterial) =====
   const hcImportBtn = document.getElementById('hcImportBtn');
   const hcBpImportBtn = document.getElementById('hcBpImportBtn');
+  const dashImportHcBtn = document.getElementById('dashImportHcBtn');
 
   function hcDisponible() {
     try {
@@ -4033,6 +4034,9 @@ function initDashboard() {
       bpBtn.style.display = disp ? '' : 'none';
       bpBtn.textContent = text;
     }
+    if (dashImportHcBtn) {
+      dashImportHcBtn.style.display = disp ? '' : 'none';
+    }
   }
 
   function importarPesosHealthConnect(silencioso) {
@@ -4058,6 +4062,7 @@ function initDashboard() {
       showToast('No se pudo consultar Health Connect');
     }
   }
+  window.importarPesosHealthConnect = importarPesosHealthConnect;
 
   // Agrupa mediciones separadas por como máximo 15 minutos y calcula la media clínica
   function clusterAndAverageBpReadings(rawReadings) {
@@ -4333,7 +4338,14 @@ function initDashboard() {
   window.mispepPresionHC = function (registros, error) {
     if (error) {
       const eraSilencioso = window.__hcSilencioso;
-      if (!eraSilencioso) showToast('Health Connect (presión): ' + error);
+      if (!eraSilencioso) {
+        if (String(error).includes('SecurityException') || String(error).includes('permission')) {
+          showToast('Health Connect: Falta activar permiso de Tensión arterial');
+          try { window.AndroidBridge.abrirAjustesHC(); } catch (e) {}
+        } else {
+          showToast('Health Connect (presión): ' + error);
+        }
+      }
       return;
     }
     aplicarPresionHealthConnect(Array.isArray(registros) ? registros : []);
@@ -4349,6 +4361,13 @@ function initDashboard() {
   const hcBpImportBtnEl = document.getElementById('hcBpImportBtn');
   if (hcBpImportBtnEl) {
     hcBpImportBtnEl.addEventListener('click', () => {
+      triggerHaptic(12);
+      importarPesosHealthConnect(false);
+    });
+  }
+
+  if (dashImportHcBtn) {
+    dashImportHcBtn.addEventListener('click', () => {
       triggerHaptic(12);
       importarPesosHealthConnect(false);
     });
