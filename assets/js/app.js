@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.28';
+  const APP_VERSION = 'v1.0.29';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -4019,11 +4019,12 @@ function initDashboard() {
   }
 
   function refrescarBotonHealthConnect() {
+    const isEn = (typeof currentLang !== 'undefined' ? currentLang === 'en' : document.documentElement.lang === 'en');
     const disp = hcDisponible();
     const perm = hcTienePermiso();
     const text = perm
-      ? '⌚ Sincronizar datos de Health Connect'
-      : '⌚ Conectar con Health Connect';
+      ? (isEn ? '⌚ Sync Health Connect data' : '⌚ Sincronizar datos de Health Connect')
+      : (isEn ? '⌚ Connect with Health Connect' : '⌚ Conectar con Health Connect');
 
     if (hcImportBtn) {
       hcImportBtn.style.display = disp ? '' : 'none';
@@ -4036,21 +4037,118 @@ function initDashboard() {
     }
     if (dashImportHcBtn) {
       dashImportHcBtn.style.display = disp ? '' : 'none';
+      dashImportHcBtn.title = isEn ? 'Sync Health Connect data' : 'Importar datos de Health Connect';
+      dashImportHcBtn.setAttribute('aria-label', dashImportHcBtn.title);
     }
+  }
+
+  // Estado coordinado de sincronización Health Connect
+  let hcSyncReport = {
+    pending: 0,
+    silencioso: false,
+    timer: null,
+    wDone: false,
+    wNew: 0,
+    wCorr: 0,
+    wErr: null,
+    bpDone: false,
+    bpNew: 0,
+    bpUpd: 0,
+    bpAvg: false,
+    bpErr: null
+  };
+
+  function iniciarSincronizacionHC(silencioso) {
+    if (hcSyncReport.timer) clearTimeout(hcSyncReport.timer);
+    hcSyncReport = {
+      pending: 2,
+      silencioso: !!silencioso,
+      timer: null,
+      wDone: false,
+      wNew: 0,
+      wCorr: 0,
+      wErr: null,
+      bpDone: false,
+      bpNew: 0,
+      bpUpd: 0,
+      bpAvg: false,
+      bpErr: null
+    };
+
+    hcSyncReport.timer = setTimeout(() => {
+      finalizarSincronizacionHC(true);
+    }, 4000);
+  }
+
+  function finalizarSincronizacionHC(forzado) {
+    if (!hcSyncReport || hcSyncReport.pending < 0) return;
+    if (hcSyncReport.timer) {
+      clearTimeout(hcSyncReport.timer);
+      hcSyncReport.timer = null;
+    }
+    hcSyncReport.pending = -1;
+
+    if (hcSyncReport.silencioso) return;
+
+    const isEn = (typeof currentLang !== 'undefined' ? currentLang === 'en' : document.documentElement.lang === 'en');
+    const wN = hcSyncReport.wNew;
+    const bpN = hcSyncReport.bpNew;
+    const hasMedias = hcSyncReport.bpAvg;
+
+    // Error específico de permiso de tensión arterial
+    if (hcSyncReport.bpErr && (String(hcSyncReport.bpErr).includes('SecurityException') || String(hcSyncReport.bpErr).includes('permission'))) {
+      showToast(isEn ? 'Health Connect: Blood pressure permission needed in settings' : 'Health Connect: Falta activar permiso de Tensión arterial');
+      try { window.AndroidBridge.abrirAjustesHC(); } catch (e) {}
+      return;
+    }
+
+    if (wN > 0 && bpN > 0) {
+      const msg = isEn
+        ? `✓ ${wN} weight log(s) and ${bpN} blood pressure reading(s) imported${hasMedias ? ' (15-min averages)' : ''}`
+        : `✓ ${wN} pesaje(s) y ${bpN} toma(s) de tensión importadas${hasMedias ? ' (medias en 15 min)' : ''}`;
+      showToast(msg);
+      return;
+    }
+
+    if (wN > 0) {
+      const msg = isEn
+        ? `✓ ${wN} weight log(s) imported · No new blood pressure readings`
+        : `✓ ${wN} pesaje(s) importados · Sin mediciones de tensión nuevas`;
+      showToast(msg);
+      return;
+    }
+
+    if (bpN > 0) {
+      const msg = isEn
+        ? `✓ ${bpN} blood pressure reading(s) imported${hasMedias ? ' (15-min averages)' : ''} · No new weight logs`
+        : `✓ ${bpN} toma(s) de tensión importadas${hasMedias ? ' (medias en 15 min)' : ''} · Sin pesajes nuevos`;
+      showToast(msg);
+      return;
+    }
+
+    // Ni pesajes ni tensión nuevos
+    const msg = isEn
+      ? 'Health Connect up to date: No new weight or blood pressure logs'
+      : 'Health Connect al día: Sin pesajes ni mediciones de tensión nuevas';
+    showToast(msg);
   }
 
   function importarPesosHealthConnect(silencioso) {
     if (!hcDisponible()) {
-      if (!silencioso) showToast('Health Connect no está disponible en este móvil');
+      if (!silencioso) {
+        const isEn = (typeof currentLang !== 'undefined' ? currentLang === 'en' : document.documentElement.lang === 'en');
+        showToast(isEn ? 'Health Connect is not available on this device' : 'Health Connect no está disponible en este móvil');
+      }
       return;
     }
     if (!hcTienePermiso()) {
       if (silencioso) return;
-      showToast('Concede el acceso para leer tus datos de salud');
+      const isEn = (typeof currentLang !== 'undefined' ? currentLang === 'en' : document.documentElement.lang === 'en');
+      showToast(isEn ? 'Grant access to read your health data' : 'Concede el acceso para leer tus datos de salud');
       try { window.AndroidBridge.pedirPermisoPesoHC(); } catch (e) {}
       return;
     }
-    window.__hcSilencioso = !!silencioso;
+    iniciarSincronizacionHC(silencioso);
     try {
       // Sincronización simultánea de peso y presión arterial
       window.AndroidBridge.leerPesosHC(180);
@@ -4058,7 +4156,7 @@ function initDashboard() {
         window.AndroidBridge.leerPresionHC(180);
       }
     } catch (e) {
-      window.__hcSilencioso = false;
+      finalizarSincronizacionHC(true);
       showToast('No se pudo consultar Health Connect');
     }
   }
@@ -4162,11 +4260,21 @@ function initDashboard() {
   // Fusiona las lecturas promediadas de presión arterial con las ya registradas en MisPep
   function aplicarPresionHealthConnect(registrosHC) {
     if (!Array.isArray(registrosHC) || registrosHC.length === 0) {
+      hcSyncReport.bpDone = true;
+      hcSyncReport.bpNew = 0;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
       return;
     }
 
     const promediados = clusterAndAverageBpReadings(registrosHC);
-    if (promediados.length === 0) return;
+    if (promediados.length === 0) {
+      hcSyncReport.bpDone = true;
+      hcSyncReport.bpNew = 0;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
+      return;
+    }
 
     let logs = getBpLogs();
     const calEntries = JSON.parse(localStorage.getItem('mispep_calendar_entries') || '[]');
@@ -4234,6 +4342,10 @@ function initDashboard() {
     });
 
     if (!nuevos && !actualizados) {
+      hcSyncReport.bpDone = true;
+      hcSyncReport.bpNew = 0;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
       return;
     }
 
@@ -4246,8 +4358,12 @@ function initDashboard() {
     if (typeof renderBpDashboard === 'function') renderBpDashboard();
     if (typeof renderBpHistoryList === 'function') renderBpHistoryList();
 
-    const infoMedia = promediados.some(pr => pr.samplesCount > 1) ? ' (medias en 15 min calculadas)' : '';
-    showToast('✓ ' + nuevos + ' toma(s) de tensión importadas' + (actualizados ? ' · ' + actualizados + ' corregidas' : '') + infoMedia);
+    hcSyncReport.bpDone = true;
+    hcSyncReport.bpNew = nuevos;
+    hcSyncReport.bpUpd = actualizados;
+    hcSyncReport.bpAvg = promediados.some(pr => pr.samplesCount > 1);
+    hcSyncReport.pending--;
+    if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
   }
 
   // Fusiona los pesajes recibidos con los que ya tiene MisPep (sin duplicar fechas)
@@ -4294,8 +4410,11 @@ function initDashboard() {
     });
 
     if (!nuevos && !corregidos) {
-      if (!window.__hcSilencioso) showToast('Health Connect no tiene pesajes nuevos');
-      window.__hcSilencioso = false;
+      hcSyncReport.wDone = true;
+      hcSyncReport.wNew = 0;
+      hcSyncReport.wCorr = 0;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
       return;
     }
 
@@ -4311,16 +4430,21 @@ function initDashboard() {
     renderDashboard();
     if (typeof renderWeightGraph === 'function') renderWeightGraph();
     refrescarBotonHealthConnect();
-    showToast('✓ ' + nuevos + ' pesaje(s) importados de la báscula' + (corregidos ? ' · ' + corregidos + ' corregidos' : ''));
-    window.__hcSilencioso = false;
+
+    hcSyncReport.wDone = true;
+    hcSyncReport.wNew = nuevos;
+    hcSyncReport.wCorr = corregidos;
+    hcSyncReport.pending--;
+    if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
   }
 
   // Estas dos funciones las llama el código nativo (Java)
   window.mispepPesosHC = function (registros, error) {
     if (error) {
-      const eraSilencioso = window.__hcSilencioso;
-      window.__hcSilencioso = false;
-      if (!eraSilencioso) showToast('Health Connect: ' + error);
+      hcSyncReport.wDone = true;
+      hcSyncReport.wErr = error;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
       return;
     }
     aplicarPesosHealthConnect(Array.isArray(registros) ? registros : []);
@@ -4337,15 +4461,10 @@ function initDashboard() {
 
   window.mispepPresionHC = function (registros, error) {
     if (error) {
-      const eraSilencioso = window.__hcSilencioso;
-      if (!eraSilencioso) {
-        if (String(error).includes('SecurityException') || String(error).includes('permission')) {
-          showToast('Health Connect: Falta activar permiso de Tensión arterial');
-          try { window.AndroidBridge.abrirAjustesHC(); } catch (e) {}
-        } else {
-          showToast('Health Connect (presión): ' + error);
-        }
-      }
+      hcSyncReport.bpDone = true;
+      hcSyncReport.bpErr = error;
+      hcSyncReport.pending--;
+      if (hcSyncReport.pending === 0) finalizarSincronizacionHC(false);
       return;
     }
     aplicarPresionHealthConnect(Array.isArray(registros) ? registros : []);
@@ -11034,6 +11153,7 @@ window.initDuracionEstimador();
 
 // Sincronización instantánea de cambio de idioma: kg <-> lb y textos
 window.addEventListener('languageChanged', () => {
+  if (typeof refrescarBotonHealthConnect === 'function') refrescarBotonHealthConnect();
   if (typeof loadHealthDashboard === 'function') loadHealthDashboard();
   if (typeof renderWeightGraph === 'function') renderWeightGraph();
   if (typeof renderWeightGoal === 'function') renderWeightGoal();
