@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.26';
+  const APP_VERSION = 'v1.0.27';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -3999,8 +3999,9 @@ function initDashboard() {
     });
   }
 
-  // ===== HEALTH CONNECT: traer los pesajes que registra la báscula (vía Fit Profile) =====
+  // ===== HEALTH CONNECT: traer datos de salud (peso y presión arterial) =====
   const hcImportBtn = document.getElementById('hcImportBtn');
+  const hcBpImportBtn = document.getElementById('hcBpImportBtn');
 
   function hcDisponible() {
     try {
@@ -4010,17 +4011,28 @@ function initDashboard() {
 
   function hcTienePermiso() {
     try {
-      return !!(window.AndroidBridge && typeof window.AndroidBridge.tienePermisoPesoHC === 'function' && window.AndroidBridge.tienePermisoPesoHC());
+      const pPeso = (typeof window.AndroidBridge.tienePermisoPesoHC === 'function' && window.AndroidBridge.tienePermisoPesoHC());
+      const pBp = (typeof window.AndroidBridge.tienePermisoPresionHC === 'function' && window.AndroidBridge.tienePermisoPresionHC());
+      return !!(pPeso || pBp);
     } catch (e) { return false; }
   }
 
   function refrescarBotonHealthConnect() {
-    if (!hcImportBtn) return;
-    if (!hcDisponible()) { hcImportBtn.style.display = 'none'; return; }
-    hcImportBtn.style.display = '';
-    hcImportBtn.textContent = hcTienePermiso()
-      ? '⌚ Importar pesajes de la báscula (Health Connect)'
+    const disp = hcDisponible();
+    const perm = hcTienePermiso();
+    const text = perm
+      ? '⌚ Sincronizar datos de Health Connect'
       : '⌚ Conectar con Health Connect';
+
+    if (hcImportBtn) {
+      hcImportBtn.style.display = disp ? '' : 'none';
+      hcImportBtn.textContent = text;
+    }
+    const bpBtn = document.getElementById('hcBpImportBtn');
+    if (bpBtn) {
+      bpBtn.style.display = disp ? '' : 'none';
+      bpBtn.textContent = text;
+    }
   }
 
   function importarPesosHealthConnect(silencioso) {
@@ -4030,17 +4042,207 @@ function initDashboard() {
     }
     if (!hcTienePermiso()) {
       if (silencioso) return;
-      showToast('Concede el acceso para leer los pesajes de la báscula');
+      showToast('Concede el acceso para leer tus datos de salud');
       try { window.AndroidBridge.pedirPermisoPesoHC(); } catch (e) {}
       return;
     }
     window.__hcSilencioso = !!silencioso;
     try {
+      // Sincronización simultánea de peso y presión arterial
       window.AndroidBridge.leerPesosHC(180);
+      if (typeof window.AndroidBridge.leerPresionHC === 'function') {
+        window.AndroidBridge.leerPresionHC(180);
+      }
     } catch (e) {
       window.__hcSilencioso = false;
       showToast('No se pudo consultar Health Connect');
     }
+  }
+
+  // Agrupa mediciones separadas por como máximo 15 minutos y calcula la media clínica
+  function clusterAndAverageBpReadings(rawReadings) {
+    if (!Array.isArray(rawReadings) || rawReadings.length === 0) return [];
+
+    const valid = [];
+    rawReadings.forEach(r => {
+      const sys = parseInt(r.sys, 10);
+      const dia = parseInt(r.dia, 10);
+      const pulse = parseInt(r.pulse, 10) || 0;
+      if (!sys || !dia || sys <= 0 || dia <= 0) return;
+
+      let timeMs = r.timestamp ? Number(r.timestamp) : NaN;
+      if (isNaN(timeMs) || timeMs <= 0) {
+        const datePart = r.fechaLocal || String(r.fecha || '').slice(0, 10);
+        const timePart = r.hora || '12:00';
+        timeMs = new Date(`${datePart}T${timePart}:00`).getTime();
+      }
+      if (isNaN(timeMs) || timeMs <= 0) return;
+
+      valid.push({
+        timestamp: timeMs,
+        sys: sys,
+        dia: dia,
+        pulse: pulse,
+        origen: r.origen || 'Health Connect'
+      });
+    });
+
+    if (valid.length === 0) return [];
+
+    // Ordenar cronológicamente
+    valid.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Agrupar mediciones separadas por como máximo 15 minutos (900.000 ms)
+    const MAX_GAP_MS = 15 * 60 * 1000;
+    const clusters = [];
+    let currentCluster = [valid[0]];
+
+    for (let i = 1; i < valid.length; i++) {
+      const prev = currentCluster[currentCluster.length - 1];
+      const curr = valid[i];
+      if (curr.timestamp - prev.timestamp <= MAX_GAP_MS) {
+        currentCluster.push(curr);
+      } else {
+        clusters.push(currentCluster);
+        currentCluster = [curr];
+      }
+    }
+    if (currentCluster.length > 0) {
+      clusters.push(currentCluster);
+    }
+
+    // Calcular la media de cada grupo de mediciones
+    return clusters.map(cluster => {
+      const count = cluster.length;
+      let sumSys = 0;
+      let sumDia = 0;
+      let sumTime = 0;
+      let sumPulse = 0;
+      let pulseCount = 0;
+
+      cluster.forEach(item => {
+        sumSys += item.sys;
+        sumDia += item.dia;
+        sumTime += item.timestamp;
+        if (item.pulse > 0) {
+          sumPulse += item.pulse;
+          pulseCount++;
+        }
+      });
+
+      const avgSys = Math.round(sumSys / count);
+      const avgDia = Math.round(sumDia / count);
+      const avgTimeMs = Math.round(sumTime / count);
+      const avgPulse = pulseCount > 0 ? Math.round(sumPulse / pulseCount) : 0;
+
+      const dAvg = new Date(avgTimeMs);
+      const fecha = getLocalDateStr(dAvg);
+      const hh = String(dAvg.getHours()).padStart(2, '0');
+      const mm = String(dAvg.getMinutes()).padStart(2, '0');
+      const hora = `${hh}:${mm}`;
+
+      return {
+        date: fecha,
+        time: hora,
+        sys: avgSys,
+        dia: avgDia,
+        pulse: avgPulse || 68,
+        timestamp: avgTimeMs,
+        samplesCount: count,
+        origen: cluster[0].origen || 'Health Connect'
+      };
+    });
+  }
+
+  // Fusiona las lecturas promediadas de presión arterial con las ya registradas en MisPep
+  function aplicarPresionHealthConnect(registrosHC) {
+    if (!Array.isArray(registrosHC) || registrosHC.length === 0) {
+      return;
+    }
+
+    const promediados = clusterAndAverageBpReadings(registrosHC);
+    if (promediados.length === 0) return;
+
+    let logs = getBpLogs();
+    const calEntries = JSON.parse(localStorage.getItem('mispep_calendar_entries') || '[]');
+    let nuevos = 0, actualizados = 0;
+
+    promediados.forEach(p => {
+      // Buscar si ya existe una toma en la misma fecha y hora (margen de 15 min)
+      const existingIdx = logs.findIndex(l => {
+        if (l.date !== p.date) return false;
+        const [lh, lm] = (l.time || '00:00').split(':').map(Number);
+        const [ph, pm] = (p.time || '00:00').split(':').map(Number);
+        const diffMins = Math.abs((lh * 60 + lm) - (ph * 60 + pm));
+        return diffMins <= 15;
+      });
+
+      if (existingIdx >= 0) {
+        const cur = logs[existingIdx];
+        if (cur.sys !== p.sys || cur.dia !== p.dia || (p.pulse > 0 && cur.pulse !== p.pulse)) {
+          cur.sys = p.sys;
+          cur.dia = p.dia;
+          if (p.pulse > 0) cur.pulse = p.pulse;
+          cur.origen = p.origen;
+          actualizados++;
+        }
+      } else {
+        // Heredar medicación antihipertensiva si existe pauta previa
+        const lastWithMeds = [...logs].reverse().find(l => Array.isArray(l.meds) && l.meds.length > 0);
+        const medsToInherit = lastWithMeds
+          ? lastWithMeds.meds.map(m => ({ name: m.name, doseMg: m.doseMg, time: m.time || '21:30' }))
+          : [];
+
+        const newLog = {
+          id: 'bp-hc-' + p.date + '-' + p.time.replace(':', ''),
+          date: p.date,
+          time: p.time,
+          sys: p.sys,
+          dia: p.dia,
+          pulse: p.pulse,
+          meds: medsToInherit,
+          origen: p.origen
+        };
+        logs.push(newLog);
+        nuevos++;
+
+        // Sincronizar con calendario
+        const calId = 'bp-hc-' + p.date + '-' + p.time.replace(':', '');
+        const existingCalIdx = calEntries.findIndex(e => e.id === calId || (e.type === 'bp' && e.date === p.date && e.time === p.time));
+        const titulo = `${p.sys}/${p.dia} mmHg`;
+        const detalle = `Pulso: ${p.pulse} ppm · Health Connect${p.samplesCount > 1 ? ` (media de ${p.samplesCount} tomas)` : ''}`;
+        if (existingCalIdx >= 0) {
+          calEntries[existingCalIdx].title = titulo;
+          calEntries[existingCalIdx].detail = detalle;
+        } else {
+          calEntries.unshift({
+            id: calId,
+            date: p.date,
+            type: 'bp',
+            title: titulo,
+            detail: detalle,
+            icon: '❤️',
+            time: p.time
+          });
+        }
+      }
+    });
+
+    if (!nuevos && !actualizados) {
+      return;
+    }
+
+    logs.sort((a, b) => new Date(a.date + 'T' + (a.time || '00:00')) - new Date(b.date + 'T' + (b.time || '00:00')));
+    saveBpLogs(logs);
+    localStorage.setItem('mispep_calendar_entries', JSON.stringify(calEntries));
+
+    if (window.renderCalendar) window.renderCalendar();
+    if (typeof renderBpGraph === 'function') renderBpGraph();
+    if (typeof renderBpDashboard === 'function') renderBpDashboard();
+    if (typeof renderBpHistoryList === 'function') renderBpHistoryList();
+
+    const infoMedia = promediados.some(pr => pr.samplesCount > 1) ? ' (medias en 15 min calculadas)' : '';
+    showToast('✓ ' + nuevos + ' toma(s) de tensión importadas' + (actualizados ? ' · ' + actualizados + ' corregidas' : '') + infoMedia);
   }
 
   // Fusiona los pesajes recibidos con los que ya tiene MisPep (sin duplicar fechas)
@@ -4124,12 +4326,29 @@ function initDashboard() {
       refrescarBotonHealthConnect();
       importarPesosHealthConnect(false);
     } else {
-      showToast('Sin permiso no se pueden leer los pesajes de la báscula');
+      showToast('Sin permiso no se pueden leer los datos de salud');
     }
+  };
+
+  window.mispepPresionHC = function (registros, error) {
+    if (error) {
+      const eraSilencioso = window.__hcSilencioso;
+      if (!eraSilencioso) showToast('Health Connect (presión): ' + error);
+      return;
+    }
+    aplicarPresionHealthConnect(Array.isArray(registros) ? registros : []);
   };
 
   if (hcImportBtn) {
     hcImportBtn.addEventListener('click', () => {
+      triggerHaptic(12);
+      importarPesosHealthConnect(false);
+    });
+  }
+
+  const hcBpImportBtnEl = document.getElementById('hcBpImportBtn');
+  if (hcBpImportBtnEl) {
+    hcBpImportBtnEl.addEventListener('click', () => {
       triggerHaptic(12);
       importarPesosHealthConnect(false);
     });

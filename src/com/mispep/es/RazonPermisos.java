@@ -38,17 +38,17 @@ public class RazonPermisos extends Activity {
 
     protected String textoPantalla() {
         return
-            "MisPep usa Health Connect para una única cosa: leer los pesajes que tu báscula "
-            + "envía a Health Connect a través de la aplicación Fit Profile.\n\n"
-            + "• Solo LEE el dato «Peso» (y nunca en segundo plano).\n"
+            "MisPep usa Health Connect para dos cosas: leer los pesajes de la báscula "
+            + "y las mediciones de presión arterial y pulso del tensiómetro.\n\n"
+            + "• Solo LEE los datos necesarios (y nunca en segundo plano).\n"
+            + "• Calcula la media clínica en tomas consecutivas en 15 minutos.\n"
             + "• NO escribe nada en Health Connect.\n"
-            + "• NO envía tus datos a ningún servidor: todo se queda en tu teléfono.\n"
-            + "• Los pesajes importados se guardan junto a tu historial y entran también en tus "
-            + "copias de seguridad automáticas, que se guardan en tu propio teléfono.\n\n"
-            + "Puedes retirar este permiso cuando quieras desde Health Connect → Permisos de "
-            + "aplicaciones → MisPep. Si lo retiras, MisPep seguirá funcionando con normalidad, "
-            + "simplemente no leerá nuevos pesajes de la báscula.\n\n"
-            + "Pulsa «Entendido» para continuar con el permiso.";
+            + "• NO envía tus datos a ningún servidor externo: todo se queda en tu teléfono.\n"
+            + "• Los registros importados se guardan junto a tu historial local y entran en tus "
+            + "copias de seguridad automáticas.\n\n"
+            + "Puedes retirar estos permisos cuando quieras desde Health Connect → Permisos de "
+            + "aplicaciones → MisPep.\n\n"
+            + "Pulsa «Entendido» para continuar con los permisos.";
     }
 
     @Override

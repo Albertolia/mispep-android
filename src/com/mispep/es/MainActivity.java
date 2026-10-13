@@ -673,6 +673,13 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public boolean tienePermisoPresionHC() {
+            boolean r = Build.VERSION.SDK_INT >= 34 && MisPepHealthConnect.tienePermisoPresion(mContext);
+            android.util.Log.i("MisPepHC", "JS -> tienePermisoPresionHC = " + r);
+            return r;
+        }
+
+        @JavascriptInterface
         public void pedirPermisoPesoHC() {
             android.util.Log.i("MisPepHC", "JS -> pedirPermisoPesoHC");
             if (Build.VERSION.SDK_INT < 34) return;
@@ -688,6 +695,15 @@ public class MainActivity extends Activity {
             if (Build.VERSION.SDK_INT < 34) return;
             if (mContext instanceof MainActivity) {
                 MisPepHealthConnect.leerPesos((MainActivity) mContext, dias);
+            }
+        }
+
+        @JavascriptInterface
+        public void leerPresionHC(int dias) {
+            android.util.Log.i("MisPepHC", "JS -> leerPresionHC " + dias + " dias");
+            if (Build.VERSION.SDK_INT < 34) return;
+            if (mContext instanceof MainActivity) {
+                MisPepHealthConnect.leerPresion((MainActivity) mContext, dias);
             }
         }
     }
@@ -739,7 +755,9 @@ public class MainActivity extends Activity {
 
     /** Vuelta de la pantalla de permisos de Health Connect (se reconsulta el permiso real). */
     public void resultadoPermisoHealthConnect() {
-        boolean concedido = checkSelfPermission("android.permission.health.READ_WEIGHT") == PackageManager.PERMISSION_GRANTED;
+        boolean concedidoPeso = checkSelfPermission("android.permission.health.READ_WEIGHT") == PackageManager.PERMISSION_GRANTED;
+        boolean concedidoBP = checkSelfPermission("android.permission.health.READ_BLOOD_PRESSURE") == PackageManager.PERMISSION_GRANTED;
+        boolean concedido = concedidoPeso || concedidoBP;
         enviarAJavaScript("window.mispepPermisoHC && window.mispepPermisoHC(" + (concedido ? "true" : "false") + ")");
     }
 
