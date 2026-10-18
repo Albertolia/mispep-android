@@ -18,16 +18,19 @@ Interfaz en inglés (la aplicación está disponible en español e inglés).
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/screenshots/07-dashboard.png" width="180" alt="Inicio"><br><sub><b>Inicio</b><br>nivel en circulación y próxima dosis</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/01-calculator.png" width="180" alt="Calculadora de reconstitución"><br><sub><b>Calculadora</b><br>mg, mL y unidades de jeringa</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/08-injection-units.png" width="180" alt="Resultado de dosificación"><br><sub><b>Dosificación exacta</b><br>unidades, jeringa y pluma</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/02-peptide-library.png" width="180" alt="Biblioteca de péptidos"><br><sub><b>Biblioteca</b><br>42 monografías con filtros</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/07-dashboard.png" width="240" alt="Inicio"><br><sub><b>Inicio</b><br>nivel en circulación y próxima dosis</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/09-health.png" width="240" alt="Salud"><br><sub><b>Salud</b><br>peso y presión arterial</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/01-calculator.png" width="240" alt="Calculadora"><br><sub><b>Calculadora</b><br>mg, mL y unidades de jeringa</sub></td>
   </tr>
   <tr>
-    <td align="center" width="25%"><img src="docs/screenshots/03-school-sheet.png" width="180" alt="Ficha de escuela"><br><sub><b>Ficha de escuela</b><br>evidencia y errores frecuentes</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/04-regulation.png" width="180" alt="Por qué no se aprueban"><br><sub><b>Por qué no se aprueban</b><br>patentes, CMC y regulación</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/05-glossary.png" width="180" alt="Glosario"><br><sub><b>Glosario</b><br>términos explicados en llano</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/06-duration.png" width="180" alt="Estabilidad"><br><sub><b>¿Cuánto dura?</b><br>estabilidad y conservación</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/08-injection-units.png" width="240" alt="Dosificación exacta"><br><sub><b>Dosificación exacta</b><br>unidades, jeringa y pluma</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/02-peptide-library.png" width="240" alt="Biblioteca"><br><sub><b>Biblioteca</b><br>42 monografías con filtros</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/03-school-sheet.png" width="240" alt="Ficha de escuela"><br><sub><b>Ficha de escuela</b><br>evidencia y errores frecuentes</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/04-regulation.png" width="240" alt="Por qué no se aprueban"><br><sub><b>Por qué no se aprueban</b><br>patentes, CMC y regulación</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/05-glossary.png" width="240" alt="Glosario"><br><sub><b>Glosario</b><br>términos explicados en llano</sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/06-duration.png" width="240" alt="¿Cuánto dura?"><br><sub><b>¿Cuánto dura?</b><br>estabilidad y conservación</sub></td>
   </tr>
 </table>
 

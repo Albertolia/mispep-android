@@ -1600,6 +1600,8 @@
   "Puntos clave": "Key points",
   "Preguntas frecuentes": "Frequently asked questions",
   "Barras": "Bars",
+  "Estado": "Status",
+  "Estado:": "Status:",
   "Volumen": "Volume",
   "Si es bueno, ¿por qué no lo aprueban?": "If it works, why isn't it approved?",
   "Por qué un péptido prometedor no se aprueba": "Why a promising peptide never gets approved",
