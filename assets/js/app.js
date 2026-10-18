@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.33';
+  const APP_VERSION = 'v1.0.35';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -10244,6 +10244,7 @@ function initResearch() {
 
     listContainer.innerHTML = filtered.map((p) => {
       const pEn = isEn ? (pepEnDict[p.name] || {}) : {};
+      const displayName = (isEn && pEn.name) ? pEn.name : p.name;
       const displayDesc = isEn ? (pEn.desc || p.desc) : p.desc;
       const displayContra = isEn ? (pEn.contra !== undefined ? pEn.contra : p.contra) : p.contra;
       const displayHalfLife = isEn ? (pEn.halfLife || p.halfLife) : p.halfLife;
@@ -10255,7 +10256,8 @@ function initResearch() {
       let schoolHtml = '';
       if (sc) {
         const chips = [];
-        if (sc.mw) chips.push(`<span class="pep-school-chip">⚖️ ${sc.mw}</span>`);
+        const mwTxt = (isEn && sc.mw) ? sc.mw.replace(/,/g, '.') : sc.mw;
+        if (sc.mw) chips.push(`<span class="pep-school-chip">⚖️ ${mwTxt}</span>`);
         if (sc.formula) chips.push(`<span class="pep-school-chip">🧪 ${sc.formula}</span>`);
         const st = (isEn && sc.statusEn) ? sc.statusEn : sc.status;
         if (st) chips.push(`<span class="pep-school-chip">🏷️ ${st}</span>`);
@@ -10282,7 +10284,7 @@ function initResearch() {
       <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:0 4px 12px var(--shadow-ambient);">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
           <div>
-            <strong style="font-size:1.02rem; color:var(--text-main); display:block;">${p.name}</strong>
+            <strong style="font-size:1.02rem; color:var(--text-main); display:block;">${displayName}</strong>
             <span class="badge-tag" style="margin-top:4px;">${displayCat}</span>
           </div>
         </div>
