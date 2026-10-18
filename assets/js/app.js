@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.29';
+  const APP_VERSION = 'v1.0.30';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -1012,6 +1012,7 @@ function renderPen(containerId, clicksVal, units = 0, maxUnits = 100) {
 function initDashboard() {
   const dashBannerText = document.getElementById('dashBannerText');
   const dashDaysCount = document.getElementById('dashDaysCount');
+  const dashLblOnTrack = document.getElementById('dashLblOnTrack');
   const dashTotalInjections = document.getElementById('dashTotalInjections');
   const dashTotalInjAllTime = document.getElementById('dashTotalInjAllTime');
 
@@ -1498,15 +1499,67 @@ function initDashboard() {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    // 1. Días en camino
-    const startObj = p.startDate ? new Date(p.startDate) : null;
-    let elapsedDays = 0;
-    if (startObj && !isNaN(startObj.getTime())) {
-      startObj.setHours(0, 0, 0, 0);
-      elapsedDays = Math.max(0, Math.round((now.getTime() - startObj.getTime()) / (24 * 3600 * 1000)));
+    // 1. Días en camino — TOTAL del tratamiento completo, no solo del fármaco vigente.
+    //    Se toma la primera dosis de TODO el historial (cualquier medicamento) y,
+    //    si existe, una fecha de inicio guardada anterior.
+    let firstDoseMs = null;
+    try {
+      const histAll = (window.MisPepProtocols && window.MisPepProtocols.getInjectionHistory)
+        ? window.MisPepProtocols.getInjectionHistory()
+        : (typeof getInjectionHistory === 'function' ? getInjectionHistory() : []);
+      if (histAll && histAll.length) firstDoseMs = histAll[0].time;
+    } catch (_) {}
+    if (p.startDate) {
+      const sd = new Date(String(p.startDate).split('T')[0] + 'T12:00:00');
+      if (!isNaN(sd.getTime()) && (firstDoseMs === null || sd.getTime() < firstDoseMs)) {
+        firstDoseMs = sd.getTime();
+      }
     }
+    const DAY_MS = 24 * 3600 * 1000;
+    let elapsedDays = 0;
+    if (firstDoseMs !== null) {
+      const startMid = new Date(firstDoseMs);
+      startMid.setHours(0, 0, 0, 0);
+      elapsedDays = Math.max(0, Math.round((now.getTime() - startMid.getTime()) / DAY_MS));
+      // El día de la primera dosis cuenta como día 1 de tratamiento
+      if (elapsedDays === 0) elapsedDays = 1;
+    }
+
+    // Días del fármaco vigente (desglose), para no confundirlo con el total
+    let activeDays = null;
+    let activeLabel = '';
+    try {
+      const activeSeg = (window.MisPepProtocols && window.MisPepProtocols.getActiveProtocol)
+        ? window.MisPepProtocols.getActiveProtocol() : null;
+      if (activeSeg && activeSeg.startDate) {
+        const asd = new Date(activeSeg.startDate + 'T12:00:00');
+        if (!isNaN(asd.getTime())) {
+          activeDays = Math.max(1, Math.round((now.getTime() - asd.getTime()) / DAY_MS));
+          activeLabel = activeSeg.label || '';
+        }
+      }
+    } catch (_) {}
+
     const isEn = window.MISPEP_I18N && window.MISPEP_I18N.getLang() === 'en';
     if (dashDaysCount) dashDaysCount.textContent = elapsedDays > 0 ? (isEn ? `${elapsedDays} days` : `${elapsedDays} días`) : (isEn ? '0 days' : '0 días');
+    if (dashLblOnTrack) dashLblOnTrack.textContent = isEn ? 'on treatment' : 'en tratamiento';
+    const dashMedDaysSubEl = document.getElementById('dashMedDaysSub');
+    if (dashMedDaysSubEl) {
+      let segsCount = 1;
+      try {
+        const segsAll = (window.MisPepProtocols && window.MisPepProtocols.getProtocolSegments)
+          ? window.MisPepProtocols.getProtocolSegments() : [];
+        if (segsAll && segsAll.length) segsCount = segsAll.length;
+      } catch (_) {}
+      if (!activeLabel) {
+        dashMedDaysSubEl.textContent = '';
+      } else if (segsCount > 1 && activeDays !== null) {
+        // Solo mostramos el desglose cuando hay más de un fármaco en el historial
+        dashMedDaysSubEl.textContent = `${activeLabel} · ${activeDays} ${isEn ? 'd' : 'd'}`;
+      } else {
+        dashMedDaysSubEl.textContent = activeLabel;
+      }
+    }
     if (dashBannerText) {
       if (elapsedDays > 0) {
         dashBannerText.textContent = isEn ? `${elapsedDays} days on track with your treatment!` : `¡${elapsedDays} días en camino con tu tratamiento!`;
@@ -11154,6 +11207,7 @@ window.initDuracionEstimador();
 // Sincronización instantánea de cambio de idioma: kg <-> lb y textos
 window.addEventListener('languageChanged', () => {
   if (typeof refrescarBotonHealthConnect === 'function') refrescarBotonHealthConnect();
+  if (typeof renderDashboard === 'function') renderDashboard();
   if (typeof loadHealthDashboard === 'function') loadHealthDashboard();
   if (typeof renderWeightGraph === 'function') renderWeightGraph();
   if (typeof renderWeightGoal === 'function') renderWeightGoal();
