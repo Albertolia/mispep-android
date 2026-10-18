@@ -20,42 +20,49 @@
 
   var peptidesEn = {
   "Tirzepatida (Mounjaro / Zepbound)": {
+    "name": "Tirzepatide (Mounjaro / Zepbound)",
     "desc": "Dual GIP and GLP-1 receptor agonist in a single molecule: 39 amino acids with a C20 fatty diacid moiety attached at Lys20 that reversibly binds to albumin and prolongs its action. Enhances insulin secretion, delays gastric emptying, and reduces appetite and fat mass; reference compound for dual incretin signaling (Coskun, 2018).",
     "contra": "Hypersensitivity; personal/family history of MTC or MEN2 (boxed warning); pregnancy (discontinue prior to planned pregnancy); breastfeeding not recommended.",
     "halfLife": "5 days",
     "freq": "Once weekly (SubQ)"
   },
   "Semaglutida (Ozempic / Wegovy)": {
+    "name": "Semaglutide (Ozempic / Wegovy)",
     "desc": "Acylated GLP-1 analogue of 31 amino acids with a C18 fatty diacid (and Aib at position 8) that binds to albumin for prolonged once-weekly action with selective GLP-1 receptor affinity. Regulates blood glucose and promotes hypothalamic satiety; classic benchmark in incretin pathway research (Lau, 2015).",
     "contra": "Hypersensitivity; personal/family history of MTC or MEN2; pregnancy (discontinue ≥2 months prior to pregnancy); breastfeeding not recommended.",
     "halfLife": "7 days",
     "freq": "Once weekly (SubQ)"
   },
   "Retatrutida (LY3437943)": {
+    "name": "Retatrutide (LY3437943)",
     "desc": "Triple GIP/GLP-1/glucagon receptor agonist in a single 39-amino-acid molecule. In addition to appetite suppression, the glucagon arm increases resting energy expenditure and hepatic lipolysis; landmark molecule for studying simultaneous activation of all three metabolic signaling pathways (Coskun, 2022).",
     "contra": "Not approved for human use (RUO). Hypersensitivity; personal/family history of MTC or MEN2; prior pancreatitis; severe GI disease (gastroparesis/IBD); pregnancy/breastfeeding; <18 years.",
     "halfLife": "6 days",
     "freq": "Once weekly (SubQ)"
   },
   "Cagrilintida (AM833)": {
+    "name": "Cagrilintide (AM833)",
     "desc": "Long-acting acylated amylin analogue that acts on calcitonin and amylin (AMY) receptors in the area postrema, promoting homeostatic satiety via a non-incretin pathway. In preclinical and clinical synergy with GLP-1 (CagriSema), it reduces food intake and delays gastric emptying through complementary neural mechanisms (Kruse, 2021).",
     "contra": "Not approved for human use (RUO). Hypersensitivity to amylin analogues; severe GI disorders; pancreatitis; pregnancy/breastfeeding; <18 years.",
     "halfLife": "7-8 days",
     "freq": "Once weekly (SubQ)"
   },
   "Survodutida (BI 456906)": {
+    "name": "Survodutide (BI 456906)",
     "desc": "Dual glucagon and GLP-1 receptor agonist in a single peptide: glucagon activation drives hepatic energy expenditure, lipid oxidation, and anti-fibrotic remodeling in NASH/MASH, while GLP-1 balances glycemic control and suppresses appetite (Zimmermann, 2022).",
     "contra": "Not approved for human use (RUO). Hypersensitivity; personal/family history of MTC or MEN2; decompensated hepatic disease; pancreatitis; pregnancy/breastfeeding; <18 years.",
     "halfLife": "5-6 days",
     "freq": "Once weekly (SubQ)"
   },
   "Mazdutida (IBI362)": {
+    "name": "Mazdutide (IBI362)",
     "desc": "Dual GLP-1 and glucagon receptor agonist (OXM analogue) modified with a fatty acid side chain for extended half-life. Promotes dual weight reduction and hepatic fat clearance in metabolic syndrome and NAFLD/MASH models (Ji, 2021).",
     "contra": "Not approved for human use (RUO). Hypersensitivity; personal/family history of MTC or MEN2; pancreatitis; pregnancy/breastfeeding; <18 years.",
     "halfLife": "~5 days",
     "freq": "Once weekly (SubQ)"
   },
   "AOD-9604 (Fragmento hGH 176-191)": {
+    "name": "AOD-9604 (hGH fragment 176-191)",
     "desc": "Synthetic 16-amino-acid peptide corresponding to the lipolytic C-terminal domain of human growth hormone (hGH 176-191), stabilized with an internal disulfide bridge. Stimulates lipolysis and inhibits lipogenesis in adipocytes without IGF-1 elevation or hyperglycemic/mitogenic effects (Heffernan, 2001).",
     "contra": "Hypersensitivity; active cancer (precautionary RUO principle); pregnancy/breastfeeding; <18 years.",
     "halfLife": "~30 minutes",
@@ -68,6 +75,7 @@
     "freq": "1-2 times daily (SubQ / Oral)"
   },
   "TB-500 (Timosina Beta-4 fragmento)": {
+    "name": "TB-500 (Thymosin Beta-4 fragment)",
     "desc": "Synthetic peptide derived from the active actin-sequestering domain of Thymosin Beta-4 (LKKTETQ sequence). Regulates actin polymerization (G-actin sequestering), accelerates cell migration, endothelial repair, and dermal wound healing with anti-fibrotic and anti-inflammatory properties (Philp, 2003).",
     "contra": "Hypersensitivity; active malignancy (promotes cell migration/angiogenesis); pregnancy/breastfeeding; RUO (research use only).",
     "halfLife": "24-48 hours",
@@ -80,6 +88,7 @@
     "freq": "1-2 times daily (SubQ / Oral / Topical)"
   },
   "ARA-290 (Cibinetida)": {
+    "name": "ARA-290 (Cibinetide)",
     "desc": "Synthetic 11-amino-acid peptide designed from the tertiary structure of erythropoietin (EPO helix B) that selectively activates the Innate Repair Receptor (IRR / EPOR-betaCR) without stimulating hematopoiesis or erythropoiesis. Promotes nerve fiber regeneration and provides anti-neuropathic and cytoprotective relief in small fiber neuropathy (Brines, 2008).",
     "contra": "Hypersensitivity; acute systemic infection; pregnancy/breastfeeding; RUO.",
     "halfLife": "~20-30 minutes (tissue receptor activation >24h)",
@@ -92,6 +101,7 @@
     "freq": "1-3 times daily before bed/fasting (SubQ)"
   },
   "CJC-1295 (sin DAC / Mod-GRF 1-29)": {
+    "name": "CJC-1295 (no DAC / Mod-GRF 1-29)",
     "desc": "Tetrasubstituted synthetic analogue of GHRH 1-29 (positions 2, 8, 15, and 27 substituted with D-Ala, Gln, Ala, and Leu) to resist DPP-4 enzymatic degradation. Enhances physiological pulsatile growth hormone secretion when co-administered with a GHRP (Teichman, 2006).",
     "contra": "Active malignancy; proliferative diabetic retinopathy; intracranial lesions; pregnancy/breastfeeding; RUO.",
     "halfLife": "~30 minutes",
@@ -104,18 +114,21 @@
     "freq": "1-2 times weekly (SubQ)"
   },
   "Tesamorelina (Egrifta)": {
+    "name": "Tesamorelin (Egrifta)",
     "desc": "Stabilized synthetic GHRH analogue consisting of 44 amino acids modified with a trans-3-hexenoic acid group at the N-terminus. Clinically approved for reducing visceral adipose tissue in HIV-associated lipodystrophy; increases basal and pulsatile GH and IGF-1 secretion (Falutz, 2007).",
     "contra": "Hypersensitivity; active cancer; pituitary hypophysectomy or pituitary tumor; pregnancy/breastfeeding.",
     "halfLife": "~26-38 minutes",
     "freq": "Daily at bedtime (SubQ)"
   },
   "Sermorelina (GHRH 1-29)": {
+    "name": "Sermorelin (GHRH 1-29)",
     "desc": "Synthetic peptide representing the fully functional 29-amino-acid N-terminal sequence of native human growth hormone-releasing hormone (GHRH 1-44). Stimulates physiological pituitary somatotroph GH secretion; classic diagnostic and anti-aging research peptide (Walker, 1994).",
     "contra": "Active neoplasm; intracranial hypertension; pregnancy/breastfeeding; untreated hypothyroidism.",
     "halfLife": "~10-12 minutes",
     "freq": "Daily before sleep (SubQ)"
   },
   "GHRP-2 (Pralmorelina)": {
+    "name": "GHRP-2 (Pralmorelin)",
     "desc": "Synthetic hexapeptide growth hormone secretagogue (D-Ala-D-betaNal-Ala-Trp-D-Phe-Lys-NH2) that strongly activates the ghrelin GHS-R1a receptor. Induces potent GH release with moderate appetite stimulation and mild, dose-dependent increases in prolactin and cortisol (Bowers, 1992).",
     "contra": "Active neoplasm; pituitary adenoma; uncontrolled diabetes; pregnancy/breastfeeding; RUO.",
     "halfLife": "~30-60 minutes",
@@ -128,54 +141,63 @@
     "freq": "1-2 times daily in cycles (SubQ)"
   },
   "Epitalon (Epitalamina)": {
+    "name": "Epitalon (Epithalamin)",
     "desc": "Synthetic tetrapeptide (Ala-Glu-Asp-Gly / AEDG) based on bovine pineal extract (epithalamin). Stimulates pineal melatonin synthesis and upregulates telomerase activity and telomere elongation in somatic cells, extending cellular lifespan in aging models (Khavinson, 2003).",
     "contra": "Hypersensitivity; active cancer/malignancy (due to telomerase activation); pregnancy/breastfeeding; RUO.",
     "halfLife": "Short (hours in plasma, biological regulatory effects persist for weeks)",
     "freq": "10-20 day cycle 1-2 times per year (SubQ)"
   },
   "GHK-Cu (Péptido de Cobre)": {
+    "name": "GHK-Cu (Copper Peptide)",
     "desc": "Naturally occurring human plasma tripeptide (Gly-His-Lys) with high-affinity copper(II) chelation. Modulates gene expression of over 4,000 genes, stimulates collagen, elastin, and glycosaminoglycan synthesis, accelerates dermal and capillary remodeling, and demonstrates antioxidant and anti-inflammatory properties (Pickart, 2008).",
     "contra": "Hypersensitivity to copper complexes; Wilson's disease or copper metabolism disorders; pregnancy/breastfeeding; RUO.",
     "halfLife": "~1-3 hours (biological matrix effects persist for days)",
     "freq": "Daily or 3-5 times weekly in cycles (SubQ / Topical)"
   },
   "MOTS-c (Péptido Mitocondrial)": {
+    "name": "MOTS-c (Mitochondrial Peptide)",
     "desc": "Mitochondrial-derived 16-amino-acid peptide encoded in the 12S rRNA region of mtDNA. Acts as a metabolic hormone by activating AMPK, improving cellular glucose uptake, enhancing fatty acid oxidation, and reversing age-associated insulin resistance (Lee, 2015).",
     "contra": "Hypersensitivity; severe hypoglycemia; pregnancy/breastfeeding; RUO.",
     "halfLife": "~4-6 hours",
     "freq": "3 times weekly (e.g. Mon-Wed-Fri) (SubQ)"
   },
   "SS-31 (Elamipretida / Bendavia)": {
+    "name": "SS-31 (Elamipretide / Bendavia)",
     "desc": "Mitochondria-targeted synthetic tetrapeptide (D-Arg-Dmt-Lys-Phe-NH2) that selectively binds to cardiolipin in the inner mitochondrial membrane. Optimizes electron transport chain function, prevents cardiolipin peroxidation, reduces reactive oxygen species (ROS) leakage, and restores ATP production in aging cardiac, renal, and skeletal muscle tissues (Szeto, 2014).",
     "contra": "Hypersensitivity; severe acute renal/hepatic failure; pregnancy/breastfeeding; RUO.",
     "halfLife": "~2-4 hours",
     "freq": "Daily (SubQ)"
   },
   "Humanina": {
+    "name": "Humanin",
     "desc": "Endogenous 24-amino-acid mitochondrial-derived peptide that binds to the tripartite receptor (gp130/WSX-1/CNTFR) and protects cells against apoptotic death, oxidative stress, and beta-amyloid neurotoxicity; reference regulator of cellular resilience and mitochondrial longevity (Hashimoto, 2001).",
     "contra": "Hypersensitivity; active malignancy; pregnancy/breastfeeding; RUO.",
     "halfLife": "Short (~30-60 minutes in circulation)",
     "freq": "1-2 times weekly in cycles (SubQ)"
   },
   "NAD+ (Nicotinamida Adenina Dinucleótido)": {
+    "name": "NAD+ (Nicotinamide Adenine Dinucleotide)",
     "desc": "Essential cellular coenzyme (dinucleotide) required for oxidoreductase reactions, ATP generation in the mitochondrial Krebs cycle, and as an obligate substrate for PARP DNA repair enzymes and sirtuins (SIRT1-7). Depleted with aging; systemic administration supports metabolic and cognitive revitalization (Rajman, 2018).",
     "contra": "Hypersensitivity; acute heart disease; active malignancy (tumor cell metabolic dependency); pregnancy/breastfeeding.",
     "halfLife": "Rapid systemic clearance / cellular uptake (~15-30 min)",
     "freq": "1-3 times weekly (SubQ / IM / IV)"
   },
   "Glutatión (GSH)": {
+    "name": "Glutathione (GSH)",
     "desc": "Endogenous tripeptide (gamma-L-glutamyl-L-cysteinylglycine) serving as the body's primary intracellular antioxidant. Neutralizes free radicals, regenerates vitamins C and E, and acts as a key cofactor for glutathione S-transferase in hepatic phase II detoxification and immune cell maintenance (Forman, 2009).",
     "contra": "Hypersensitivity; sulfite sensitivity; active asthma; pregnancy/breastfeeding.",
     "halfLife": "~10-15 minutes (intracellular pool lasts hours/days)",
     "freq": "1-3 times weekly (SubQ / IM / IV)"
   },
   "Semax (Heptapéptido ACTH 4-10)": {
+    "name": "Semax (ACTH 4-10 heptapeptide)",
     "desc": "Synthetic heptapeptide derived from the ACTH 4-10 sequence modified with a C-terminal Pro-Gly-Pro tripeptide (Met-Glu-His-Phe-Pro-Gly-Pro) to resist proteolytic degradation. Increases BDNF and TrkB expression, promotes neuroprotection, enhances attention and working memory, and accelerates post-ischemic recovery without hormonal corticotropic activity (Ashmarin, 1997).",
     "contra": "Hypersensitivity; acute psychotic disorders; severe anxiety or agitation; pregnancy/breastfeeding; RUO outside licensed clinical regions.",
     "halfLife": "~2-4 hours (neurotrophic gene expression induction >20h)",
     "freq": "1-2 times daily (Intranasal / SubQ)"
   },
   "Selank (Tuftsina sintética)": {
+    "name": "Selank (Synthetic Tuftsin)",
     "desc": "Synthetic heptapeptide based on the endogenous immunomodulatory peptide tuftsin, stabilized with a Pro-Gly-Pro sequence (Thr-Lys-Pro-Arg-Pro-Gly-Pro). Acts as a potent anxiolytic and cognitive enhancer by modulating GABAergic transmission and dopamine/serotonin turnover without sedation, dependence, or muscle relaxation (Uchakin, 2007).",
     "contra": "Hypersensitivity; severe depressive states with motor inhibition; pregnancy/breastfeeding; RUO outside licensed countries.",
     "halfLife": "~2-4 hours",
@@ -194,18 +216,21 @@
     "freq": "As needed (Intranasal / SubQ)"
   },
   "Timosina Alfa-1 (Ta1 / Zadaxin)": {
+    "name": "Thymosin Alpha-1 (Ta1 / Zadaxin)",
     "desc": "Synthetic 28-amino-acid peptide derived from prothymosin alpha. Master immunomodulator that stimulates T-cell differentiation, enhances natural killer (NK) cell activity, upregulates MHC class I presentation, and activates Toll-like receptors (TLR9), restoring immune balance without triggering inflammatory cytokine storms (Goldstein, 1977).",
     "contra": "Hypersensitivity; organ transplant recipients (prevention of allograft rejection); active autoimmune flares; pregnancy/breastfeeding.",
     "halfLife": "~2 hours (immune signaling cascade persists >24h)",
     "freq": "2 times weekly (SubQ)"
   },
   "LL-37 (Catelicidina)": {
+    "name": "LL-37 (Cathelicidin)",
     "desc": "Human cathelicidin-derived 37-amino-acid antimicrobial peptide. Disrupts microbial cell membranes, neutralizes lipopolysaccharides (LPS), promotes re-epithelialization and wound healing, and recruits immune cells to infection sites (Dürr, 2006).",
     "contra": "Hypersensitivity; autoimmune disease with psoriasis or rosacea (may exacerbate); active inflammatory bowel disease; RUO.",
     "halfLife": "~1-2 hours",
     "freq": "Daily or alternate days in short cycles (SubQ / Topical)"
   },
   "PT-141 (Bremelanotida / Vyleesi)": {
+    "name": "PT-141 (Bremelanotide / Vyleesi)",
     "desc": "Synthetic cyclic heptapeptide analogue of alpha-MSH that acts as a non-selective agonist of melanocortin receptors (MC3R and MC4R) in the central nervous system. Stimulates sexual desire and arousal through central dopaminergic and melanocortinergic pathways rather than vascular dilation; approved for premenopausal HSDD (Kingsberg, 2019).",
     "contra": "Uncontrolled hypertension; cardiovascular disease; pregnancy/breastfeeding; concurrent naltrexone therapy; hypersensitivity.",
     "halfLife": "~2.7 hours",
@@ -242,6 +267,7 @@
     "freq": "Daily or alternate days in cycles (SubQ)"
   },
   "CJC-1295 + Ipamorelina (stack GHRH + GHRP)": {
+    "name": "CJC-1295 + Ipamorelin (GHRH + GHRP stack)",
     "desc": "Gold standard GH secretagogue stack combining a GHRH analogue (Mod-GRF 1-29) and a selective ghrelin receptor agonist (Ipamorelina). Synergistically amplifies pulsatile pituitary growth hormone release without elevating cortisol or prolactin.",
     "contra": "Active cancer/malignancy; pituitary tumors; severe hyperglycemia; pregnancy/breastfeeding; RUO.",
     "halfLife": "Ipamorelina: ~2h | Mod-GRF: ~30 min",
@@ -254,6 +280,7 @@
     "freq": "Post-workout or morning (SubQ)"
   },
   "DSIP (Péptido inductor del sueño delta)": {
+    "name": "DSIP (Delta sleep-inducing peptide)",
     "desc": "Endogenous nonapeptide (Trp-Ala-Gly-Gly-Asp-Ala-Ser-Gly-Glu) discovered in rabbit cerebral venous blood during slow-wave sleep. Modulates sleep architecture by enhancing delta/SWS rhythms, reducing hypothalamic stress responses, and stabilizing circadian rhythms (Schoenenberger, 1977).",
     "contra": "Hypersensitivity; concurrent sedative/hypnotic medications without medical oversight; pregnancy/breastfeeding; RUO.",
     "halfLife": "~15-30 minutes (circadian sleep modulation persists overnight)",
@@ -1571,6 +1598,7 @@
   "Qué dice la evidencia": "What the evidence says",
   "Puntos clave": "Key points",
   "Preguntas frecuentes": "Frequently asked questions",
+  "Barras": "Bars",
   "Si es bueno, ¿por qué no lo aprueban?": "If it works, why isn't it approved?",
   "Por qué un péptido prometedor no se aprueba": "Why a promising peptide never gets approved",
   "Regulación": "Regulation",
