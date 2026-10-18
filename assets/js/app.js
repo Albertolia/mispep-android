@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.35';
+  const APP_VERSION = 'v1.0.41';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -1224,6 +1224,24 @@ function initDashboard() {
     return list;
   }
 
+  // --- i18n helpers para nombres de fármacos y etiquetas de gráfica ---
+  function uiLangEn() {
+    try { return (window.MISPEP_I18N && window.MISPEP_I18N.getLang && window.MISPEP_I18N.getLang() === 'en') || localStorage.getItem('mispep_lang') === 'en'; }
+    catch (e) { return false; }
+  }
+  function enName(n) {
+    try {
+      const d = (window.MISPEP_I18N && window.MISPEP_I18N.peptidesEn) || {};
+      if (d[n] && d[n].name) return d[n].name;
+      for (const k in d) {
+        if (k.split(' (')[0] === n && d[k] && d[k].name) return d[k].name.split(' (')[0];
+      }
+      return n;
+    } catch (e) { return n; }
+  }
+  window.uiLangEn = uiLangEn;
+  window.enName = enName;
+
   // Segmentos (protocolos) = dosis consecutivas del mismo fármaco
   function getProtocolSegments() {
     const hist = getInjectionHistory();
@@ -1555,7 +1573,7 @@ function initDashboard() {
         dashMedDaysSubEl.textContent = '';
       } else if (segsCount > 1 && activeDays !== null) {
         // Solo mostramos el desglose cuando hay más de un fármaco en el historial
-        dashMedDaysSubEl.textContent = `${activeLabel} · ${activeDays} ${isEn ? 'd' : 'd'}`;
+        dashMedDaysSubEl.textContent = `${isEn ? enName(activeLabel) : activeLabel} · ${activeDays} d`;
       } else {
         dashMedDaysSubEl.textContent = activeLabel;
       }
@@ -1582,7 +1600,7 @@ function initDashboard() {
     }
 
     if (dashMedName) {
-      dashMedName.textContent = (p.activeMed || (isEn ? 'NO TREATMENT' : 'SIN TRATAMIENTO')).toUpperCase();
+      dashMedName.textContent = ((p.activeMed ? (isEn ? enName(p.activeMed) : p.activeMed) : (isEn ? 'NO TREATMENT' : 'SIN TRATAMIENTO'))).toUpperCase();
       dashMedName.style.color = medColor;
     }
 
@@ -1783,7 +1801,7 @@ function initDashboard() {
     const activeDose = parseFloat(p.nextDoseMg) || (lastDoseOfActive ? lastDoseOfActive.dose : 1.5) || 1.5;
 
     const compLabel = document.getElementById('benchCurCompName');
-    if (compLabel) { compLabel.textContent = activeMed; compLabel.style.color = activeColor; }
+    if (compLabel) { compLabel.textContent = uiLangEn() ? enName(activeMed) : activeMed; compLabel.style.color = activeColor; }
 
     // --- Ventana temporal y proyección del protocolo vigente ---
     const now = new Date();
@@ -1883,7 +1901,7 @@ function initDashboard() {
       allEvents.forEach(ev => {
         if (ev.isFuture) return;
         if (ev.isMedChange) {
-          upperBadges.push({ x: ev.x, w: 66, type: 'med', col: ev.col, label: `⇄ ${ev.seg.label.slice(0, 11)}` });
+          upperBadges.push({ x: ev.x, w: 66, type: 'med', col: ev.col, label: `⇄ ${(uiLangEn() ? enName(ev.seg.label) : ev.seg.label).slice(0, 11)}` });
         } else if (ev.isDoseChange) {
           upperBadges.push({ x: ev.x, w: 54, type: 'dose', col: '#f59e0b', label: `▲ ${fmtNum(ev.dose, 1)} mg` });
         }
@@ -2104,7 +2122,7 @@ function initDashboard() {
         benchLegend.innerHTML = series.map(sr =>
           `<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.66rem; font-weight:800; color:var(--text-muted); margin-right:10px;">
              <span style="width:10px; height:10px; border-radius:50%; background:${sr.seg.color}; box-shadow:0 0 6px ${sr.seg.color};"></span>
-             ${sr.seg.label}${sr.seg.isActive ? ' (vigente)' : ''}
+             ${uiLangEn() ? enName(sr.seg.label) : sr.seg.label}${sr.seg.isActive ? (uiLangEn() ? ' (active)' : ' (vigente)') : ''}
            </span>`
         ).join('');
       }
@@ -2203,7 +2221,7 @@ function initDashboard() {
     const elStock = document.getElementById('benchStockCoverageText');
 
     if (elTitle) {
-      elTitle.textContent = activeMed;
+      elTitle.textContent = uiLangEn() ? enName(activeMed) : activeMed;
       elTitle.style.color = activeColor;
     }
 
@@ -2216,7 +2234,7 @@ function initDashboard() {
 
     // Marcas de jeringa (concentración estándar 5 mg/mL -> 2.0 mg = 40 unidades U-100)
     const marksUnits = Math.round((activeInj.dose / 5) * 100) || 40;
-    if (elDoseMarks) elDoseMarks.textContent = `${fmtNum(activeInj.dose, 1)} mg · ${marksUnits} marcas (unidades U-100) · ${activeMed}`;
+    if (elDoseMarks) elDoseMarks.textContent = `${fmtNum(activeInj.dose, 1)} mg · ${marksUnits} ${uiLangEn() ? 'marks (U-100 units)' : 'marcas (unidades U-100)'} · ${uiLangEn() ? enName(activeMed) : activeMed}`;
 
     if (elGlow) {
       elGlow.style.width = `${Math.min(100, Math.max(15, peakPct * 0.75))}%`;
@@ -7796,6 +7814,7 @@ function initCalc() {
   syncPillState(dosePills, doseInput.value);
 
   function calculate() {
+    window.__mispepCalc = calculate;
     updateCalcDoseBadge();
     const vialMg = parseFloat(vialInput.value) || 0;
     const bacMl = parseFloat(bacInput.value) || 0;
@@ -7840,12 +7859,15 @@ function initCalc() {
     const mcgPerUnit = (concMgMl * 1000) / (syringeTotalUnits === 40 ? 40 : 100);
 
     // Actualizar UI
+    const _en = (window.MISPEP_I18N && window.MISPEP_I18N.getLang && window.MISPEP_I18N.getLang() === 'en') || localStorage.getItem('mispep_lang') === 'en';
     document.getElementById('calcUnitsResult').textContent = fmtNum(units, 1);
-    document.getElementById('calcDescResult').innerHTML = `Extrae exactamente <strong>${fmtNum(units, 1)} unidades</strong> (${fmtNum(volumeMl, 3)} mL) para administrar <strong>${fmtNum(doseMcg, 0)} mcg</strong> (${fmtNum(doseMg, 2)} mg).`;
+    document.getElementById('calcDescResult').innerHTML = _en
+      ? `Draw exactly <strong>${fmtNum(units, 1)} units</strong> (${fmtNum(volumeMl, 3)} mL) to administer <strong>${fmtNum(doseMcg, 0)} mcg</strong> (${fmtNum(doseMg, 2)} mg).`
+      : `Extrae exactamente <strong>${fmtNum(units, 1)} unidades</strong> (${fmtNum(volumeMl, 3)} mL) para administrar <strong>${fmtNum(doseMcg, 0)} mcg</strong> (${fmtNum(doseMg, 2)} mg).`;
     
     document.getElementById('calcConcVal').textContent = `${fmtNum(concMgMl, 2)} mg/mL`;
     document.getElementById('calcVolVal').textContent = `${fmtNum(volumeMl, 3)} mL`;
-    document.getElementById('calcDosesVal').textContent = `${dosesPerVial} dosis`;
+    document.getElementById('calcDosesVal').textContent = `${dosesPerVial} ${_en ? 'doses' : 'dosis'}`;
     document.getElementById('calcPerUnitVal').textContent = `${fmtNum(mcgPerUnit, 1)} mcg/u`;
 
     // Clicks (unidades) exactas que deben mostrarse dentro de la ventana del Pen (ej. 40)
@@ -8531,7 +8553,7 @@ function initPlan() {
         pkLegend.innerHTML = pkSeries.map(sr =>
           `<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; font-weight:800; color:var(--text-muted);">
              <span style="width:10px; height:10px; border-radius:50%; background:${sr.seg.color}; box-shadow:0 0 6px ${sr.seg.color};"></span>
-             ${sr.seg.label}${sr.seg.isActive ? ' (vigente)' : ''}
+             ${uiLangEn() ? enName(sr.seg.label) : sr.seg.label}${sr.seg.isActive ? (uiLangEn() ? ' (active)' : ' (vigente)') : ''}
            </span>`
         ).join('');
       }
