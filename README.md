@@ -55,7 +55,20 @@ Interfaz en inglés (la aplicación está disponible en español e inglés).
 - `MisPep.apk`: Binario compilado y firmado listo para instalar.
 
 ## Compilación
+
+> Para firmar el APK necesitas tu propia clave: define `MISPEP_KEYSTORE` y `MISPEP_STOREPASS`
+> (o crea `~/.mispep/signing.env` con esas variables y cárgalo antes de compilar). El repositorio
+> no incluye ninguna clave de firma.
+
+
 Requiere Android SDK Tools (API 34) y JDK 17+:
 ```bash
 python3 build.py
 ```
+
+## Licencia
+
+MIT — puedes usar, modificar y redistribuir el código citando la licencia. Ver [LICENSE](LICENSE).
+
+MisPep es una herramienta de cálculo y registro con fines educativos. No es consejo médico,
+no sustituye la prescripción de un profesional y no vende ni suministra ningún producto.

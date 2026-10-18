@@ -119,26 +119,25 @@ if r5.returncode != 0:
     exit(1)
 
 print("7. Signing APK with apksigner...")
-keystore = os.path.join(PROJECT_DIR, 'mispep-release.keystore')
+# La clave de firma NO vive en el repositorio.
+# Ruta y contrasena se leen del entorno (o de ~/.mispep/signing.env, ver README).
+keystore = os.environ.get('MISPEP_KEYSTORE', os.path.expanduser('~/.mispep/mispep-release.keystore'))
+storepass = os.environ.get('MISPEP_STOREPASS', '')
+keypass = os.environ.get('MISPEP_KEYPASS', storepass)
+ks_alias = os.environ.get('MISPEP_KEYALIAS', 'mispep')
 if not os.path.exists(keystore):
-    subprocess.run([
-        'keytool', '-genkeypair', '-v',
-        '-keystore', keystore,
-        '-storepass', 'REDACTED',
-        '-alias', 'mispep',
-        '-keypass', 'REDACTED',
-        '-keyalg', 'RSA',
-        '-keysize', '2048',
-        '-validity', '10000',
-        '-dname', 'CN=MisPep,OU=Medical,O=Health,C=ES'
-    ], capture_output=True)
+    print(f"ERROR: no existe el keystore en {keystore}. Configura MISPEP_KEYSTORE.")
+    exit(1)
+if not storepass:
+    print("ERROR: falta MISPEP_STOREPASS (contrasena del keystore).")
+    exit(1)
 
 final_apk = os.path.join(PROJECT_DIR, 'MisPep.apk')
 r6 = subprocess.run([
     f'{BUILD_TOOLS}/apksigner', 'sign',
     '--ks', keystore,
-    '--ks-pass', 'pass:REDACTED',
-    '--key-pass', 'pass:REDACTED',
+    '--ks-pass', f'pass:{storepass}',
+    '--key-pass', f'pass:{keypass}',
     '--out', final_apk,
     aligned_apk
 ], capture_output=True, text=True)
