@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.42';
+  const APP_VERSION = 'v1.0.44';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -8528,6 +8528,80 @@ function initPlan() {
     // Contenido condicional: Curva continua vs Barras
     let plotContent = '';
 
+    const pkLegend = document.getElementById('pkProtocolLegend');
+    if (pkLegend) {
+      pkLegend.innerHTML = pkSeries.map(sr =>
+        `<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; font-weight:800; color:var(--text-muted);">
+           <span style="width:10px; height:10px; border-radius:50%; background:${sr.seg.color}; box-shadow:0 0 6px ${sr.seg.color};"></span>
+           ${uiLangEn() ? enName(sr.seg.label) : sr.seg.label}${sr.seg.isActive ? (uiLangEn() ? ' (active)' : ' (vigente)') : ''}
+         </span>`
+      ).join('');
+    }
+
+    function renderPkFloatingBadges(currX, currY, currTime) {
+      const activeSeries = pkSeries.map(sr => ({
+        label: sr.seg.label,
+        val: sr.at(currTime),
+        color: sr.seg.color
+      })).filter(s => s.val >= 0.02);
+
+      if (activeSeries.length === 0 && pkSeries.length > 0) {
+        const lastSr = pkSeries[pkSeries.length - 1];
+        activeSeries.push({
+          label: lastSr.seg.label,
+          val: lastSr.at(currTime),
+          color: lastSr.seg.color
+        });
+      }
+
+      const isNearHoy = Math.abs(currX - todayX) < 32;
+      const badgeY = (currY < padT + 22 && isNearHoy) ? (currY + 18) : Math.max(padT + 4, currY - 24);
+
+      if (activeSeries.length === 1) {
+        const s = activeSeries[0];
+        const badgeW = 54;
+        const badgeX = Math.max(padL + badgeW / 2, Math.min(width - padR - badgeW / 2, currX));
+        return `
+          <g transform="translate(${badgeX.toFixed(1)}, ${badgeY.toFixed(1)})">
+            <rect x="${(-badgeW / 2).toFixed(1)}" y="-10" width="${badgeW}" height="20" rx="6" fill="${s.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+            <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(s.val, 2)}mg</text>
+          </g>
+        `;
+      }
+
+      if (activeSeries.length >= 2) {
+        const sLeft = activeSeries[0];
+        const sRight = activeSeries[1];
+        const badgeW = 50;
+        let leftX = currX - 3;
+        let rightX = currX + 3;
+
+        if (leftX - badgeW < padL) {
+          const shift = padL - (leftX - badgeW);
+          leftX += shift;
+          rightX += shift;
+        } else if (rightX + badgeW > width - padR) {
+          const shift = (rightX + badgeW) - (width - padR);
+          leftX -= shift;
+          rightX -= shift;
+        }
+
+        return `
+          <!-- Etiqueta izquierda: ${sLeft.label} -->
+          <g transform="translate(${leftX.toFixed(1)}, ${badgeY.toFixed(1)})">
+            <rect x="${-badgeW}" y="-10" width="${badgeW}" height="20" rx="5" fill="${sLeft.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+            <text x="${(-badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sLeft.val, 2)}mg</text>
+          </g>
+          <!-- Etiqueta derecha: ${sRight.label} -->
+          <g transform="translate(${rightX.toFixed(1)}, ${badgeY.toFixed(1)})">
+            <rect x="0" y="-10" width="${badgeW}" height="20" rx="5" fill="${sRight.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
+            <text x="${(badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sRight.val, 2)}mg</text>
+          </g>
+        `;
+      }
+      return '';
+    }
+
     if (pkViewMode === 'curve') {
       // Una curva por protocolo, superpuestas y con color propio.
       // El protocolo antiguo cae a cero (Bateman) y el nuevo arranca de cero.
@@ -8548,79 +8622,7 @@ function initPlan() {
         }
       });
 
-      const pkLegend = document.getElementById('pkProtocolLegend');
-      if (pkLegend) {
-        pkLegend.innerHTML = pkSeries.map(sr =>
-          `<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; font-weight:800; color:var(--text-muted);">
-             <span style="width:10px; height:10px; border-radius:50%; background:${sr.seg.color}; box-shadow:0 0 6px ${sr.seg.color};"></span>
-             ${uiLangEn() ? enName(sr.seg.label) : sr.seg.label}${sr.seg.isActive ? (uiLangEn() ? ' (active)' : ' (vigente)') : ''}
-           </span>`
-        ).join('');
-      }
 
-      function renderPkFloatingBadges(currX, currY, currTime) {
-        const activeSeries = pkSeries.map(sr => ({
-          label: sr.seg.label,
-          val: sr.at(currTime),
-          color: sr.seg.color
-        })).filter(s => s.val >= 0.02);
-
-        if (activeSeries.length === 0 && pkSeries.length > 0) {
-          const lastSr = pkSeries[pkSeries.length - 1];
-          activeSeries.push({
-            label: lastSr.seg.label,
-            val: lastSr.at(currTime),
-            color: lastSr.seg.color
-          });
-        }
-
-        const isNearHoy = Math.abs(currX - todayX) < 32;
-        const badgeY = (currY < padT + 22 && isNearHoy) ? (currY + 18) : Math.max(padT + 4, currY - 24);
-
-        if (activeSeries.length === 1) {
-          const s = activeSeries[0];
-          const badgeW = 54;
-          const badgeX = Math.max(padL + badgeW / 2, Math.min(width - padR - badgeW / 2, currX));
-          return `
-            <g transform="translate(${badgeX.toFixed(1)}, ${badgeY.toFixed(1)})">
-              <rect x="${(-badgeW / 2).toFixed(1)}" y="-10" width="${badgeW}" height="20" rx="6" fill="${s.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
-              <text x="0" y="3.5" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(s.val, 2)}mg</text>
-            </g>
-          `;
-        }
-
-        if (activeSeries.length >= 2) {
-          const sLeft = activeSeries[0];
-          const sRight = activeSeries[1];
-          const badgeW = 50;
-          let leftX = currX - 3;
-          let rightX = currX + 3;
-
-          if (leftX - badgeW < padL) {
-            const shift = padL - (leftX - badgeW);
-            leftX += shift;
-            rightX += shift;
-          } else if (rightX + badgeW > width - padR) {
-            const shift = (rightX + badgeW) - (width - padR);
-            leftX -= shift;
-            rightX -= shift;
-          }
-
-          return `
-            <!-- Etiqueta izquierda: ${sLeft.label} -->
-            <g transform="translate(${leftX.toFixed(1)}, ${badgeY.toFixed(1)})">
-              <rect x="${-badgeW}" y="-10" width="${badgeW}" height="20" rx="5" fill="${sLeft.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
-              <text x="${(-badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sLeft.val, 2)}mg</text>
-            </g>
-            <!-- Etiqueta derecha: ${sRight.label} -->
-            <g transform="translate(${rightX.toFixed(1)}, ${badgeY.toFixed(1)})">
-              <rect x="0" y="-10" width="${badgeW}" height="20" rx="5" fill="${sRight.color}" stroke="#ffffff" stroke-width="1.5" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.6))" />
-              <text x="${(badgeW / 2).toFixed(1)}" y="3.5" font-size="8.5" font-weight="900" fill="#ffffff" text-anchor="middle" style="paint-order:stroke fill; stroke:rgba(0,0,0,0.4); stroke-width:1.5px;">${fmtNum(sRight.val, 2)}mg</text>
-            </g>
-          `;
-        }
-        return '';
-      }
 
       plotContent = `
         <!-- Rellenos de referencia (historial / previsión) -->
@@ -8714,7 +8716,7 @@ function initPlan() {
           <linearGradient id="pkBarPastGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#8b5cf6" />
             <stop offset="50%" stop-color="#3b82f6" />
-            <stop offset="100%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#22d3ee" />
           </linearGradient>
           <linearGradient id="pkBarActiveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#f43f5e" />
@@ -8723,7 +8725,7 @@ function initPlan() {
           <linearGradient id="pkBarFutGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="#06b6d4" />
             <stop offset="50%" stop-color="#6366f1" />
-            <stop offset="100%" stop-color="#1e293b" />
+            <stop offset="100%" stop-color="#8b5cf6" />
           </linearGradient>
         </defs>
 
