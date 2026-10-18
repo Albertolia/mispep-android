@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.30';
+  const APP_VERSION = 'v1.0.31';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
@@ -9661,6 +9661,7 @@ function initResearch() {
     /* --- METABOLISMO / INCRETINAS --- */
     {
       name: 'Tirzepatida (Mounjaro / Zepbound)',
+      school: {"mw": "4813,45 g/mol", "formula": "C₂₂₅H₃₄₈N₄₈O₆₈", "status": "Aprobado por FDA y EMA", "statusEn": "FDA/EMA approved", "evidence": "Ensayo SURMOUNT-1: pérdida media cercana al 21 % con 15 mg a las 72 semanas. En SURPASS superó a semaglutida 1 mg en HbA1c y peso.", "keyPoints": ["Una sola cadena de 39 aminoácidos activa a la vez los receptores GIP y GLP-1.", "La unión a albúmina alarga su semivida hasta unos 5 días, permitiendo pauta semanal.", "Aprobada para diabetes tipo 2 y para obesidad; no sustituye al seguimiento médico."], "faq": [{"q": "¿Se puede pasar de semaglutida a tirzepatida sin más?", "a": "No son intercambiables mg por mg. El cambio lo pauta el médico y suele reiniciarse a dosis baja para reducir molestias digestivas."}, {"q": "¿Cuánto tarda en notarse el efecto?", "a": "El cambio de apetito aparece en una o dos semanas; la evolución del peso se valora a partir de las 8-12 semanas."}], "en": {"evidence": "SURMOUNT-1: about 21% mean weight loss with 15 mg at 72 weeks. In SURPASS it beat semaglutide 1 mg on HbA1c and weight.", "keyPoints": ["A single 39-amino-acid chain activates both GIP and GLP-1 receptors.", "Albumin binding extends its half-life to about 5 days, allowing a weekly dose.", "Approved for type 2 diabetes and obesity; medical follow-up is required."], "faq": [{"q": "Can I switch from semaglutide to tirzepatide directly?", "a": "They are not interchangeable milligram for milligram. The switch is doctor-led and usually restarts at a low dose to limit digestive upset."}, {"q": "How soon does it work?", "a": "Appetite changes appear within one or two weeks; weight trends are assessed from 8-12 weeks."}]}},
       cat: 'Metabolismo',
       vial: 10,
       bac: 2,
@@ -9673,6 +9674,7 @@ function initResearch() {
     },
     {
       name: 'Semaglutida (Ozempic / Wegovy)',
+      school: {"mw": "4113,58 g/mol", "formula": "C₁₈₇H₂₉₁N₄₅O₅₉", "status": "Aprobado por FDA y EMA", "statusEn": "FDA/EMA approved", "evidence": "En STEP 1, la pauta semanal de 2,4 mg redujo el peso alrededor de un 15 % a las 68 semanas. También reduce eventos cardiovasculares en pacientes de alto riesgo.", "keyPoints": ["Análogo del GLP-1 humano con modificaciones que evitan la degradación por DPP-4.", "La cadena de ácido graso y la unión a albúmina sostienen su acción durante toda la semana.", "Existe versión oral, pero su absorción es muy variable y exige ayuno estricto."], "faq": [{"q": "¿Por qué se empieza con dosis baja?", "a": "Para que el intestino se adapte: la escalada gradual reduce náuseas, vómitos y diarrea."}, {"q": "¿Qué pasa si se olvida una dosis?", "a": "Si han pasado menos de 5 días, se administra; si falta menos para la siguiente, se omite y se sigue la pauta habitual."}], "en": {"evidence": "In STEP 1, weekly 2.4 mg produced about 15% weight loss at 68 weeks. It also lowers cardiovascular events in high-risk patients.", "keyPoints": ["A GLP-1 analogue with modifications that resist DPP-4 breakdown.", "A fatty-acid chain and albumin binding sustain activity across the week.", "An oral form exists, but absorption varies widely and requires strict fasting."], "faq": [{"q": "Why start at a low dose?", "a": "To let the gut adapt: gradual escalation reduces nausea, vomiting and diarrhoea."}, {"q": "What if a dose is missed?", "a": "If fewer than 5 days have passed, take it; if the next dose is closer, skip it and resume the usual schedule."}]}},
       cat: 'Metabolismo',
       vial: 5,
       bac: 2,
@@ -9685,6 +9687,7 @@ function initResearch() {
     },
     {
       name: 'Retatrutida (LY3437943)',
+      school: {"mw": "≈ 4300 g/mol", "formula": "C₁₉₇H₂₉₀N₅₀O₆₁S", "status": "Fase 3 (programa TRIUMPH), sin aprobación", "statusEn": "Phase 3 (TRIUMPH), not approved", "evidence": "En el ensayo de fase 2 publicado en 2023, la dosis de 12 mg produjo una pérdida de peso cercana al 24 % a las 48 semanas, con efectos digestivos dosis-dependientes.", "keyPoints": ["Triple agonista: suma el brazo del glucagón al GLP-1 y al GIP.", "El componente glucagón aumenta el gasto energético y la oxidación de grasa hepática.", "No está aprobada: solo debería usarse dentro de un ensayo clínico supervisado."], "faq": [{"q": "¿En qué se diferencia de tirzepatida?", "a": "Añade el agonismo del receptor de glucagón, lo que puede incrementar el gasto calórico, a costa de más náuseas y molestias digestivas."}, {"q": "¿Ya se vende legalmente?", "a": "No. Sigue en fase 3 y no cuenta con aprobación de la FDA ni de la EMA."}], "en": {"evidence": "In the 2023 phase 2 trial, 12 mg produced about 24% weight loss at 48 weeks, with dose-dependent digestive effects.", "keyPoints": ["A triple agonist: it adds the glucagon arm to GLP-1 and GIP.", "The glucagon component raises energy expenditure and liver fat oxidation.", "It is not approved and should only be used inside a supervised clinical trial."], "faq": [{"q": "How does it differ from tirzepatide?", "a": "It adds glucagon-receptor agonism, which may raise energy use at the cost of more nausea and gut side effects."}, {"q": "Is it legally sold yet?", "a": "No. It remains in phase 3 without FDA or EMA approval."}]}},
       cat: 'Metabolismo',
       vial: 10,
       bac: 2,
@@ -9697,6 +9700,7 @@ function initResearch() {
     },
     {
       name: 'Cagrilintida (AM833)',
+      school: {"mw": "≈ 4409 g/mol", "formula": "C₁₉₄H₃₁₂N₅₄O₅₉S₂", "status": "Fase 3, sin aprobación", "statusEn": "Phase 3, not approved", "evidence": "Los ensayos de fase 2 muestran pérdidas de peso moderadas como monoterapia y claramente mayores al combinarse con semaglutida (CagriSema).", "keyPoints": ["Análogo de amilina de acción prolongada, con vía distinta a la del GLP-1.", "Actúa sobre la saciedad en el área postrema y enlentece el vaciado gástrico.", "Se estudia sobre todo en combinación fija con semaglutida."], "faq": [{"q": "¿Es lo mismo que la amilina?", "a": "Es un análogo sintético con modificaciones que resisten la degradación y prolongan su efecto."}, {"q": "¿Comparte los avisos del GLP-1?", "a": "En combinación con semaglutida sí se aplican los avisos de clase, incluido el riesgo de carcinoma medular de tiroides."}], "en": {"evidence": "Phase 2 trials show moderate weight loss as monotherapy and clearly greater loss when combined with semaglutide (CagriSema).", "keyPoints": ["A long-acting amylin analogue that works through a pathway distinct from GLP-1.", "It acts on satiety in the area postrema and slows gastric emptying.", "It is mainly studied as a fixed combination with semaglutide."], "faq": [{"q": "Is it the same as amylin?", "a": "It is a synthetic analogue with modifications that resist breakdown and prolong its effect."}, {"q": "Does it share GLP-1 warnings?", "a": "When combined with semaglutide, class warnings apply, including medullary thyroid carcinoma risk."}]}},
       cat: 'Metabolismo',
       vial: 5,
       bac: 2,
@@ -9709,6 +9713,7 @@ function initResearch() {
     },
     {
       name: 'Survodutida (BI 456906)',
+      school: {"mw": "≈ 4,9 kDa", "formula": "—", "status": "Fase 3, sin aprobación", "statusEn": "Phase 3, not approved", "evidence": "Los datos de fase 2 muestran pérdidas de peso relevantes, con un perfil digestivo similar al de otros agonistas de incretinas.", "keyPoints": ["Doble agonista GLP-1 y glucagón construido sobre un armazón de glucagón.", "Incorporar el brazo glucagón busca aumentar el gasto energético y movilizar grasa.", "Aún no aprobada; faltan datos de fase 3."], "faq": [{"q": "¿Por qué se habla de «GLP-1 con glucagón»?", "a": "Porque activa ambos receptores: el GLP-1 reduce el apetito y el glucagón eleva el gasto de energía."}, {"q": "¿Está disponible en farmacia?", "a": "No, sigue en desarrollo clínico."}], "en": {"evidence": "Phase 2 data show meaningful weight loss with a digestive profile similar to other incretin agonists.", "keyPoints": ["A dual GLP-1 and glucagon agonist built on a glucagon backbone.", "The glucagon arm aims to raise energy expenditure and mobilise fat.", "Not yet approved; phase 3 data are pending."], "faq": [{"q": "Why call it 'GLP-1 plus glucagon'?", "a": "Because it activates both receptors: GLP-1 curbs appetite while glucagon raises energy use."}, {"q": "Is it available in pharmacies?", "a": "No, it is still in clinical development."}]}},
       cat: 'Metabolismo',
       vial: 10,
       bac: 2,
@@ -9721,6 +9726,7 @@ function initResearch() {
     },
     {
       name: 'Mazdutida (IBI362)',
+      school: {"mw": "≈ 4,5 kDa", "formula": "—", "status": "Fase 3 en China, sin aprobación", "statusEn": "Phase 3 in China, not approved", "evidence": "Los ensayos publicados en población china muestran reducciones de peso y de HbA1c superiores a placebo, con un perfil de tolerabilidad digestiva.", "keyPoints": ["Oxintomodulina sintética acilada con acción dual GLP-1 y glucagón.", "Su cadena grasa prolonga la semivida y permite administración semanal.", "Desarrollo liderado en China; sin aprobación en Europa."], "faq": [{"q": "¿Qué es la oxintomodulina?", "a": "Una hormona intestinal precursora del glucagón y del GLP-1; la mazdutida es su versión modificada."}, {"q": "¿Puedo encontrarla fuera de ensayos?", "a": "No debería: no está aprobada y su uso fuera de investigación carece de garantías."}], "en": {"evidence": "Trials in Chinese populations show greater weight and HbA1c reductions than placebo, with a digestive tolerability profile.", "keyPoints": ["An acylated synthetic oxyntomodulin with dual GLP-1 and glucagon action.", "Its fatty-acid chain extends half-life and allows weekly dosing.", "Development is led in China; it is not approved in Europe."], "faq": [{"q": "What is oxyntomodulin?", "a": "An intestinal hormone that is a precursor of both glucagon and GLP-1; mazdutide is its modified version."}, {"q": "Can I get it outside trials?", "a": "You should not: it is unapproved and non-research use has no safety guarantees."}]}},
       cat: 'Metabolismo',
       vial: 10,
       bac: 2,
@@ -9732,6 +9738,7 @@ function initResearch() {
     },
     {
       name: 'AOD-9604 (Fragmento hGH 176-191)',
+      school: {"mw": "1815,08 g/mol", "formula": "C₇₈H₁₂₃N₂₃O₂₃S₂", "status": "Investigación preclínica / uso veterinario", "statusEn": "Preclinical / veterinary use", "evidence": "Los estudios en roedores describen lipólisis sin elevar IGF-1 ni afectar la glucemia; los ensayos en humanos han sido pequeños y con resultados inconsistentes.", "keyPoints": ["Fragmento C-terminal de 16 aminoácidos de la hormona de crecimiento con tirosina añadida.", "Busca separar el efecto lipolítico de los efectos sobre crecimiento y glucosa.", "Prohibido por la WADA en deportistas."], "faq": [{"q": "¿Adelgaza por sí solo?", "a": "La evidencia humana es débil; no hay ensayos grandes que confirmen pérdida de peso clínicamente relevante."}, {"q": "¿Afecta a la glucemia?", "a": "En modelos animales no eleva la glucosa ni el IGF-1, a diferencia de la hGH completa."}], "en": {"evidence": "Rodent studies describe lipolysis without raising IGF-1 or affecting glycaemia; human trials have been small and inconsistent.", "keyPoints": ["A 16-amino-acid C-terminal fragment of growth hormone with an added tyrosine.", "It aims to separate the lipolytic effect from growth and glucose effects.", "Banned by WADA for athletes."], "faq": [{"q": "Does it cause weight loss on its own?", "a": "Human evidence is weak; no large trial confirms clinically relevant weight loss."}, {"q": "Does it affect blood glucose?", "a": "In animal models it does not raise glucose or IGF-1, unlike full hGH."}]}},
       cat: 'Metabolismo',
       vial: 5,
       bac: 2,
@@ -9746,6 +9753,7 @@ function initResearch() {
     /* --- REPARACIÓN Y ARTICULACIONES --- */
     {
       name: 'BPC-157 (Body Protection Compound)',
+      school: {"mw": "1419,53 g/mol", "formula": "C₆₂H₉₈N₁₆O₂₂", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "La mayoría de los datos proviene de roedores: acelera la cicatrización de tendones, úlceras gástricas y lesiones musculares. Los ensayos en humanos son escasos y de baja calidad.", "keyPoints": ["Pentadecapéptido derivado de una proteína del jugo gástrico humano.", "Estimula angiogénesis y síntesis de colágeno a través de VEGFR2 y EGR-1.", "Su estabilidad en medio ácido explica el interés en vía oral, aunque la biodisponibilidad es baja."], "faq": [{"q": "¿Es un medicamento aprobado?", "a": "No. Se vende como compuesto de investigación y no tiene aprobación regulatoria."}, {"q": "¿Por qué se asocia a riesgo tumoral?", "a": "Porque promueve la formación de vasos; en cáncer activo se considera una precaución importante."}], "en": {"evidence": "Most data come from rodents: it speeds tendon, gastric ulcer and muscle healing. Human trials are scarce and low quality.", "keyPoints": ["A pentadecapeptide derived from a human gastric juice protein.", "It stimulates angiogenesis and collagen synthesis via VEGFR2 and EGR-1.", "Its acid stability explains interest in oral use, though bioavailability is low."], "faq": [{"q": "Is it an approved medicine?", "a": "No. It is sold as a research compound without regulatory approval."}, {"q": "Why the cancer concern?", "a": "Because it promotes blood-vessel formation; active cancer is therefore an important precaution."}]}},
       cat: 'Reparación',
       vial: 5,
       bac: 2,
@@ -9758,6 +9766,7 @@ function initResearch() {
     },
     {
       name: 'TB-500 (Timosina Beta-4 fragmento)',
+      school: {"mw": "4963,50 g/mol", "formula": "C₂₁₂H₃₅₀N₅₆O₇₈S", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "Los estudios se centran en migración celular y reparación de tejidos en modelos animales; no existen ensayos clínicos robustos en humanos.", "keyPoints": ["Fragmento activo de la timosina beta-4, proteína implicada en la dinámica de la actina.", "Su motivo LKKTET secuestra G-actina y facilita la migración de células endoteliales.", "Se investiga en regeneración de músculo, tendón y piel."], "faq": [{"q": "¿Es lo mismo que la timosina beta-4?", "a": "No exactamente: el TB-500 es un fragmento sintético de la región activa, no la proteína completa."}, {"q": "¿Tiene aprobación?", "a": "No; se comercializa como producto de investigación."}], "en": {"evidence": "Studies focus on cell migration and tissue repair in animal models; there are no robust human trials.", "keyPoints": ["The active fragment of thymosin beta-4, a protein involved in actin dynamics.", "Its LKKTET motif sequesters G-actin and aids endothelial cell migration.", "It is researched for muscle, tendon and skin regeneration."], "faq": [{"q": "Is it the same as thymosin beta-4?", "a": "Not exactly: TB-500 is a synthetic fragment of the active region, not the full protein."}, {"q": "Is it approved?", "a": "No; it is sold as a research product."}]}},
       cat: 'Reparación',
       vial: 5,
       bac: 2,
@@ -9770,6 +9779,7 @@ function initResearch() {
     },
     {
       name: 'KPV (Lys-Pro-Val)',
+      school: {"mw": "342,44 g/mol", "formula": "C₁₆H₃₀N₄O₄", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "Los estudios en modelos de colitis e inflamación cutánea muestran reducción de citocinas proinflamatorias; los datos en humanos son muy limitados.", "keyPoints": ["Tripéptido C-terminal de la hormona α-MSH.", "Actúa sobre NF-κB y reduce la producción de mediadores inflamatorios.", "Se investiga por vía oral y tópica por su pequeño tamaño."], "faq": [{"q": "¿Es un antiinflamatorio?", "a": "Es un péptido de investigación con actividad antiinflamatoria en modelos animales, no un fármaco aprobado."}, {"q": "¿Se puede usar en la piel?", "a": "Se ha estudiado en formulaciones tópicas, pero no hay productos aprobados con garantías."}], "en": {"evidence": "Studies in colitis and skin inflammation models show reduced pro-inflammatory cytokines; human data are very limited.", "keyPoints": ["A C-terminal tripeptide of α-MSH.", "It acts on NF-κB and lowers inflammatory mediator production.", "Its small size makes oral and topical routes of interest."], "faq": [{"q": "Is it an anti-inflammatory drug?", "a": "It is a research peptide with anti-inflammatory activity in animals, not an approved medicine."}, {"q": "Can it be used on the skin?", "a": "Topical formulations have been studied, but no approved product with guarantees exists."}]}},
       cat: 'Reparación',
       vial: 5,
       bac: 2.5,
@@ -9782,6 +9792,7 @@ function initResearch() {
     },
     {
       name: 'ARA-290 (Cibinetida)',
+      school: {"mw": "≈ 1257 g/mol", "formula": "—", "status": "Fase 2, sin aprobación", "statusEn": "Phase 2, not approved", "evidence": "Los ensayos en sarcoidosis y neuropatía diabética han mostrado señales mixtas; no hay aprobación regulatoria.", "keyPoints": ["Péptido de 11 aminoácidos derivado de la eritropoyetina, sin efecto hematopoyético.", "Activa el receptor innato de reparación (IRR) en tejido nervioso y vascular.", "Se investiga en neuropatías y enfermedades inflamatorias."], "faq": [{"q": "¿Es eritropoyetina?", "a": "No: es un fragmento diseñado para conservar el efecto reparador sin estimular la producción de glóbulos rojos."}, {"q": "¿Está aprobado?", "a": "No, su desarrollo clínico no ha llegado a aprobación."}], "en": {"evidence": "Trials in sarcoidosis and diabetic neuropathy have shown mixed signals; there is no regulatory approval.", "keyPoints": ["An 11-amino-acid peptide derived from erythropoietin without haematopoietic effect.", "It activates the innate repair receptor (IRR) in nerve and vascular tissue.", "It is studied in neuropathies and inflammatory disease."], "faq": [{"q": "Is it erythropoietin?", "a": "No: it is a fragment designed to keep the repair effect without boosting red-cell production."}, {"q": "Is it approved?", "a": "No, its clinical development has not reached approval."}]}},
       cat: 'Reparación',
       vial: 16,
       bac: 2,
@@ -9796,6 +9807,7 @@ function initResearch() {
     /* --- EJE GH Y SECRETAGOGOS --- */
     {
       name: 'Ipamorelina',
+      school: {"mw": "711,85 g/mol", "formula": "C₃₈H₄₉N₉O₅", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "En animales libera hormona de crecimiento de forma dosis-dependiente con menor elevación de cortisol y prolactina que otros secretagogos.", "keyPoints": ["Pentapéptido sintético que activa el receptor GHS-R1a de la ghrelina.", "Estimula la liberación pulsátil de hormona de crecimiento desde la hipófisis.", "Se considera uno de los secretagogos más selectivos."], "faq": [{"q": "¿Sustituye a la hormona de crecimiento?", "a": "No: estimula su liberación natural, no aporta hormona exógena."}, {"q": "¿Cuándo se administra?", "a": "En investigación suele pautarse antes de dormir o en ayunas, momentos de mayor pulso fisiológico."}], "en": {"evidence": "In animals it releases growth hormone dose-dependently with less cortisol and prolactin rise than other secretagogues.", "keyPoints": ["A synthetic pentapeptide that activates the ghrelin receptor GHS-R1a.", "It stimulates pulsatile growth hormone release from the pituitary.", "It is considered one of the more selective secretagogues."], "faq": [{"q": "Does it replace growth hormone?", "a": "No: it stimulates natural release rather than supplying exogenous hormone."}, {"q": "When is it given?", "a": "In research it is usually dosed before sleep or fasting, when the physiological pulse is highest."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2,
@@ -9808,6 +9820,7 @@ function initResearch() {
     },
     {
       name: 'CJC-1295 (sin DAC / Mod-GRF 1-29)',
+      school: {"mw": "3367,97 g/mol", "formula": "C₁₅₂H₂₅₂N₄₄O₄₂", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "Aumenta los niveles de GH e IGF-1 en estudios pequeños; su semivida corta exige administración frecuente.", "keyPoints": ["Análogo de la GHRH de 29 aminoácidos modificado para resistir la degradación.", "Actúa sobre la hipófisis amplificando la liberación de hormona de crecimiento.", "Sin la molécula DAC su acción dura horas, no días."], "faq": [{"q": "¿Qué diferencia hay con la versión con DAC?", "a": "La versión con DAC se une a albúmina y dura días; la versión sin DAC es más fisiológica pero más corta."}, {"q": "¿Se usa solo?", "a": "En investigación suele combinarse con un secretagogo como ipamorelina para sumar los dos mecanismos."}], "en": {"evidence": "It raises GH and IGF-1 levels in small studies; its short half-life requires frequent dosing.", "keyPoints": ["A 29-amino-acid GHRH analogue modified to resist degradation.", "It acts on the pituitary to amplify growth hormone release.", "Without the DAC moiety its effect lasts hours, not days."], "faq": [{"q": "How does it differ from the DAC version?", "a": "The DAC version binds albumin and lasts days; the non-DAC version is more physiological but shorter."}, {"q": "Is it used alone?", "a": "In research it is often combined with a secretagogue such as ipamorelin to add both mechanisms."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2.5,
@@ -9820,6 +9833,7 @@ function initResearch() {
     },
     {
       name: 'CJC-1295 con DAC',
+      school: {"mw": "≈ 3,6 kDa", "formula": "—", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "La modificación DAC prolonga la exposición a GH e IGF-1 durante días, pero también puede producir elevaciones sostenidas fuera del patrón pulsátil.", "keyPoints": ["GHRH modificada con un grupo maleimida que se une covalentemente a la albúmina.", "Esta unión prolonga su presencia en sangre hasta aproximadamente una semana.", "Se investiga por su efecto sostenido sobre IGF-1."], "faq": [{"q": "¿Por qué se llama «con DAC»?", "a": "Por el Drug Affinity Complex: el grupo que se ancla a la albúmina y retrasa su eliminación."}, {"q": "¿Es mejor que la versión corta?", "a": "No necesariamente: la exposición continua puede desensibilizar el eje y no imita los pulsos naturales."}], "en": {"evidence": "The DAC modification extends GH and IGF-1 exposure over days but can produce sustained levels outside the pulsatile pattern.", "keyPoints": ["GHRH modified with a maleimide group that binds covalently to albumin.", "This binding keeps it in circulation for roughly a week.", "It is studied for its sustained effect on IGF-1."], "faq": [{"q": "Why 'with DAC'?", "a": "From Drug Affinity Complex: the group that anchors to albumin and delays clearance."}, {"q": "Is it better than the short version?", "a": "Not necessarily: continuous exposure may desensitise the axis and does not mimic natural pulses."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2,
@@ -9832,6 +9846,7 @@ function initResearch() {
     },
     {
       name: 'Tesamorelina (Egrifta)',
+      school: {"mw": "≈ 5,1 kDa", "formula": "—", "status": "Aprobado por FDA (lipodistrofia VIH)", "statusEn": "FDA approved (HIV lipodystrophy)", "evidence": "Aprobada en 2010 para reducir grasa visceral en lipodistrofia asociada al VIH; los estudios en personas sin VIH son limitados.", "keyPoints": ["Análogo de la GHRH de 44 aminoácidos.", "Estimula la producción de GH y la liberación de ácidos grasos.", "Su indicación aprobada es muy concreta y requiere receta."], "faq": [{"q": "¿Sirve para adelgazar en general?", "a": "No está aprobada para eso; su indicación es la lipodistrofia en pacientes con VIH."}, {"q": "¿Qué efectos vigilar?", "a": "Retención de líquidos, dolor articular y posible aumento de IGF-1."}], "en": {"evidence": "Approved in 2010 to reduce visceral fat in HIV-associated lipodystrophy; studies in people without HIV are limited.", "keyPoints": ["A 44-amino-acid GHRH analogue.", "It stimulates GH production and fatty-acid release.", "Its approved indication is narrow and prescription-only."], "faq": [{"q": "Is it for general weight loss?", "a": "It is not approved for that; its indication is lipodystrophy in patients with HIV."}, {"q": "What should be monitored?", "a": "Fluid retention, joint pain and possible IGF-1 elevation."}]}},
       cat: 'Eje GH',
       vial: 10,
       bac: 2,
@@ -9844,6 +9859,7 @@ function initResearch() {
     },
     {
       name: 'Sermorelina (GHRH 1-29)',
+      school: {"mw": "3357,9 g/mol", "formula": "C₁₄₉H₂₄₆N₄₄O₄₂S", "status": "Investigación activa", "statusEn": "Active research", "evidence": "Estudios pequeños muestran aumento de GH e IGF-1; se ha usado como prueba de reserva hipofisaria y en investigación sobre composición corporal.", "keyPoints": ["Fragmento de 29 aminoácidos de la GHRH humana.", "Conserva la capacidad de estimular la hipófisis sin la cola larga de la hormona completa.", "Su semivida es corta, de minutos a pocas horas."], "faq": [{"q": "¿Es lo mismo que CJC-1295 sin DAC?", "a": "Muy parecido: ambos son GHRH 1-29 modificada; cambian detalles de estabilidad y presentación."}, {"q": "¿Necesita receta?", "a": "En la mayoría de países no está aprobada como medicamento y se vende como producto de investigación."}], "en": {"evidence": "Small studies show rises in GH and IGF-1; it has been used to test pituitary reserve and in body-composition research.", "keyPoints": ["A 29-amino-acid fragment of human GHRH.", "It keeps the pituitary-stimulating capacity without the full hormone's long tail.", "Its half-life is short, from minutes to a few hours."], "faq": [{"q": "Is it the same as CJC-1295 without DAC?", "a": "Very similar: both are modified GHRH 1-29; stability and presentation details differ."}, {"q": "Does it need a prescription?", "a": "In most countries it is not approved as a medicine and is sold as a research product."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2,
@@ -9856,6 +9872,7 @@ function initResearch() {
     },
     {
       name: 'GHRP-2 (Pralmorelina)',
+      school: {"mw": "817,98 g/mol", "formula": "C₄₅H₅₅N₉O₆", "status": "Aprobado solo en Japón como diagnóstico", "statusEn": "Japan only, diagnostic use", "evidence": "Aumenta GH de forma marcada en pruebas de provocación; su uso como tratamiento no está aprobado en Europa ni EE. UU.", "keyPoints": ["Hexapéptido sintético que activa el receptor GHS-R1a.", "Provoca un pico de GH y también eleva ligeramente cortisol y prolactina.", "En Japón se usa como agente diagnóstico de la secreción de GH."], "faq": [{"q": "¿Es un tratamiento?", "a": "No en Occidente: su única aprobación es diagnóstica y en Japón."}, {"q": "¿Por qué eleva el apetito?", "a": "Porque activa la vía de la ghrelina, que además de liberar GH estimula el hambre."}], "en": {"evidence": "It markedly raises GH in provocation tests; its use as a treatment is not approved in Europe or the US.", "keyPoints": ["A synthetic hexapeptide that activates the GHS-R1a receptor.", "It triggers a GH spike and also mildly raises cortisol and prolactin.", "In Japan it is used as a diagnostic agent for GH secretion."], "faq": [{"q": "Is it a treatment?", "a": "Not in the West: its only approval is diagnostic and in Japan."}, {"q": "Why does it increase appetite?", "a": "Because it activates the ghrelin pathway, which releases GH and also stimulates hunger."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2.5,
@@ -9868,6 +9885,7 @@ function initResearch() {
     },
     {
       name: 'Hexarelina',
+      school: {"mw": "887,04 g/mol", "formula": "C₄₇H₅₈N₁₂O₆", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "Potente liberador de GH en modelos animales, con estudios muy limitados en humanos y señales de efectos cardíacos.", "keyPoints": ["Hexapéptido sintético de la familia GHRP.", "Actúa como agonista del receptor GHS-R1a con gran potencia.", "Se ha estudiado también por efectos sobre el músculo cardíaco."], "faq": [{"q": "¿Es más potente que GHRP-6?", "a": "En algunos modelos sí, pero la potencia no equivale a mejor perfil de seguridad."}, {"q": "¿Está aprobada?", "a": "No; es un compuesto de investigación."}], "en": {"evidence": "A potent GH releaser in animal models, with very limited human studies and signals of cardiac effects.", "keyPoints": ["A synthetic hexapeptide of the GHRP family.", "It acts as a highly potent GHS-R1a agonist.", "It has also been studied for effects on cardiac muscle."], "faq": [{"q": "Is it stronger than GHRP-6?", "a": "In some models yes, but potency does not mean a better safety profile."}, {"q": "Is it approved?", "a": "No; it is a research compound."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2,
@@ -9882,6 +9900,7 @@ function initResearch() {
     /* --- LONGEVIDAD Y MITOCONDRIAS --- */
     {
       name: 'Epitalon (Epitalamina)',
+      school: {"mw": "390,35 g/mol", "formula": "C₁₄H₂₂N₄O₉", "status": "Solo investigación", "statusEn": "Research only", "evidence": "Los trabajos rusos describen aumentos de telomerasa y cambios en melatonina; no hay ensayos occidentales replicados.", "keyPoints": ["Tetrapéptido sintético (Ala-Glu-Asp-Gly) derivado de la epífisis.", "Se investiga por su posible efecto sobre la telomerasa y el ritmo circadiano.", "Su evidencia se apoya en estudios antiguos y de pequeño tamaño."], "faq": [{"q": "¿Alarga los telómeros?", "a": "Se ha descrito un aumento de actividad telomerasa en cultivos y estudios pequeños, pero no está demostrado que prolongue la vida."}, {"q": "¿Es un medicamento?", "a": "No; se vende como compuesto de investigación."}], "en": {"evidence": "Russian work describes telomerase increases and melatonin changes; there are no replicated Western trials.", "keyPoints": ["A synthetic tetrapeptide (Ala-Glu-Asp-Gly) derived from the pineal gland.", "It is studied for possible effects on telomerase and circadian rhythm.", "Its evidence rests on old, small studies."], "faq": [{"q": "Does it lengthen telomeres?", "a": "Increased telomerase activity has been reported in cells and small studies, but it is not shown to extend lifespan."}, {"q": "Is it a medicine?", "a": "No; it is sold as a research compound."}]}},
       cat: 'Longevidad',
       vial: 10,
       bac: 2,
@@ -9894,6 +9913,7 @@ function initResearch() {
     },
     {
       name: 'GHK-Cu (Péptido de Cobre)',
+      school: {"mw": "403,93 g/mol", "formula": "C₁₄H₂₄CuN₆O₄", "status": "Estudios clínicos en cosmética", "statusEn": "Clinical studies in cosmetics", "evidence": "Se ha estudiado en cicatrización y calidad de la piel; los ensayos son pequeños y la mayoría de productos son cosméticos, no medicamentos.", "keyPoints": ["Tripéptido Gly-His-Lys unido a un ion cobre.", "Modula colágeno, elastina y actividad antioxidante en la piel.", "Se usa sobre todo por vía tópica en formulaciones cosméticas."], "faq": [{"q": "¿Es un fármaco?", "a": "No está aprobado como medicamento; se emplea como principio cosmético."}, {"q": "¿Puede irritar la piel?", "a": "El cobre libre puede irritar; conviene probar en una zona pequeña y evitar mezclar con ácidos fuertes."}], "en": {"evidence": "Studied for wound healing and skin quality; trials are small and most products are cosmetics, not medicines.", "keyPoints": ["A Gly-His-Lys tripeptide bound to a copper ion.", "It modulates collagen, elastin and antioxidant activity in skin.", "It is mainly used topically in cosmetic formulations."], "faq": [{"q": "Is it a drug?", "a": "It is not approved as a medicine; it is used as a cosmetic ingredient."}, {"q": "Can it irritate skin?", "a": "Free copper can irritate; patch-test first and avoid mixing with strong acids."}]}},
       cat: 'Longevidad',
       vial: 50,
       bac: 3,
@@ -9906,6 +9926,7 @@ function initResearch() {
     },
     {
       name: 'MOTS-c (Péptido Mitocondrial)',
+      school: {"mw": "2174,66 g/mol", "formula": "C₁₀₁H₁₄₄N₃₀O₂₂S₂", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "En ratones mejora la sensibilidad a la insulina y el rendimiento físico; los datos en humanos son muy preliminares.", "keyPoints": ["Péptido de 16 aminoácidos codificado en el ADN mitocondrial.", "Actúa como señal metabólica que activa AMPK y el metabolismo de la glucosa.", "Se investiga en envejecimiento y resistencia a la insulina."], "faq": [{"q": "¿Es un péptido «del ejercicio»?", "a": "Se le atribuye imitar parte de la respuesta metabólica al ejercicio, pero en humanos aún no está confirmado."}, {"q": "¿Hay presentación aprobada?", "a": "No; solo existe como producto de investigación."}], "en": {"evidence": "In mice it improves insulin sensitivity and exercise capacity; human data are very preliminary.", "keyPoints": ["A 16-amino-acid peptide encoded in mitochondrial DNA.", "It acts as a metabolic signal activating AMPK and glucose metabolism.", "It is studied in ageing and insulin resistance."], "faq": [{"q": "Is it an 'exercise peptide'?", "a": "It is credited with mimicking part of the metabolic response to exercise, but this is unconfirmed in humans."}, {"q": "Is there an approved product?", "a": "No; it exists only as a research product."}]}},
       cat: 'Longevidad',
       vial: 10,
       bac: 2,
@@ -9918,6 +9939,7 @@ function initResearch() {
     },
     {
       name: 'SS-31 (Elamipretida / Bendavia)',
+      school: {"mw": "639,8 g/mol", "formula": "C₃₂H₄₉N₉O₅", "status": "Aprobado por FDA (Forzinity, 2025) para síndrome de Barth", "statusEn": "FDA approved (Forzinity, 2025) for Barth syndrome", "evidence": "Recibió aprobación acelerada en septiembre de 2025 para mejorar la fuerza muscular en el síndrome de Barth; en otras indicaciones los resultados han sido menos consistentes.", "keyPoints": ["Tetrapéptido dirigido a la cardiolipina de la membrana mitocondrial interna.", "Estabiliza la cadena respiratoria y reduce la producción de radicales libres.", "Su indicación aprobada es una enfermedad ultrarrara, no el uso general antienvejecimiento."], "faq": [{"q": "¿Puedo usarla para longevidad?", "a": "No está aprobada para eso; su única indicación autorizada es el síndrome de Barth."}, {"q": "¿Cómo se administra?", "a": "En la ficha aprobada es inyección subcutánea de 40 mg una vez al día."}], "en": {"evidence": "It received accelerated approval in September 2025 to improve muscle strength in Barth syndrome; results in other indications have been less consistent.", "keyPoints": ["A tetrapeptide that targets cardiolipin in the inner mitochondrial membrane.", "It stabilises the respiratory chain and lowers free-radical production.", "Its approved indication is an ultra-rare disease, not general anti-ageing use."], "faq": [{"q": "Can I use it for longevity?", "a": "It is not approved for that; its only authorised indication is Barth syndrome."}, {"q": "How is it given?", "a": "The approved label is a 40 mg subcutaneous injection once daily."}]}},
       cat: 'Longevidad',
       vial: 50,
       bac: 2.5,
@@ -9930,6 +9952,7 @@ function initResearch() {
     },
     {
       name: 'Humanina',
+      school: {"mw": "≈ 1,5 kDa", "formula": "—", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "En modelos animales protege neuronas y mejora la función mitocondrial; no hay ensayos clínicos sólidos en humanos.", "keyPoints": ["Péptido de 12 aminoácidos derivado de la región 5' del gen SHMOOSE.", "Se estudia por efectos neuroprotectores y sobre la señalización de IGF-1.", "Su nombre proviene de «humanin», descubierto en tejido cerebral humano."], "faq": [{"q": "¿Es una hormona?", "a": "Se comporta como un péptido señal con acciones locales y sistémicas, pero no es una hormona clásica."}, {"q": "¿Está disponible como fármaco?", "a": "No; es un compuesto de investigación."}], "en": {"evidence": "In animal models it protects neurons and improves mitochondrial function; there are no solid human trials.", "keyPoints": ["A 12-amino-acid peptide derived from the 5' region of the SHMOOSE gene.", "It is studied for neuroprotective effects and IGF-1 signalling.", "Its name comes from 'humanin', discovered in human brain tissue."], "faq": [{"q": "Is it a hormone?", "a": "It behaves as a signalling peptide with local and systemic actions, but it is not a classic hormone."}, {"q": "Is it available as a drug?", "a": "No; it is a research compound."}]}},
       cat: 'Longevidad',
       vial: 10,
       bac: 2,
@@ -9941,6 +9964,7 @@ function initResearch() {
     },
     {
       name: 'NAD+ (Nicotinamida Adenina Dinucleótido)',
+      school: {"mw": "663,43 g/mol", "formula": "C₂₁H₂₇N₇O₁₄P₂", "status": "Coenzima endógena; suplementos orales sin aprobación", "statusEn": "Endogenous coenzyme; oral supplements unapproved", "evidence": "Los precursores orales (NR, NMN) se han estudiado en ensayos pequeños con resultados modestos; la forma inyectable tiene datos humanos muy limitados.", "keyPoints": ["No es un péptido: es la molécula redox central del metabolismo.", "Es sustrato de sirtuinas y PARP, implicadas en reparación del ADN.", "Sus niveles descienden con la edad y en enfermedades metabólicas."], "faq": [{"q": "¿Tomarlo por vía oral funciona?", "a": "Se degrada en el intestino; los precursores como NR o NMN se usan para elevar sus niveles de forma indirecta."}, {"q": "¿Es seguro inyectarlo?", "a": "No hay datos sólidos de seguridad a largo plazo; la vía inyectable no está aprobada."}], "en": {"evidence": "Oral precursors (NR, NMN) have been studied in small trials with modest results; the injectable form has very limited human data.", "keyPoints": ["It is not a peptide: it is the central redox molecule of metabolism.", "It is a substrate for sirtuins and PARP, involved in DNA repair.", "Its levels decline with age and in metabolic disease."], "faq": [{"q": "Does oral NAD+ work?", "a": "It is broken down in the gut; precursors such as NR or NMN are used to raise levels indirectly."}, {"q": "Is injecting it safe?", "a": "There are no solid long-term safety data; the injectable route is not approved."}]}},
       cat: 'Longevidad',
       vial: 500,
       bac: 5,
@@ -9953,6 +9977,7 @@ function initResearch() {
     },
     {
       name: 'Glutatión (GSH)',
+      school: {"mw": "307,32 g/mol", "formula": "C₁₀H₁₇N₃O₆S", "status": "Endógeno; suplementos sin aprobación", "statusEn": "Endogenous; supplements unapproved", "evidence": "La evidencia es sólida para su papel antioxidante fisiológico, pero débil para la mayoría de usos estéticos o de longevidad.", "keyPoints": ["Tripéptido gamma-Glu-Cys-Gly con un enlace gamma-glutamilo atípico.", "Es el principal antioxidante intracelular y participa en la detoxificación hepática.", "Su forma oral se degrada en el tubo digestivo; se usan precursores como NAC."], "faq": [{"q": "¿Conviene inyectarlo?", "a": "No hay evidencia clara de que la vía inyectable aporte más que la oral o los precursores, y puede producir reacciones."}, {"q": "¿Quién debe evitarlo?", "a": "Personas con asma, alergia a sulfitos o en tratamiento con platino, entre otras precauciones."}], "en": {"evidence": "Evidence is solid for its physiological antioxidant role but weak for most cosmetic or longevity uses.", "keyPoints": ["A gamma-Glu-Cys-Gly tripeptide with an unusual gamma-glutamyl bond.", "It is the main intracellular antioxidant and supports liver detoxification.", "Oral glutathione is broken down in the gut; precursors such as NAC are used."], "faq": [{"q": "Is injecting it worthwhile?", "a": "There is no clear evidence that injection beats oral use or precursors, and it can cause reactions."}, {"q": "Who should avoid it?", "a": "People with asthma, sulfite allergy or platinum-based chemotherapy, among other precautions."}]}},
       cat: 'Longevidad',
       vial: 600,
       bac: 3,
@@ -9967,6 +9992,7 @@ function initResearch() {
     /* --- COGNICIÓN Y SISTEMA NERVIOSO --- */
     {
       name: 'Semax (Heptapéptido ACTH 4-10)',
+      school: {"mw": "813,92 g/mol", "formula": "C₃₇H₅₁N₉O₁₀S", "status": "Aprobado en Rusia; investigación en Occidente", "statusEn": "Approved in Russia; research in the West", "evidence": "Los estudios rusos describen mejoras en atención y recuperación tras ictus; los ensayos independientes son escasos.", "keyPoints": ["Análogo del fragmento ACTH(4-10) con una cola Pro-Gly-Pro.", "Eleva BDNF y TrkB en el hipocampo sin activar la corteza suprarrenal.", "Se administra por vía intranasal por su paso a la nariz-cerebro."], "faq": [{"q": "¿Es un esteroide?", "a": "No: conserva la señal neurotrófica del ACTH sin el efecto hormonal de la molécula completa."}, {"q": "¿Produce dependencia?", "a": "No se ha descrito dependencia, pero faltan estudios de seguridad a largo plazo."}], "en": {"evidence": "Russian studies report gains in attention and recovery after stroke; independent trials are scarce.", "keyPoints": ["An ACTH(4-10) fragment analogue with a Pro-Gly-Pro tail.", "It raises hippocampal BDNF and TrkB without activating the adrenal cortex.", "It is given intranasally because of nose-to-brain transport."], "faq": [{"q": "Is it a steroid?", "a": "No: it keeps ACTH's neurotrophic signal without the full molecule's hormonal effect."}, {"q": "Is it addictive?", "a": "No dependence has been reported, but long-term safety studies are lacking."}]}},
       cat: 'Cognición',
       vial: 10,
       bac: 2,
@@ -9979,6 +10005,7 @@ function initResearch() {
     },
     {
       name: 'Selank (Tuftsina sintética)',
+      school: {"mw": "751,90 g/mol", "formula": "C₃₃H₅₇N₁₁O₉", "status": "Aprobado en Rusia; investigación en Occidente", "statusEn": "Approved in Russia; research in the West", "evidence": "Estudios pequeños sugieren reducción de ansiedad sin sedación; la calidad metodológica es limitada.", "keyPoints": ["Heptapéptido derivado de la tuftsina con una cola Pro-Gly.", "Modula GABA-A y citocinas inflamatorias como la IL-6.", "Se investiga como ansiolítico sin efecto sedante."], "faq": [{"q": "¿Sustituye a un ansiolítico?", "a": "No; su evidencia es preliminar y no sustituye un tratamiento pautado."}, {"q": "¿Da somnolencia?", "a": "En los estudios rusos no se describe sedación relevante, a diferencia de las benzodiacepinas."}], "en": {"evidence": "Small studies suggest anxiety reduction without sedation; methodological quality is limited.", "keyPoints": ["A tuftsin-derived heptapeptide with a Pro-Gly tail.", "It modulates GABA-A and inflammatory cytokines such as IL-6.", "It is studied as an anxiolytic without sedative effect."], "faq": [{"q": "Does it replace an anxiolytic?", "a": "No; its evidence is preliminary and it does not replace prescribed treatment."}, {"q": "Does it cause drowsiness?", "a": "Russian studies report no relevant sedation, unlike benzodiazepines."}]}},
       cat: 'Cognición',
       vial: 10,
       bac: 2,
@@ -9991,6 +10018,7 @@ function initResearch() {
     },
     {
       name: 'Dihexa (N-hexanoic-Tyr-Ile)',
+      school: {"mw": "≈ 407 g/mol", "formula": "—", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "En ratones con Alzheimer experimental mejoró la memoria y la sinaptogénesis; no hay ensayos en humanos.", "keyPoints": ["Peptidomimético estable derivado de la angiotensina IV.", "Activa la señalización HGF/c-Met y la formación de nuevas conexiones neuronales.", "Su pequeño tamaño le permite atravesar la barrera hematoencefálica."], "faq": [{"q": "¿Es un fármaco para la memoria?", "a": "No: solo hay datos preclínicos y su perfil de seguridad en humanos es desconocido."}, {"q": "¿Por qué preocupa el c-Met?", "a": "Porque es una vía implicada en proliferación celular; en cáncer activo sería una precaución."}], "en": {"evidence": "In mice with experimental Alzheimer's it improved memory and synaptogenesis; there are no human trials.", "keyPoints": ["A stable peptidomimetic derived from angiotensin IV.", "It activates HGF/c-Met signalling and new neural connections.", "Its small size lets it cross the blood-brain barrier."], "faq": [{"q": "Is it a memory drug?", "a": "No: only preclinical data exist and its human safety profile is unknown."}, {"q": "Why the c-Met concern?", "a": "It is a pathway involved in cell proliferation; active cancer would be a precaution."}]}},
       cat: 'Cognición',
       vial: 10,
       bac: 2,
@@ -10003,6 +10031,7 @@ function initResearch() {
     },
     {
       name: 'Oxitocina',
+      school: {"mw": "1007,19 g/mol", "formula": "C₄₃H₆₆N₁₂O₁₂S₂", "status": "Medicamento aprobado", "statusEn": "Approved medicine", "evidence": "Aprobada para inducción del parto; en neurociencia social los resultados son prometedores pero inconsistentes.", "keyPoints": ["Nonapéptido cíclico con puente disulfuro.", "Actúa sobre el receptor OXTR acoplado a proteínas G.", "Participa en vínculo social, confianza y modulación del dolor."], "faq": [{"q": "¿Sirve para el autismo o la ansiedad social?", "a": "Los ensayos han dado resultados mixtos; no es un tratamiento aprobado para eso."}, {"q": "¿Se puede usar sin control?", "a": "Como medicamento tiene efectos uterinos y cardiovasculares; requiere supervisión."}], "en": {"evidence": "Approved for labour induction; social-neuroscience results are promising but inconsistent.", "keyPoints": ["A cyclic nonapeptide with a disulfide bridge.", "It acts on the G-protein-coupled OXTR receptor.", "It is involved in social bonding, trust and pain modulation."], "faq": [{"q": "Is it used for autism or social anxiety?", "a": "Trials have produced mixed results; it is not an approved treatment for these."}, {"q": "Can it be used unsupervised?", "a": "As a medicine it has uterine and cardiovascular effects and needs supervision."}]}},
       cat: 'Cognición',
       vial: 5,
       bac: 2,
@@ -10017,6 +10046,7 @@ function initResearch() {
     /* --- INMUNIDAD --- */
     {
       name: 'Timosina Alfa-1 (Ta1 / Zadaxin)',
+      school: {"mw": "3108,30 g/mol", "formula": "C₁₂₉H₂₁₅N₃₃O₅₅", "status": "Aprobado en varios países asiáticos y europeos", "statusEn": "Approved in several Asian and European countries", "evidence": "Ensayos pequeños muestran mejoría en subconjuntos de células T; su uso en inmunoterapia sigue siendo objeto de debate.", "keyPoints": ["Péptido tímico acetilado de 28 aminoácidos.", "Favorece la maduración de linfocitos T CD4+ y CD8+ y la actividad de células NK.", "Se usa en algunos países como inmunomodulador adyuvante."], "faq": [{"q": "¿Es un antiviral?", "a": "No directamente; modula la respuesta inmune y se ha estudiado como adyuvante en infecciones crónicas."}, {"q": "¿Puede empeorar una autoinmunidad?", "a": "Es una precaución teórica por su efecto inmunoestimulante."}], "en": {"evidence": "Small trials show improvement in T-cell subsets; its role in immunotherapy remains debated.", "keyPoints": ["An acetylated 28-amino-acid thymic peptide.", "It supports CD4+ and CD8+ T-cell maturation and NK-cell activity.", "Some countries use it as an adjuvant immunomodulator."], "faq": [{"q": "Is it an antiviral?", "a": "Not directly; it modulates the immune response and has been studied as an adjuvant in chronic infections."}, {"q": "Can it worsen autoimmunity?", "a": "That is a theoretical precaution because of its immune-stimulating effect."}]}},
       cat: 'Inmunidad',
       vial: 5,
       bac: 2,
@@ -10029,6 +10059,7 @@ function initResearch() {
     },
     {
       name: 'LL-37 (Catelicidina)',
+      school: {"mw": "4493,33 g/mol", "formula": "C₂₀₅H₃₄₀N₆₀O₅₃", "status": "Uso exclusivo en investigación", "statusEn": "Research use only", "evidence": "Tiene actividad antimicrobiana y moduladora de la inmunidad en laboratorio; los ensayos clínicos son muy limitados.", "keyPoints": ["Los 37 aminoácidos de la única catelicidina humana.", "Permeabiliza membranas bacterianas y neutraliza endotoxinas.", "Participa en la cicatrización y en la respuesta inmune innata."], "faq": [{"q": "¿Es un antibiótico?", "a": "No es un antibiótico comercial: es un péptido antimicrobiano endógeno estudiado en investigación."}, {"q": "¿Por qué se relaciona con la psoriasis?", "a": "Porque niveles altos de LL-37 se asocian a inflamación Th17 y a brotes de psoriasis."}], "en": {"evidence": "It has antimicrobial and immune-modulating activity in the lab; clinical trials are very limited.", "keyPoints": ["The 37 amino acids of the only human cathelicidin.", "It permeabilises bacterial membranes and neutralises endotoxins.", "It participates in wound healing and innate immunity."], "faq": [{"q": "Is it an antibiotic?", "a": "It is not a commercial antibiotic: it is an endogenous antimicrobial peptide studied in research."}, {"q": "Why is it linked to psoriasis?", "a": "High LL-37 levels are associated with Th17 inflammation and psoriasis flares."}]}},
       cat: 'Inmunidad',
       vial: 5,
       bac: 2.5,
@@ -10043,6 +10074,7 @@ function initResearch() {
     /* --- SALUD SEXUAL Y PIGMENTACIÓN --- */
     {
       name: 'PT-141 (Bremelanotida / Vyleesi)',
+      school: {"mw": "1025,2 g/mol", "formula": "C₅₀H₆₈N₁₄O₁₀", "status": "Aprobado por FDA (Vyleesi, 2019)", "statusEn": "FDA approved (Vyleesi, 2019)", "evidence": "Aprobada para el deseo sexual hipoactivo en mujeres premenopáusicas; en hombres se usa fuera de indicación con datos más limitados.", "keyPoints": ["Heptapéptido cíclico agonista de MC3R y MC4R en el hipotálamo.", "Actúa por vía central, no por efecto vascular directo.", "Se administra a demanda, unos 45 minutos antes."], "faq": [{"q": "¿Es como la viagra?", "a": "No: la viagra actúa sobre el flujo sanguíneo; la bremelanotida actúa sobre receptores cerebrales del deseo."}, {"q": "¿Qué efectos secundarios tiene?", "a": "Náuseas, rubor, cefalea y elevación transitoria de la presión arterial."}], "en": {"evidence": "Approved for hypoactive sexual desire in premenopausal women; male use is off-label with more limited data.", "keyPoints": ["A cyclic heptapeptide agonist of MC3R and MC4R in the hypothalamus.", "It works centrally, not through a direct vascular effect.", "It is taken on demand, about 45 minutes before."], "faq": [{"q": "Is it like Viagra?", "a": "No: Viagra acts on blood flow; bremelanotide acts on brain desire receptors."}, {"q": "What side effects does it have?", "a": "Nausea, flushing, headache and a transient rise in blood pressure."}]}},
       cat: 'Sexual',
       vial: 10,
       bac: 2,
@@ -10055,6 +10087,7 @@ function initResearch() {
     },
     {
       name: 'Melanotan II (MT-2)',
+      school: {"mw": "1024,18 g/mol", "formula": "C₅₀H₆₉N₁₅O₉", "status": "Solo investigación; no aprobado", "statusEn": "Research only; not approved", "evidence": "Se usa de forma no regulada para bronceado; los datos de seguridad a largo plazo son inexistentes y se han descrito lesiones pigmentarias.", "keyPoints": ["Análogo sintético de la α-MSH que activa los receptores MC1R y MC4R.", "Estimula la producción de melanina y puede aumentar el deseo sexual.", "No tiene aprobación regulatoria en ningún país occidental."], "faq": [{"q": "¿Es seguro para broncearse?", "a": "No hay control de calidad ni datos de seguridad; se han notificado nevus nuevos y cambios pigmentarios."}, {"q": "¿Por qué se desaconseja?", "a": "Por la ausencia de garantías farmacéuticas y el riesgo de efectos hormonales y cardiovasculares."}], "en": {"evidence": "It is used unregulated for tanning; long-term safety data are absent and pigmentary lesions have been reported.", "keyPoints": ["A synthetic α-MSH analogue activating MC1R and MC4R.", "It stimulates melanin production and may increase sexual desire.", "It has no regulatory approval in any Western country."], "faq": [{"q": "Is it safe for tanning?", "a": "There is no quality control or safety data; new naevi and pigment changes have been reported."}, {"q": "Why is it discouraged?", "a": "Because of the lack of pharmaceutical guarantees and the risk of hormonal and cardiovascular effects."}]}},
       cat: 'Sexual',
       vial: 10,
       bac: 2,
@@ -10067,6 +10100,7 @@ function initResearch() {
     },
     {
       name: 'Kisspeptina-10',
+      school: {"mw": "≈ 1302 g/mol", "formula": "—", "status": "Solo investigación", "statusEn": "Research only", "evidence": "Se estudia en el eje reproductivo; su uso exógeno puede alterar la pulsatilidad de GnRH y no está aprobado.", "keyPoints": ["Fragmento C-terminal activo de la kisspeptina (KP-54).", "Actúa sobre el receptor KISS1R para estimular la liberación de GnRH.", "Es clave en la pubertad y la regulación hormonal."], "faq": [{"q": "¿Sirve para fertilidad?", "a": "Se investiga en medicina reproductiva, pero no es un tratamiento disponible."}, {"q": "¿Puede desregular las hormonas?", "a": "Sí; al actuar sobre el eje hipotálamo-hipófisis-gonadal puede alterar la pulsatilidad hormonal."}], "en": {"evidence": "Studied in the reproductive axis; exogenous use can disrupt GnRH pulsatility and is not approved.", "keyPoints": ["The active C-terminal fragment of kisspeptin (KP-54).", "It acts on KISS1R to stimulate GnRH release.", "It is key in puberty and hormonal regulation."], "faq": [{"q": "Is it used for fertility?", "a": "It is being researched in reproductive medicine but is not an available treatment."}, {"q": "Can it disrupt hormones?", "a": "Yes; by acting on the hypothalamic-pituitary-gonadal axis it can alter hormonal pulsatility."}]}},
       cat: 'Sexual',
       vial: 5,
       bac: 2.5,
@@ -10080,6 +10114,7 @@ function initResearch() {
     /* --- AÑADIDOS · Tier List 2026 (datos de Hpebio-Peptide.xlsx) --- */
     {
       name: 'Wolverine (BPC-157 + TB-500)',
+      school: {"mw": "Mezcla (sin peso único)", "formula": "—", "status": "Combinación de investigación", "statusEn": "Research combination", "evidence": "No hay ensayos de la mezcla; la evidencia disponible es la de cada péptido por separado y casi toda preclínica.", "keyPoints": ["Combina BPC-157 (angiogénesis y mucosa) con TB-500 (migración celular y actina).", "Busca sumar reparación estructural y modulación de la inflamación.", "No es un producto aprobado: es una mezcla oficiosa de dos compuestos de investigación."], "faq": [{"q": "¿Hay estudios de la mezcla?", "a": "No; se extrapola de los datos individuales, lo que no demuestra que combinarlos sea mejor."}, {"q": "¿Cómo se dosifica?", "a": "No existe una pauta validada; cualquier mezcla casera añade riesgo de error de concentración."}], "en": {"evidence": "There are no trials of the blend; available evidence is for each peptide separately and mostly preclinical.", "keyPoints": ["Combines BPC-157 (angiogenesis and mucosa) with TB-500 (cell migration and actin).", "It aims to add structural repair and inflammatory modulation.", "It is not an approved product: it is an informal mix of two research compounds."], "faq": [{"q": "Are there studies of the blend?", "a": "No; it extrapolates from individual data, which does not prove the combination is better."}, {"q": "How is it dosed?", "a": "No validated schedule exists; any home-made mix adds concentration-error risk."}]}},
       cat: 'Reparación',
       vial: 10,
       bac: 3,
@@ -10092,6 +10127,7 @@ function initResearch() {
     },
     {
       name: 'Klow (GHK-Cu + TB-500 + BPC-157 + KPV)',
+      school: {"mw": "Mezcla (sin peso único)", "formula": "—", "status": "Combinación de investigación", "statusEn": "Research combination", "evidence": "No existen ensayos clínicos de esta mezcla; la evidencia es indirecta y procede de cada componente por separado.", "keyPoints": ["Reúne cuatro péptidos con perfiles distintos: cobre-péptido, reparación, angiogénesis y antiinflamación.", "Se plantea para recuperación de tejidos y piel.", "La combinación no está aprobada ni estandarizada."], "faq": [{"q": "¿Es mejor que usar uno solo?", "a": "No está demostrado; sumar compuestos también suma incertidumbres y posibles interacciones."}, {"q": "¿Qué riesgo tiene?", "a": "Al no haber control de mezclas, la concentración real de cada péptido puede variar mucho."}], "en": {"evidence": "There are no clinical trials of this blend; evidence is indirect and comes from each component separately.", "keyPoints": ["It combines four peptides with different profiles: copper-peptide, repair, angiogenesis and anti-inflammation.", "It is proposed for tissue and skin recovery.", "The combination is neither approved nor standardised."], "faq": [{"q": "Is it better than using one alone?", "a": "Not proven; adding compounds also adds uncertainty and possible interactions."}, {"q": "What is the risk?", "a": "Without blend controls, the actual concentration of each peptide can vary widely."}]}},
       cat: 'Reparación',
       vial: 80,
       bac: 3,
@@ -10104,6 +10140,7 @@ function initResearch() {
     },
     {
       name: 'Glow (BPC-157 + TB-500 + GHK-Cu)',
+      school: {"mw": "Mezcla (sin peso único)", "formula": "—", "status": "Combinación de investigación", "statusEn": "Research combination", "evidence": "Sin ensayos de la mezcla; los datos disponibles son preclínicos o cosméticos de cada péptido.", "keyPoints": ["Combina reparación (BPC-157), migración celular (TB-500) y cobre-péptido para piel.", "Se orienta a recuperación y calidad de la piel.", "No es un medicamento ni una fórmula validada."], "faq": [{"q": "¿Se puede usar tópico?", "a": "El GHK-Cu se ha estudiado tópico; los otros dos no están pensados para esa vía."}, {"q": "¿Hay dosis estándar?", "a": "No; al ser una mezcla oficiosa, no existe una dosis regulada."}], "en": {"evidence": "No trials of the blend; available data are preclinical or cosmetic for each peptide.", "keyPoints": ["It combines repair (BPC-157), cell migration (TB-500) and a copper-peptide for skin.", "It targets recovery and skin quality.", "It is neither a medicine nor a validated formula."], "faq": [{"q": "Can it be used topically?", "a": "GHK-Cu has been studied topically; the other two are not intended for that route."}, {"q": "Is there a standard dose?", "a": "No; as an informal blend there is no regulated dose."}]}},
       cat: 'Reparación',
       vial: 70,
       bac: 3,
@@ -10116,6 +10153,7 @@ function initResearch() {
     },
     {
       name: 'CJC-1295 + Ipamorelina (stack GHRH + GHRP)',
+      school: {"mw": "Mezcla (sin peso único)", "formula": "—", "status": "Combinación de investigación", "statusEn": "Research combination", "evidence": "La combinación se usa en foros y estudios pequeños por su efecto aditivo sobre la GH; no hay ensayos controlados de la mezcla.", "keyPoints": ["Suma un análogo de GHRH (CJC-1295) y un secretagogo de ghrelina (ipamorelina).", "Actúan en puntos distintos de la hipófisis, por lo que el efecto sobre la GH puede ser aditivo.", "No es una combinación aprobada."], "faq": [{"q": "¿Por qué se combinan?", "a": "Porque la GHRH y la ghrelina estimulan la liberación de GH por vías complementarias."}, {"q": "¿Es seguro a largo plazo?", "a": "No hay datos; la exposición prolongada a GH e IGF-1 tiene riesgos conocidos."}], "en": {"evidence": "The combination is used in forums and small studies for its additive GH effect; there are no controlled trials of the blend.", "keyPoints": ["It adds a GHRH analogue (CJC-1295) and a ghrelin secretagogue (ipamorelin).", "They act at different pituitary points, so the GH effect may be additive.", "It is not an approved combination."], "faq": [{"q": "Why combine them?", "a": "Because GHRH and ghrelin stimulate GH release through complementary pathways."}, {"q": "Is it safe long term?", "a": "There are no data; prolonged GH and IGF-1 exposure carries known risks."}]}},
       cat: 'Eje GH',
       vial: 5,
       bac: 2.5,
@@ -10128,6 +10166,7 @@ function initResearch() {
     },
     {
       name: 'IGF-1 LR3',
+      school: {"mw": "9117,60 g/mol", "formula": "C₄₀₀H₆₂₅N₁₁₁O₁₁₅S₉", "status": "Producto de investigación", "statusEn": "Research product", "evidence": "Su versión de larga duración se usa en investigación de crecimiento y metabolismo; los datos de seguridad en humanos sanos son escasos.", "keyPoints": ["Análogo de IGF-1 con una extensión que reduce su unión a proteínas transportadoras.", "Mayor vida media y mayor potencia que el IGF-1 nativo.", "Se investiga en crecimiento, reparación y metabolismo."], "faq": [{"q": "¿Es hormona de crecimiento?", "a": "No: es un factor de crecimiento parecido a la insulina, con acciones distintas."}, {"q": "¿Riesgos principales?", "a": "Hipoglucemia, retención de líquidos y posible estimulación de tejidos tumorales."}], "en": {"evidence": "The long-acting version is used in growth and metabolism research; safety data in healthy humans are scarce.", "keyPoints": ["An IGF-1 analogue with an extension that reduces binding to carrier proteins.", "Longer half-life and greater potency than native IGF-1.", "It is researched in growth, repair and metabolism."], "faq": [{"q": "Is it growth hormone?", "a": "No: it is an insulin-like growth factor with different actions."}, {"q": "Main risks?", "a": "Hypoglycaemia, fluid retention and possible stimulation of tumour tissue."}]}},
       cat: 'Eje GH',
       vial: 1,
       bac: 2,
@@ -10140,6 +10179,7 @@ function initResearch() {
     },
     {
       name: 'DSIP (Péptido inductor del sueño delta)',
+      school: {"mw": "848,81 g/mol", "formula": "C₃₅H₄₈N₁₀O₁₅", "status": "Péptido de investigación", "statusEn": "Research peptide", "evidence": "Los estudios sobre sueño son antiguos y pequeños; no hay evidencia moderna sólida de eficacia.", "keyPoints": ["Nonapéptido aislado originalmente del cerebro de conejo.", "Se estudia por su efecto sobre el sueño de ondas lentas y el estrés.", "Su mecanismo exacto sigue sin estar claro."], "faq": [{"q": "¿Funciona como somnífero?", "a": "La evidencia es débil; no sustituye a un tratamiento del insomnio."}, {"q": "¿Es seguro?", "a": "No hay datos de seguridad a largo plazo en humanos."}], "en": {"evidence": "Sleep studies are old and small; there is no solid modern evidence of efficacy.", "keyPoints": ["A nonapeptide originally isolated from rabbit brain.", "It is studied for effects on slow-wave sleep and stress.", "Its exact mechanism remains unclear."], "faq": [{"q": "Does it work as a sleeping pill?", "a": "Evidence is weak; it does not replace insomnia treatment."}, {"q": "Is it safe?", "a": "There are no long-term human safety data."}]}},
       cat: 'Cognición',
       vial: 5,
       bac: 2,
@@ -10152,6 +10192,7 @@ function initResearch() {
     },
     {
       name: '5-Amino-1MQ',
+      school: {"mw": "≈ 286 g/mol (yoduro)", "formula": "C₁₁H₁₃IN₂", "status": "Investigación preclínica", "statusEn": "Preclinical research", "evidence": "Inhibe NNMT y reduce grasa en ratones; no hay ensayos clínicos publicados en humanos.", "keyPoints": ["No es un péptido: es una molécula pequeña inhibidora de NNMT.", "Bloquea la enzima que consume nicotinamida y altera los donantes de metilo.", "Se investiga en obesidad y resistencia a la insulina."], "faq": [{"q": "¿Es un péptido?", "a": "No, aunque se venda junto a ellos: es un compuesto de molécula pequeña."}, {"q": "¿Se puede tomar por vía oral?", "a": "En investigación se ha usado por vía oral, pero no hay datos de seguridad humana."}], "en": {"evidence": "It inhibits NNMT and reduces fat in mice; no human clinical trials have been published.", "keyPoints": ["It is not a peptide: it is a small-molecule NNMT inhibitor.", "It blocks the enzyme that consumes nicotinamide and alters methyl donors.", "It is researched in obesity and insulin resistance."], "faq": [{"q": "Is it a peptide?", "a": "No, although it is sold alongside them: it is a small-molecule compound."}, {"q": "Can it be taken orally?", "a": "Oral use has been explored in research, but there are no human safety data."}]}},
       cat: 'Metabolismo',
       vial: 5,
       bac: 2,
@@ -10164,6 +10205,7 @@ function initResearch() {
     },
     {
       name: 'SLU-PP-332',
+      school: {"mw": "290,32 g/mol", "formula": "C₁₈H₁₄N₂O₂", "status": "Preclínico, solo investigación", "statusEn": "Preclinical, research only", "evidence": "En ratones sedentarios aumentó la resistencia al ejercicio y el gasto energético; no hay datos en humanos.", "keyPoints": ["No es un péptido: activa los receptores ERR alfa, beta y gamma.", "Desencadena parte de la señal génica del ejercicio aeróbico.", "Su nombre se asocia a «mimético del ejercicio»."], "faq": [{"q": "¿Sustituye al ejercicio?", "a": "No: los datos son preclínicos y no reproducen los múltiples efectos del ejercicio real."}, {"q": "¿Es seguro?", "a": "No se ha estudiado en humanos; se considera un compuesto exclusivamente de laboratorio."}], "en": {"evidence": "In sedentary mice it increased exercise endurance and energy expenditure; there are no human data.", "keyPoints": ["It is not a peptide: it activates the ERR alpha, beta and gamma receptors.", "It triggers part of the gene signal of aerobic exercise.", "It is marketed as an 'exercise mimetic'."], "faq": [{"q": "Does it replace exercise?", "a": "No: data are preclinical and do not reproduce the many effects of real exercise."}, {"q": "Is it safe?", "a": "It has not been studied in humans; it is strictly a laboratory compound."}]}},
       cat: 'Metabolismo',
       vial: 5,
       bac: 2,
@@ -10208,6 +10250,32 @@ function initResearch() {
       const displayFreq = isEn ? (pEn.freq || p.freq) : p.freq;
       const displayCat = isEn ? (catEnDict[p.cat] || p.cat) : p.cat;
 
+      const sc = p.school || null;
+      const scLoc = sc && isEn && sc.en ? sc.en : sc;
+      let schoolHtml = '';
+      if (sc) {
+        const chips = [];
+        if (sc.mw) chips.push(`<span class="pep-school-chip">⚖️ ${sc.mw}</span>`);
+        if (sc.formula) chips.push(`<span class="pep-school-chip">🧪 ${sc.formula}</span>`);
+        const st = (isEn && sc.statusEn) ? sc.statusEn : sc.status;
+        if (st) chips.push(`<span class="pep-school-chip">🏷️ ${st}</span>`);
+
+        const kp = (scLoc && scLoc.keyPoints) || [];
+        const faq = (scLoc && scLoc.faq) || [];
+        const ev = (scLoc && scLoc.evidence) || '';
+
+        schoolHtml = `
+        <details class="pep-school">
+          <summary><span>${t('school_sheet', '📖 Ficha de escuela')} <span style="font-weight:700; opacity:.65; font-size:.66rem;">${t('school_sheet_sub', 'datos, mecanismo y evidencia')}</span></span></summary>
+          <div class="pep-school-body">
+            <div class="pep-school-chips">${chips.join('')}</div>
+            ${ev ? `<div class="pep-school-section"><b>${t('school_evidence', 'Qué dice la evidencia')}</b>${ev}</div>` : ''}
+            ${kp.length ? `<div class="pep-school-section"><b>${t('school_keypoints', 'Puntos clave')}</b><ul>${kp.map(k => `<li>${k}</li>`).join('')}</ul></div>` : ''}
+            ${faq.length ? `<div class="pep-school-section"><b>${t('school_faq', 'Preguntas frecuentes')}</b><div class="pep-school-faq">${faq.map(f => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join('')}</div></div>` : ''}
+          </div>
+        </details>`;
+      }
+
       return `
       <div style="background:var(--card-bg-elevated); border:1px solid var(--border-color); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:0 4px 12px var(--shadow-ambient);">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
@@ -10219,6 +10287,7 @@ function initResearch() {
         <p style="font-size:0.82rem; color:var(--text-secondary); margin:8px 0; line-height:1.4;">
           ${displayDesc}
         </p>
+        ${schoolHtml}
         ${displayContra ? `<div style="font-size:0.78rem; color:#f0a08a; margin:8px 0; line-height:1.4;">${t('contra_label', '⚠️ Contraindicaciones:')} ${displayContra}</div>` : ''}
         <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:10px; line-height:1.4;">
           • ${t('sugg_vial', 'Vial sugerido:')} <strong>${p.vial} mg</strong> | ${t('bac_water', 'Agua BAC:')} <strong>${p.bac} mL</strong><br>
