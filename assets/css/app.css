@@ -1641,3 +1641,91 @@ body {
   border-top: 1px solid var(--border-color);
   padding-top: 8px;
 }
+
+/* ===== Ficha de escuela de la Biblioteca de Péptidos ===== */
+.pep-school {
+  margin: 10px 0 8px;
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
+  overflow: hidden;
+}
+
+.pep-school > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  color: #2dd4bf;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pep-school > summary::-webkit-details-marker { display: none; }
+
+.pep-school > summary::after {
+  content: "▾";
+  font-size: 0.75rem;
+  opacity: 0.8;
+  transition: transform 0.2s ease;
+}
+
+.pep-school[open] > summary::after { transform: rotate(180deg); }
+
+.pep-school-body {
+  padding: 0 12px 12px;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.pep-school-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+
+.pep-school-chip {
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--text-main);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.pep-school-section { margin: 9px 0 0; }
+.pep-school-section > b {
+  display: block;
+  color: var(--text-main);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+
+.pep-school ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.pep-school li { margin: 3px 0; }
+
+.pep-school-faq { margin-top: 4px; }
+.pep-school-faq details {
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+  padding: 6px 0 2px;
+}
+.pep-school-faq summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--text-main);
+  font-size: 0.76rem;
+}
+.pep-school-faq p { margin: 5px 0 3px; }
