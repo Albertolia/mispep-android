@@ -508,6 +508,7 @@
       localStorage.setItem('mispep_lang', lang);
     } catch(e) {}
     apply();
+    try { if (window.__mispepCalc) window.__mispepCalc(); } catch (e) {}
     if (window.dispatchEvent) {
       window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     }
@@ -1599,6 +1600,7 @@
   "Puntos clave": "Key points",
   "Preguntas frecuentes": "Frequently asked questions",
   "Barras": "Bars",
+  "Volumen": "Volume",
   "Si es bueno, ¿por qué no lo aprueban?": "If it works, why isn't it approved?",
   "Por qué un péptido prometedor no se aprueba": "Why a promising peptide never gets approved",
   "Regulación": "Regulation",
