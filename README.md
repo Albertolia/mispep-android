@@ -70,5 +70,7 @@ python3 build.py
 
 MIT — puedes usar, modificar y redistribuir el código citando la licencia. Ver [LICENSE](LICENSE).
 
+El nombre **MisPep** y el logotipo quedan reservados: si publicas un fork, cámbiale el nombre y el icono. Ver [TRADEMARK.md](TRADEMARK.md).
+
 MisPep es una herramienta de cálculo y registro con fines educativos. No es consejo médico,
 no sustituye la prescripción de un profesional y no vende ni suministra ningún producto.
