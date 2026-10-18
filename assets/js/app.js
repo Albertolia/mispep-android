@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const APP_VERSION = 'v1.0.32';
+  const APP_VERSION = 'v1.0.33';
   document.querySelectorAll('.app-version-badge').forEach(el => {
     el.textContent = APP_VERSION;
     el.style.cursor = 'pointer';
