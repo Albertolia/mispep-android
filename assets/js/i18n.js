@@ -1566,6 +1566,7 @@
   "⌚ Conectar con Health Connect": "⌚ Connect with Health Connect",
   "Importar datos de Health Connect": "Import Health Connect data",
   "📖 Ficha de escuela": "📖 School sheet",
+  "Errores más frecuentes": "Common mistakes",
   "datos, mecanismo y evidencia": "data, mechanism & evidence",
   "Qué dice la evidencia": "What the evidence says",
   "Puntos clave": "Key points",
